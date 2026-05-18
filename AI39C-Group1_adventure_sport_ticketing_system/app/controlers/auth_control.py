@@ -6,3 +6,8 @@ class AuthController:
         if request.method == "POST":
             print(request.form)
         return render_template("login.html")
+
+    def manage(self):
+        if request.method == "POST":
+            print(request.form)
+        return render_template("manage_profile.html")

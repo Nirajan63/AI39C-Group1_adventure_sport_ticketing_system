@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ThrillSphere Profile</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile_manage.css') }}">
+
+</head>
+<body>
+
+<div class="bg-overlay"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">TS</div>
+    <h2>ThrillSphere</h2>
+  </div>
+
+  <div class="top-actions">
+    <button class="btn outline" id="previewBtn">Preview</button>
+    <button class="btn primary" id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <aside class="profile-card glass">
+    <div class="cover-wrap">
+      <img id="coverImg" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2070&auto=format&fit=crop" alt="cover">
+    </div>
+
+    <div class="profile-content">
+      <div class="avatar-wrap">
+        <img id="avatarImg" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1200&auto=format&fit=crop" alt="avatar">
+      </div>
+
+      <input type="file" id="avatarFile" hidden accept="image/*">
+
+      <h2 id="displayName">User Name</h2>
+      <p id="displayRole">Adventure Seeker</p>
+
+      <button class="btn outline small" onclick="avatarFile.click()">
+        Change Avatar
+      </button>
+
+      <div class="stats">
+        <div class="stat">
+          <span id="statBookings">24</span>
+          <p>Bookings</p>
+        </div>
+
+        <div class="stat">
+          <span id="statSaved">18</span>
+          <p>Saved</p>
+        </div>
+
+        <div class="stat">
+          <span id="statPoints">980</span>
+          <p>Points</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="form-card glass">
+    <div class="form-header">
+      <h1>Profile Management</h1>
+      <p>Customize your adventure identity.</p>
+    </div>
+
+    <form id="profileForm">
+
+      <div class="grid">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" id="firstName" placeholder="John">
+        </div>
+
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com">
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="phone" placeholder="+977 98XXXXXXXX">
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <input type="text" id="city" placeholder="Kathmandu">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Bio</label>
+        <textarea id="bio" placeholder="Tell the world about your adventures..."></textarea>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Language</label>
+          <select id="language">
+            <option value="en">English</option>
+            <option value="ne">Nepali</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Role</label>
+          <input type="text" id="role" placeholder="Mountain Explorer">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cover Photo</label>
+        <input type="file" id="coverFile" accept="image/*">
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn primary" id="saveBtn">Save Profile</button>
+        <button type="button" class="btn outline" id="resetBtn">Reset</button>
+        <button type="button" class="btn danger" id="deleteBtn">Delete</button>
+      </div>
+
+    </form>
+  </section>
+
+</main>
+
+<script src="profile_manage.js"></script>
+</body>
+</html>
