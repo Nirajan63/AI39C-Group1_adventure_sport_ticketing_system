@@ -1,0 +1,293 @@
+{% extends "Base.html" %}
+{% block title %}Dashboard — Thrill Sphere{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<div class="dash-wrapper">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">THRILL<em>SPHERE</em></div>
+
+    <div class="sidebar-avatar">
+      <div class="avatar-ring">{{ user.username[0].upper() }}</div>
+      <div class="avatar-info">
+        <strong>{{ user.username }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" onclick="switchSection('overview', this)">
+        <span class="nav-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </span> Overview
+      </a>
+      <a class="nav-item" onclick="switchSection('bookings', this)">
+        <span class="nav-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        </span> My Bookings
+      </a>
+      <a class="nav-item" onclick="switchSection('book-new', this)">
+        <span class="nav-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </span> Book Activity
+      </a>
+    </nav>
+
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-logout">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div>
+        <p class="topbar-greeting" id="greeting">Welcome back</p>
+        <h2 class="topbar-name">{{ user.username }}</h2>
+      </div>
+      <div class="topbar-meta">
+        <span class="topbar-date" id="liveDate"></span>
+        <span class="topbar-badge">Member since {{ user.joined }}</span>
+      </div>
+    </header>
+
+    <!-- ══ OVERVIEW SECTION ══ -->
+    <section class="dash-section active" id="overview">
+
+      <!-- Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label">Total Bookings</span>
+            <span class="stat-value" data-target="{{ stats.total }}">0</span>
+          </div>
+          <div class="stat-icon orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label">Upcoming</span>
+            <span class="stat-value" data-target="{{ stats.upcoming }}">0</span>
+          </div>
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value" data-target="{{ stats.completed }}">0</span>
+          </div>
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label">Total Spent</span>
+            <span class="stat-value spent">NPR {{ "{:,}".format(stats.spent) }}</span>
+          </div>
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent bookings -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Recent Adventures</h3>
+          <button class="panel-link" onclick="switchSection('bookings', null)">View All →</button>
+        </div>
+        {% if bookings %}
+          {% for b in bookings[:3] %}
+          <div class="booking-card">
+            <div class="booking-img">
+              <img src="{{ url_for('static', filename='images/' + b.img) }}" alt="{{ b.activity }}">
+            </div>
+            <div class="booking-body">
+              <div class="booking-name">{{ b.activity }}</div>
+              <div class="booking-pills">
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ b.location }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ b.date }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  {{ b.people }} person{% if b.people > 1 %}s{% endif %}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ b.duration }}
+                </span>
+              </div>
+            </div>
+            <div class="booking-right">
+              <span class="booking-total">NPR {{ "{:,}".format(b.total) }}</span>
+              <span class="booking-status {{ b.status }}">
+                {% if b.status == 'confirmed' %}Confirmed{% else %}Completed{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">
+              <img src="{{ url_for('static', filename='images/Mountain-Main.png') }}" alt="Mountain">
+            </div>
+            <p>No adventures yet — book your first thrill!</p>
+            <button class="btn-primary" onclick="switchSection('book-new', null)">Book Now</button>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Book -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Quick Book</h3>
+          <button class="panel-link" onclick="switchSection('book-new', null)">All Activities →</button>
+        </div>
+        <div class="quick-grid">
+          {% for id, act in activities.items() %}
+          <div class="quick-card" onclick="switchSection('book-new', null); selectActivity('{{ id }}')">
+            <img src="{{ url_for('static', filename='images/' + act.img) }}" alt="{{ act.name }}">
+            <p>{{ act.name }}</p>
+            <small>NPR {{ "{:,}".format(act.price) }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ BOOKINGS SECTION ══ -->
+    <section class="dash-section" id="bookings">
+      <div class="section-title-row">
+        <h2 class="section-heading">My Bookings</h2>
+        <div class="filter-tabs">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="confirmed">Upcoming</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+      </div>
+
+      {% if bookings %}
+        <div class="bookings-full" id="bookingsFull">
+          {% for b in bookings %}
+          <div class="booking-card" data-status="{{ b.status }}">
+            <div class="booking-img">
+              <img src="{{ url_for('static', filename='images/' + b.img) }}" alt="{{ b.activity }}">
+            </div>
+            <div class="booking-body">
+              <div class="booking-name">{{ b.activity }}</div>
+              <div class="booking-pills">
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ b.location }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ b.date }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  {{ b.people }} person{% if b.people > 1 %}s{% endif %}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ b.duration }}
+                </span>
+                <span class="pill-id">#{{ b.id }}</span>
+              </div>
+            </div>
+            <div class="booking-right">
+              <span class="booking-total">NPR {{ "{:,}".format(b.total) }}</span>
+              <span class="booking-status {{ b.status }}">
+                {% if b.status == 'confirmed' %}Confirmed{% else %}Completed{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <img src="{{ url_for('static', filename='images/Mountain-Main.png') }}" alt="Mountain">
+          </div>
+          <h3>No adventures booked yet.</h3>
+          <p>The mountains are calling — book your first thrill!</p>
+          <button class="btn-primary" onclick="switchSection('book-new', null)">Explore Activities</button>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- ══ BOOK ACTIVITY SECTION ══ -->
+    <section class="dash-section" id="book-new">
+      <h2 class="section-heading">Book an Adventure</h2>
+
+      <!-- Activity Picker -->
+      <div class="activity-picker" id="activityPicker">
+        {% for id, act in activities.items() %}
+        <div class="activity-option {% if loop.first %}selected{% endif %}"
+             data-id="{{ id }}"
+             data-price="{{ act.price }}"
+             data-name="{{ act.name }}"
+             onclick="selectActivity('{{ id }}')">
+          <img src="{{ url_for('static', filename='images/' + act.img) }}" alt="{{ act.name }}">
+          <p>{{ act.name }}</p>
+          <small>NPR {{ "{:,}".format(act.price) }}</small>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Booking Form -->
+      <div class="book-form-card">
+        <h3 id="formActivityTitle">Paragliding</h3>
+
+        <form method="POST" action="{{ url_for('auth.book_activity') }}" id="bookForm">
+          <input type="hidden" name="activity_id" id="activityIdInput" value="paragliding">
+
+          <div class="book-form-grid">
+            <div class="form-group">
+              <label>Adventure Date</label>
+              <input type="date" name="date" id="bookDate" required>
+            </div>
+            <div class="form-group">
+              <label>Number of People</label>
+              <select name="people" id="bookPeople">
+                <option value="1">1 person</option>
+                <option value="2">2 people</option>
+                <option value="3">3 people</option>
+                <option value="4">4 people</option>
+                <option value="5">5 people</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="total-preview">
+            <span>Estimated Total</span>
+            <strong id="bookTotal">NPR 4,500</strong>
+          </div>
+
+          <button type="submit" class="btn-primary">Confirm Booking</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}
