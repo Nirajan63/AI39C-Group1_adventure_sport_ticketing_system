@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Thrill Sphere</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <span class="brand-logo">THRILL<em>SPHERE</em></span>
+    </div>
+
+    <div class="sidebar-avatar">
+        <div class="avatar-ring" id="avatarCircle">T</div>
+        <div class="avatar-info">
+            <strong id="sidebarName">Loading…</strong>
+            <span id="sidebarEmail">—</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="#overview"  class="nav-item active" data-section="overview">
+            <i class="bx bxs-dashboard"></i> Overview
+        </a>
+        <a href="#bookings"  class="nav-item" data-section="bookings">
+            <i class="bx bxs-calendar-check"></i> My Bookings
+        </a>
+        <a href="#book-new"  class="nav-item" data-section="book-new">
+            <i class="bx bxs-plus-circle"></i> Book Activity
+        </a>
+    </nav>
+
+    <button class="sidebar-logout" id="logoutBtn">
+        <i class="bx bx-log-out"></i> Logout
+    </button>
+</aside>
+
+<!-- ── Main ── -->
+<main class="dash-main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+        <div>
+            <p class="topbar-greeting" id="greeting">Good morning 👋</p>
+            <h2 id="topbarName">Thrillseeker</h2>
+        </div>
+        <div class="topbar-date" id="liveDate"></div>
+    </header>
+
+    <!-- ══ OVERVIEW SECTION ══ -->
+    <section class="section active" id="overview">
+
+        <!-- Stat cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-left">
+                    <span class="stat-label">Total Bookings</span>
+                    <span class="stat-value" id="statTotal">—</span>
+                </div>
+                <div class="stat-icon orange"><i class="bx bxs-calendar"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-left">
+                    <span class="stat-label">Upcoming</span>
+                    <span class="stat-value" id="statUpcoming">—</span>
+                </div>
+                <div class="stat-icon green"><i class="bx bxs-time-five"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-left">
+                    <span class="stat-label">Completed</span>
+                    <span class="stat-value" id="statCompleted">—</span>
+                </div>
+                <div class="stat-icon blue"><i class="bx bxs-check-circle"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-left">
+                    <span class="stat-label">Total Spent</span>
+                    <span class="stat-value" id="statSpent">—</span>
+                </div>
+                <div class="stat-icon red"><i class="bx bxs-wallet"></i></div>
+            </div>
+        </div>
+
+        <!-- Recent bookings preview -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Recent Adventures</h3>
+                <button class="panel-link" onclick="switchSection('bookings')">View All →</button>
+            </div>
+            <div class="bookings-list" id="recentList">
+                <div class="loading-state">Loading your adventures…</div>
+            </div>
+        </div>
+
+        <!-- Quick book -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Quick Book</h3>
+                <button class="panel-link" onclick="switchSection('book-new')">All Activities →</button>
+            </div>
+            <div class="quick-grid">
+                <div class="quick-card" onclick="switchSection('book-new','paragliding')">
+                    <span>🪂</span><p>Paragliding</p><small>NPR 4,500</small>
+                </div>
+                <div class="quick-card" onclick="switchSection('book-new','bungee')">
+                    <span>🤸</span><p>Bungee</p><small>NPR 6,000</small>
+                </div>
+                <div class="quick-card" onclick="switchSection('book-new','rafting')">
+                    <span>🚣</span><p>Rafting</p><small>NPR 3,200</small>
+                </div>
+                <div class="quick-card" onclick="switchSection('book-new','trekking')">
+                    <span>🏔️</span><p>Trekking</p><small>NPR 8,500</small>
+                </div>
+                <div class="quick-card" onclick="switchSection('book-new','zipline')">
+                    <span>⚡</span><p>Zipline</p><small>NPR 3,800</small>
+                </div>
+                <div class="quick-card" onclick="switchSection('book-new','canyoning')">
+                    <span>🌊</span><p>Canyoning</p><small>NPR 4,200</small>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ══ BOOKINGS SECTION ══ -->
+    <section class="section" id="bookings">
+        <div class="section-title-row">
+            <h2 class="section-heading">My Bookings</h2>
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="confirmed">Upcoming</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
+        </div>
+
+        <div class="bookings-full" id="bookingsFull">
+            <div class="loading-state">Loading your bookings…</div>
+        </div>
+
+        <div class="empty-state hidden" id="emptyBookings">
+            <div class="empty-icon">🏔️</div>
+            <h3>No adventures yet.</h3>
+            <p>The mountains are calling — book your first thrill!</p>
+            <button class="btn-primary" onclick="switchSection('book-new')">Explore Activities</button>
+        </div>
+    </section>
+
+    <!-- ══ BOOK NEW SECTION ══ -->
+    <section class="section" id="book-new">
+        <h2 class="section-heading">Book an Adventure</h2>
+
+        <div class="activity-picker">
+            <div class="activity-option selected" data-id="paragliding">
+                <span>🪂</span><p>Paragliding</p><small>NPR 4,500</small>
+            </div>
+            <div class="activity-option" data-id="bungee">
+                <span>🤸</span><p>Bungee Jumping</p><small>NPR 6,000</small>
+            </div>
+            <div class="activity-option" data-id="rafting">
+                <span>🚣</span><p>Rafting</p><small>NPR 3,200</small>
+            </div>
+            <div class="activity-option" data-id="trekking">
+                <span>🏔️</span><p>Trekking</p><small>NPR 8,500</small>
+            </div>
+            <div class="activity-option" data-id="zipline">
+                <span>⚡</span><p>Zipline</p><small>NPR 3,800</small>
+            </div>
+            <div class="activity-option" data-id="canyoning">
+                <span>🌊</span><p>Canyoning</p><small>NPR 4,200</small>
+            </div>
+        </div>
+
+        <div class="book-form-card">
+            <h3 id="formActivityName">🪂 Paragliding</h3>
+            <div class="book-form-grid">
+                <div class="form-group">
+                    <label>Adventure Date</label>
+                    <input type="date" id="bookDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Number of People</label>
+                    <select id="bookPeople">
+                        <option value="1">1 person</option>
+                        <option value="2">2 people</option>
+                        <option value="3">3 people</option>
+                        <option value="4">4 people</option>
+                        <option value="5">5 people</option>
+                    </select>
+                </div>
+            </div>
+            <div class="total-preview">
+                <span>Estimated Total</span>
+                <strong id="bookTotal">NPR 4,500</strong>
+            </div>
+            <button class="btn-primary" id="confirmBookBtn">Confirm Booking 🚀</button>
+            <div class="book-feedback hidden" id="bookFeedback"></div>
+        </div>
+    </section>
+
+</main>
+
+<script src="../js/dashboard.js"></script>
+</body>
+</html>
