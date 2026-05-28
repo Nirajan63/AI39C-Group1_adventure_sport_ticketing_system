@@ -9,9 +9,9 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="/static/css/forgot.css">
     <script>
-        (function(){
-            const savedTheme= localStorage.getItem('theme') || 'light'; 
-            if (savedTheme==='dark'){
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
                 document.documentElement.classList.add('dark-mode');
             }
         })();
@@ -19,6 +19,7 @@
 </head>
 
 <body>
+
     <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
         <i class='bx bx-moon'></i>
     </button>
@@ -49,7 +50,7 @@
 
     </div>
 
-     <script src="/static/js/theme.js"></script>
+    <script src="/static/js/theme.js"></script>
     <script src="/static/js/forgot.js"></script>
 </body>
 
