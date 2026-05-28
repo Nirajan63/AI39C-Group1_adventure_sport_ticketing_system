@@ -1,0 +1,590 @@
+/* ══════════════════════════════════════════
+   payment_modal.css — Thrill Sphere Payment
+   Glassmorphism · Adventure theme · NPR QR
+   ══════════════════════════════════════════ */
+
+/* ── Overlay ── */
+.payment-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 25, 0.72);
+    backdrop-filter: blur(10px) saturate(1.4);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+.payment-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Modal Shell ── */
+.payment-modal {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(116, 148, 236, 0.25);
+    border-radius: 24px;
+    box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(255,255,255,0.6) inset,
+        0 8px 32px rgba(116, 148, 236, 0.12);
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    transform: scale(0.88) translateY(24px);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.3s ease;
+    position: relative;
+}
+.payment-modal::-webkit-scrollbar { display: none; }
+.payment-overlay.open .payment-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* ── Modal Header ── */
+.pm-header {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+}
+.pm-header-left {}
+.pm-header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #7494ec;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.pm-header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1.5px;
+    color: #1a1a2e;
+    line-height: 1;
+}
+.pm-header-activity {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.pm-header-amount {
+    text-align: right;
+    flex-shrink: 0;
+}
+.pm-header-amount-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+.pm-header-amount-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 1px;
+    color: #7494ec;
+    line-height: 1;
+}
+.pm-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(0,0,0,0.04);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 16px;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    line-height: 1;
+}
+.pm-close:hover {
+    background: rgba(255,79,79,0.1);
+    color: #ff4f4f;
+    transform: rotate(90deg);
+}
+
+/* ── Modal Body ── */
+.pm-body {
+    padding: 24px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ── Method Selector ── */
+.pm-method-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+.pm-method-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.pm-method-btn {
+    border: 1.5px solid rgba(0,0,0,0.1);
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.pm-method-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+    border-radius: inherit;
+}
+.pm-method-btn.esewa::before {
+    background: linear-gradient(135deg, rgba(96,189,74,0.08), rgba(96,189,74,0.02));
+}
+.pm-method-btn.khalti::before {
+    background: linear-gradient(135deg, rgba(93,52,185,0.08), rgba(93,52,185,0.02));
+}
+.pm-method-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+.pm-method-btn.active::before { opacity: 1; }
+.pm-method-btn.esewa.active {
+    border-color: #60bd4a;
+    background: rgba(96,189,74,0.06);
+    box-shadow: 0 0 0 3px rgba(96,189,74,0.12), 0 6px 20px rgba(96,189,74,0.1);
+}
+.pm-method-btn.khalti.active {
+    border-color: #5d34b9;
+    background: rgba(93,52,185,0.06);
+    box-shadow: 0 0 0 3px rgba(93,52,185,0.12), 0 6px 20px rgba(93,52,185,0.1);
+}
+
+.pm-method-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+.pm-method-logo.esewa-logo {
+    background: #60bd4a;
+    color: white;
+}
+.pm-method-logo.khalti-logo {
+    background: #5d34b9;
+    color: white;
+}
+.pm-method-info { flex: 1; }
+.pm-method-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+.pm-method-tag {
+    font-size: 10px;
+    color: #6b7280;
+    letter-spacing: 0.3px;
+}
+.pm-method-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.15);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: transparent;
+    transition: border-color 0.25s, background 0.25s, color 0.25s;
+    flex-shrink: 0;
+}
+.pm-method-btn.esewa.active .pm-method-check {
+    border-color: #60bd4a;
+    background: #60bd4a;
+    color: white;
+}
+.pm-method-btn.khalti.active .pm-method-check {
+    border-color: #5d34b9;
+    background: #5d34b9;
+    color: white;
+}
+
+/* ── QR Section ── */
+.pm-qr-section {
+    background: linear-gradient(145deg, #f8fafc, #f0f4ff);
+    border: 1px solid rgba(116,148,236,0.15);
+    border-radius: 18px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+.pm-qr-section::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(116,148,236,0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+.pm-qr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+.pm-qr-badge.esewa-badge {
+    background: rgba(96,189,74,0.1);
+    color: #4a9a38;
+    border: 1px solid rgba(96,189,74,0.25);
+}
+.pm-qr-badge.khalti-badge {
+    background: rgba(93,52,185,0.1);
+    color: #5d34b9;
+    border: 1px solid rgba(93,52,185,0.25);
+}
+
+.pm-qr-frame {
+    width: 180px;
+    height: 180px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.pm-qr-frame.switching {
+    opacity: 0;
+    transform: scale(0.92);
+}
+.pm-qr-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Esewa QR — Generated SVG placeholder */
+.esewa-qr-svg {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+}
+
+.pm-qr-instruction {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 260px;
+}
+.pm-qr-instruction strong {
+    color: #1a1a2e;
+    font-weight: 600;
+}
+
+/* ── Divider ── */
+.pm-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #9ca3af;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.pm-divider::before, .pm-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0,0,0,0.08);
+}
+
+/* ── Transaction Input ── */
+.pm-txn-section {}
+.pm-txn-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: block;
+}
+.pm-txn-helper {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+.pm-txn-input-wrap {
+    position: relative;
+}
+.pm-txn-input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #1a1a2e;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.5px;
+}
+.pm-txn-input::placeholder { color: #9ca3af; }
+.pm-txn-input:focus {
+    border-color: #7494ec;
+    box-shadow: 0 0 0 3px rgba(116,148,236,0.12);
+    background: white;
+}
+.pm-txn-input.error {
+    border-color: #ff4f4f;
+    box-shadow: 0 0 0 3px rgba(255,79,79,0.1);
+}
+
+/* ── Submit Button ── */
+.pm-submit-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #7494ec, #5b7cdb);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 6px 20px rgba(116,148,236,0.35);
+    position: relative;
+    overflow: hidden;
+}
+.pm-submit-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.pm-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(116,148,236,0.42);
+}
+.pm-submit-btn:hover::after { opacity: 1; }
+.pm-submit-btn:active { transform: translateY(0); }
+.pm-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.pm-submit-btn.loading {
+    pointer-events: none;
+}
+.pm-submit-btn .btn-text { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pm-spinner {
+    width: 16px; height: 16px;
+    border: 2.5px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: pm-spin 0.7s linear infinite;
+    display: none;
+}
+.pm-submit-btn.loading .pm-spinner { display: block; }
+
+@keyframes pm-spin { to { transform: rotate(360deg); } }
+
+/* ── Status Display ── */
+.pm-status {
+    border-radius: 16px;
+    padding: 24px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    animation: statusIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+.pm-status.visible { display: flex; }
+
+@keyframes statusIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.pm-status.confirmed {
+    background: linear-gradient(145deg, rgba(0,200,120,0.08), rgba(0,200,120,0.04));
+    border: 1.5px solid rgba(0,200,120,0.25);
+}
+.pm-status.pending {
+    background: linear-gradient(145deg, rgba(255,193,7,0.08), rgba(255,193,7,0.04));
+    border: 1.5px solid rgba(255,193,7,0.3);
+}
+
+.pm-status-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+.pm-status.confirmed .pm-status-icon {
+    background: rgba(0,200,120,0.15);
+    box-shadow: 0 0 0 6px rgba(0,200,120,0.08), 0 0 24px rgba(0,200,120,0.2);
+}
+.pm-status.pending .pm-status-icon {
+    background: rgba(255,193,7,0.15);
+    box-shadow: 0 0 0 6px rgba(255,193,7,0.08), 0 0 24px rgba(255,193,7,0.2);
+}
+
+.pm-status-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1.5px;
+}
+.pm-status.confirmed .pm-status-title { color: #00a862; }
+.pm-status.pending .pm-status-title { color: #b8860b; }
+
+.pm-status-msg { font-size: 13px; color: #6b7280; line-height: 1.5; }
+.pm-status-txn {
+    font-size: 11px;
+    color: #9ca3af;
+    background: rgba(0,0,0,0.04);
+    border-radius: 8px;
+    padding: 5px 12px;
+    letter-spacing: 0.5px;
+    font-family: monospace;
+}
+
+.pm-status-action {
+    margin-top: 4px;
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.pm-status-btn {
+    padding: 9px 20px;
+    border-radius: 9px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.pm-status-btn:hover { transform: translateY(-1px); }
+.pm-status-btn.primary {
+    background: linear-gradient(135deg, #7494ec, #5b7cdb);
+    color: white;
+    box-shadow: 0 4px 14px rgba(116,148,236,0.3);
+}
+.pm-status-btn.secondary {
+    background: transparent;
+    border-color: rgba(0,0,0,0.12);
+    color: #6b7280;
+}
+
+/* ── Security Footer ── */
+.pm-security {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #9ca3af;
+    letter-spacing: 0.5px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    margin-top: -8px;
+}
+.pm-security svg { color: #00c878; }
+
+/* ── "Book Now" trigger button on activity cards ── */
+.btn-book-now {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, #7494ec, #5b7cdb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 22px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(116,148,236,0.3);
+    letter-spacing: 0.2px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+}
+.btn-book-now:hover {
+    background: linear-gradient(135deg, #5b7cdb, #4a6bc9);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(116,148,236,0.38);
+}
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+    .payment-modal { max-width: 100%; border-radius: 20px 20px 0 0; }
+    .payment-overlay { align-items: flex-end; padding: 0; }
+    .pm-header { padding: 22px 20px 16px; }
+    .pm-body { padding: 18px 20px 24px; }
+    .pm-qr-frame { width: 160px; height: 160px; }
+}
+
+/* ── Logo image overrides (real PNG logos) ── */
+.pm-method-logo.esewa-logo  { background: #60bd4a; padding: 2px; }
+.pm-method-logo.khalti-logo { background: #1a0a2e; padding: 4px; }
+.pm-method-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pm-sandbox-note { font-size: 11px; margin-top: 3px; display: inline-block; }
