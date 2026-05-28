@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block title %}Home — Adventure Kathmandu{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero">
+  <div class="hero-slides">
+    <div class="hero-slide active"></div>
+    <div class="hero-slide"></div>
+    <div class="hero-slide"></div>
+    <div class="hero-slide"></div>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <p class="hero-tag">Adventure Travel — Kathmandu, Nepal</p>
+    <h1 class="hero-title">
+      Where Every<br>
+      <em>Summit</em> Calls
+    </h1>
+    <p class="hero-desc">
+      Nepal's premier adventure sports booking platform. We craft
+      journeys that push limits and create memories that last a lifetime.
+    </p>
+    <div class="hero-actions">
+      <a href="/adventures" class="btn-outline">Explore Adventures</a>
+      <a href="/booking" class="btn-solid">Book a Trip</a>
+    </div>
+  </div>
+
+  <div class="hero-dots">
+    <div class="hero-dot active" data-index="0"></div>
+    <div class="hero-dot" data-index="1"></div>
+    <div class="hero-dot" data-index="2"></div>
+    <div class="hero-dot" data-index="3"></div>
+  </div>
+
+  <div class="ticker-bar">
+    <div class="ticker-item"><span class="ticker-dot"></span> Paragliding</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> River Rafting</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Himalayan Trek</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Bungee Jump</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Zip Line</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Rent a Car</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Rock Climbing</div>
+  </div>
+</section>
+
+
+<!-- ══════════════ OUR ADVENTURES ══════════════ -->
+<section class="adventures-section">
+  <div class="section-header">
+    <div>
+      <p class="section-label">What We Offer</p>
+      <h2 class="section-title">Our <em>Adventures</em></h2>
+    </div>
+    <p class="section-desc">
+      From aerial paragliding to roaring white-water rapids — every activity
+      is guided by certified professionals with your safety as the top priority.
+    </p>
+  </div>
+
+  <div class="adventures-grid">
+    <!-- Card 1 — tall left -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/paragliding.jpg') }}" alt="Paragliding">
+      <div class="adv-card-overlay"></div>
+      <div class="adv-card-info">
+        <p class="adv-category">Sky</p>
+        <h3 class="adv-name">Paragliding</h3>
+        <a href="/adventures#paragliding" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/rafting.jpg') }}" alt="River Rafting">
+      <div class="adv-card-overlay"></div>
+      <div class="adv-card-info">
+        <p class="adv-category">Water</p>
+        <h3 class="adv-name">River Rafting</h3>
+        <a href="/adventures#rafting" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/trekking.jpg') }}" alt="Himalayan Trek">
+      <div class="adv-card-overlay"></div>
+      <div class="adv-card-info">
+        <p class="adv-category">Mountain</p>
+        <h3 class="adv-name">Himalayan Trek</h3>
+        <a href="/adventures#trek" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/bungee.jpg') }}" alt="Bungee Jump">
+      <div class="adv-card-overlay"></div>
+      <div class="adv-card-info">
+        <p class="adv-category">Extreme</p>
+        <h3 class="adv-name">Bungee Jump</h3>
+        <a href="/adventures#bungee" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/zipline.jpg') }}" alt="Zip Line">
+      <div class="adv-card-overlay"></div>
+      <div class="adv-card-info">
+        <p class="adv-category">Aerial</p>
+        <h3 class="adv-name">Zip Line</h3>
+        <a href="/adventures#zipline" class="adv-arrow">→</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ STATS ══════════════ -->
+<div class="stats-section">
+  <div class="stat-item">
+    <div class="stat-number">200+</div>
+    <div class="stat-label">Happy Adventurers</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">6</div>
+    <div class="stat-label">Adventure Types</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">5</div>
+    <div class="stat-label">Years Operating</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">99%</div>
+    <div class="stat-label">Safety Record</div>
+  </div>
+</div>
+
+
+<!-- ══════════════ OUR STORY ══════════════ -->
+<section class="story-section">
+  <div class="story-image">
+    <img src="{{ url_for('static', filename='images/bg.jpg') }}" alt="Himalayan landscape">
+  </div>
+  <div class="story-content">
+    <p class="section-label">Our Story</p>
+    <h2 class="section-title">Rooted in <em>Kathmandu,</em><br>Built for Adventure</h2>
+    <div class="story-divider"></div>
+    <p class="story-text">
+      Adventure was founded by a team of passionate explorers in Kathmandu —
+      one of Nepal's most iconic gateways to the Himalayas. We believe the mountain
+      kingdom holds some of the world's most exhilarating experiences, and we share
+      them responsibly.
+    </p>
+    <p class="story-text">
+      Every trip is designed with deep local knowledge, certified safety standards,
+      and genuine care for both our clients and the environment we operate in.
+    </p>
+    <ul class="story-features">
+      <li>
+        <span class="feature-icon">📍</span>
+        Thamel, Kathmandu, Bagmati Province, Nepal
+      </li>
+      <li>
+        <span class="feature-icon">🛡</span>
+        Government-licensed guides &amp; certified safety equipment
+      </li>
+      <li>
+        <span class="feature-icon">🌿</span>
+        Eco-conscious packages for sustainable adventure tourism
+      </li>
+    </ul>
+    <a href="/adventures" class="btn-dark">View Our Adventures</a>
+  </div>
+</section>
+
+
+<!-- ══════════════ GALLERY ══════════════ -->
+<section class="gallery-section">
+  <div class="gallery-header">
+    <p class="section-label">Gallery</p>
+    <h2 class="section-title">Moments <em>Captured</em></h2>
+  </div>
+  <div class="gallery-strip" id="galleryStrip">
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/paragliding.jpg') }}" alt="Paragliding">
+      <div class="gallery-item-label">Paragliding</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/rafting.jpg') }}" alt="Rafting">
+      <div class="gallery-item-label">Rafting</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/trekking.jpg') }}" alt="Trekking">
+      <div class="gallery-item-label">Trekking</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/bungee.jpg') }}" alt="Bungee Jump">
+      <div class="gallery-item-label">Bungee Jump</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/zipline.jpg') }}" alt="Zip Line">
+      <div class="gallery-item-label">Zip Line</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/bg.jpg') }}" alt="Himalayas">
+      <div class="gallery-item-label">Himalayas</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ TESTIMONIALS ══════════════ -->
+<section class="testimonials-section">
+  <p class="section-label">Client Stories</p>
+  <h2 class="section-title">What Our <em>Adventurers</em> Say</h2>
+
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">
+        "The views above Kathmandu Valley were simply breathtaking. The Adventure
+        team was professional throughout and made me feel completely at ease. I will
+        absolutely return."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">R</div>
+        <div>
+          <div class="author-name">Rajesh Sharma</div>
+          <div class="author-activity">Paragliding</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card featured">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">
+        "The Trishuli rapids were incredible. Our guide kept the energy high the
+        entire day. The riverside lunch was a wonderful touch — I have already
+        recommended this to everyone I know."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">P</div>
+        <div>
+          <div class="author-name">Priya Thapa</div>
+          <div class="author-activity">River Rafting</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="stars">★★★★<span class="star-empty">★</span></div>
+      <p class="testimonial-text">
+        "Three unforgettable days walking through the Langtang highlands. Our
+        guide had encyclopaedic knowledge of the region. The camping was
+        comfortable and well-organised."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">D</div>
+        <div>
+          <div class="author-name">David Chen</div>
+          <div class="author-activity">Trekking</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map card -->
+    <div class="map-placeholder">
+      <span>MAP — Kathmandu, Nepal</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ CONTACT / FIND US ══════════════ -->
+<section class="contact-section">
+  <div class="contact-info">
+    <p class="section-label">Find Us</p>
+    <h2 class="contact-title">Visit Our <em>Office</em></h2>
+    <div class="contact-divider"></div>
+    <ul class="contact-details">
+      <li>
+        <span class="contact-icon">📍</span>
+        Thamel, Kathmandu-29, Bagmati Province, Nepal
+      </li>
+      <li>
+        <span class="contact-icon">📞</span>
+        +977-01-XXXXXXX &nbsp;·&nbsp; +977-9800000000
+      </li>
+      <li>
+        <span class="contact-icon">✉</span>
+        info@adventure-ktm.com.np
+      </li>
+      <li>
+        <span class="contact-icon">🕐</span>
+        Sun – Fri &nbsp;·&nbsp; 8:00 AM – 6:00 PM
+      </li>
+    </ul>
+    <a href="/booking" class="btn-outline-white">Book an Appointment</a>
+  </div>
+  <div class="contact-map">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28266.059893985555!2d85.2911!3d27.7172!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb18fcb77fd4bd%3A0x58099b1d495cf9f2!2sThamel%2C%20Kathmandu!5e0!3m2!1sen!2snp!4v1685000000000"
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+  </div>
+</section>
+
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="brand-logo">
+        <div class="logo-box">A</div>
+        <div>
+          <div class="footer-brand-name">Adventure</div>
+          <span class="footer-brand-sub">Kathmandu, Nepal</span>
+        </div>
+      </div>
+      <p>Nepal's premier adventure sports travel agency, rooted in the heart of Kathmandu. Where every heartbeat counts.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Adventures</h4>
+      <ul>
+        <li><a href="/adventures#paragliding">Paragliding</a></li>
+        <li><a href="/adventures#rafting">River Rafting</a></li>
+        <li><a href="/adventures#trek">Himalayan Trek</a></li>
+        <li><a href="/adventures#bungee">Bungee Jump</a></li>
+        <li><a href="/adventures#zipline">Zip Line</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Pages</h4>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/adventures">Adventures</a></li>
+        <li><a href="/mytickets">My Tickets</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/booking">Book Now</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:+9779800000000">Call Us</a></li>
+        <li><a href="mailto:info@adventure-ktm.com.np">Email</a></li>
+        <li><a href="https://wa.me/9779800000000" target="_blank">WhatsApp</a></li>
+        <li><a href="#">Directions</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="footer-copyright">© 2024 Adventure. Kathmandu, Nepal. All rights reserved.</p>
+    <div class="footer-socials">
+      <a href="#" class="social-btn">fb</a>
+      <a href="#" class="social-btn">ig</a>
+      <a href="#" class="social-btn">yt</a>
+      <a href="#" class="social-btn">wa</a>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+  // ── Hero slideshow ──
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots   = document.querySelectorAll('.hero-dot');
+  let current  = 0;
+  let timer;
+
+  function goToSlide(n) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function nextSlide() { goToSlide((current + 1) % slides.length); }
+
+  function startAuto() { timer = setInterval(nextSlide, 5000); }
+  function stopAuto()  { clearInterval(timer); }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      stopAuto();
+      goToSlide(+dot.dataset.index);
+      startAuto();
+    });
+  });
+
+  startAuto();
+
+  // ── Gallery drag-scroll ──
+  const strip = document.getElementById('galleryStrip');
+  let isDown = false, startX, scrollLeft;
+
+  strip.addEventListener('mousedown',  e => { isDown = true; strip.classList.add('grabbing'); startX = e.pageX - strip.offsetLeft; scrollLeft = strip.scrollLeft; });
+  strip.addEventListener('mouseleave', ()  => { isDown = false; strip.classList.remove('grabbing'); });
+  strip.addEventListener('mouseup',    ()  => { isDown = false; strip.classList.remove('grabbing'); });
+  strip.addEventListener('mousemove',  e  => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x   = e.pageX - strip.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    strip.scrollLeft = scrollLeft - walk;
+  });
+</script>
+
+{% endblock %}
