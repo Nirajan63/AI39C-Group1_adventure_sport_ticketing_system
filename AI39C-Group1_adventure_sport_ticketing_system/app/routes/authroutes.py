@@ -34,9 +34,9 @@ class AuthRoutes:
      self.bp.route("/signup", methods=["POST"])(AuthController.signup)
      self.bp.route("/api/auth/google-login/send-otp", methods=["POST"])(AuthController.google_send_otp)
      self.bp.route("/api/auth/google-login/verify-otp", methods=["POST"])(AuthController.google_verify_otp)
-
-
+     self.bp.route("/logout"                           )(self.controller.logout)
      self.bp.route("/dashboard",methods=["GET"]        )(self.controller.dashboard)
      self.bp.route("/book",     methods=["POST"]       )(self.controller.book_activity)
 
      return self.bp
+    
