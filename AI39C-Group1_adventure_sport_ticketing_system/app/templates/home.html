@@ -1,12 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Home — Adventure Kathmandu{% endblock %}
+{% block title %}Home — Thrill Sphere Nepal{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+<style>
+    /* Heart Icon Pop Micro-Animation */
+    @keyframes heartPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+    .animate-pop {
+        animation: heartPop 0.3s ease-in-out;
+    }
+    /* Section Anchors and Margins Adjustments */
+    .adventures-section {
+        padding-top: 60px !important;
+        scroll-margin-top: 80px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ══════════════ HERO ══════════════ -->
+<!-- ══════════════ HERO SLIDESHOW ══════════════ -->
 <section class="hero">
   <div class="hero-slides">
     <div class="hero-slide active"></div>
@@ -20,15 +36,15 @@
     <p class="hero-tag">Adventure Travel — Kathmandu, Nepal</p>
     <h1 class="hero-title">
       Where Every<br>
-      <em>Summit</em> Calls
+      <em>Thrill</em> Beckons
     </h1>
     <p class="hero-desc">
-      Nepal's premier adventure sports booking platform. We craft
-      journeys that push limits and create memories that last a lifetime.
+      Nepal's premier adventure sports booking platform. We curate
+      journeys that challenge limits and shape memories that endure a lifetime.
     </p>
     <div class="hero-actions">
-      <a href="/adventures" class="btn-outline">Explore Adventures</a>
-      <a href="/booking" class="btn-solid">Book a Trip</a>
+      <a href="#activities-anchor" class="btn-outline">Explore Activities</a>
+      <a href="/dashboard" class="btn-solid">Book a Trip</a>
     </div>
   </div>
 
@@ -45,101 +61,137 @@
     <div class="ticker-item"><span class="ticker-dot"></span> Himalayan Trek</div>
     <div class="ticker-item"><span class="ticker-dot"></span> Bungee Jump</div>
     <div class="ticker-item"><span class="ticker-dot"></span> Zip Line</div>
-    <div class="ticker-item"><span class="ticker-dot"></span> Rent a Car</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Canyoning</div>
     <div class="ticker-item"><span class="ticker-dot"></span> Rock Climbing</div>
   </div>
 </section>
 
 
 <!-- ══════════════ OUR ADVENTURES ══════════════ -->
-<section class="adventures-section">
+<section class="adventures-section" id="activities-anchor">
   <div class="section-header">
     <div>
       <p class="section-label">What We Offer</p>
       <h2 class="section-title">Our <em>Adventures</em></h2>
     </div>
     <p class="section-desc">
-      From aerial paragliding to roaring white-water rapids — every activity
-      is guided by certified professionals with your safety as the top priority.
+      From soaring paragliders over Pokhara to roaring white-water rapids — every adventure
+      is supervised by certified professionals with your safety as our prime priority.
     </p>
   </div>
 
   <div class="adventures-grid">
-    <!-- Card 1 — tall left -->
+    <!-- Card 1 — Paragliding -->
     <div class="adv-card">
       <img src="{{ url_for('static', filename='images/paragliding.jpg') }}" alt="Paragliding">
       <div class="adv-card-overlay"></div>
+      
+      <!-- Wishlist Toggle Floating Heart Button -->
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'paragliding')" id="btn-wishlist-paragliding" aria-label="Save to Wishlist">
+          <i class="bx {% if 'paragliding' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
       <div class="adv-card-info">
         <p class="adv-category">Sky</p>
         <h3 class="adv-name">Paragliding</h3>
-        <a href="/adventures#paragliding" class="adv-arrow">→</a>
+        <a href="/dashboard" class="adv-arrow">→</a>
       </div>
     </div>
 
-    <!-- Card 2 -->
+    <!-- Card 2 — River Rafting -->
     <div class="adv-card">
       <img src="{{ url_for('static', filename='images/rafting.jpg') }}" alt="River Rafting">
       <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'rafting')" id="btn-wishlist-rafting" aria-label="Save to Wishlist">
+          <i class="bx {% if 'rafting' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
       <div class="adv-card-info">
         <p class="adv-category">Water</p>
         <h3 class="adv-name">River Rafting</h3>
-        <a href="/adventures#rafting" class="adv-arrow">→</a>
+        <a href="/dashboard" class="adv-arrow">→</a>
       </div>
     </div>
 
-    <!-- Card 3 -->
+    <!-- Card 3 — Himalayan Trek -->
     <div class="adv-card">
       <img src="{{ url_for('static', filename='images/trekking.jpg') }}" alt="Himalayan Trek">
       <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'trekking')" id="btn-wishlist-trekking" aria-label="Save to Wishlist">
+          <i class="bx {% if 'trekking' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
       <div class="adv-card-info">
         <p class="adv-category">Mountain</p>
-        <h3 class="adv-name">Himalayan Trek</h3>
-        <a href="/adventures#trek" class="adv-arrow">→</a>
+        <h3 class="adv-name">Himalayan Trekking</h3>
+        <a href="/dashboard" class="adv-arrow">→</a>
       </div>
     </div>
 
-    <!-- Card 4 -->
+    <!-- Card 4 — Bungee Jump -->
     <div class="adv-card">
       <img src="{{ url_for('static', filename='images/bungee.jpg') }}" alt="Bungee Jump">
       <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'bungee')" id="btn-wishlist-bungee" aria-label="Save to Wishlist">
+          <i class="bx {% if 'bungee' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
       <div class="adv-card-info">
         <p class="adv-category">Extreme</p>
-        <h3 class="adv-name">Bungee Jump</h3>
-        <a href="/adventures#bungee" class="adv-arrow">→</a>
+        <h3 class="adv-name">Bungee Jumping</h3>
+        <a href="/dashboard" class="adv-arrow">→</a>
       </div>
     </div>
 
-    <!-- Card 5 -->
+    <!-- Card 5 — Zip Line -->
     <div class="adv-card">
       <img src="{{ url_for('static', filename='images/zipline.jpg') }}" alt="Zip Line">
       <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'ziplining')" id="btn-wishlist-ziplining" aria-label="Save to Wishlist">
+          <i class="bx {% if 'ziplining' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
       <div class="adv-card-info">
         <p class="adv-category">Aerial</p>
-        <h3 class="adv-name">Zip Line</h3>
-        <a href="/adventures#zipline" class="adv-arrow">→</a>
+        <h3 class="adv-name">Zip-lining</h3>
+        <a href="/dashboard" class="adv-arrow">→</a>
       </div>
     </div>
   </div>
 </section>
 
 
-<!-- ══════════════ STATS ══════════════ -->
+<!-- ══════════════ STATS METRICS ══════════════ -->
 <div class="stats-section">
   <div class="stat-item">
-    <div class="stat-number">200+</div>
-    <div class="stat-label">Happy Adventurers</div>
+    <div class="stat-number">500+</div>
+    <div class="stat-label">Thrilled Adventurers</div>
   </div>
   <div class="stat-item">
     <div class="stat-number">6</div>
-    <div class="stat-label">Adventure Types</div>
+    <div class="stat-label">Epic Activities</div>
   </div>
   <div class="stat-item">
-    <div class="stat-number">5</div>
+    <div class="stat-number">5+</div>
     <div class="stat-label">Years Operating</div>
   </div>
   <div class="stat-item">
-    <div class="stat-number">99%</div>
-    <div class="stat-label">Safety Record</div>
+    <div class="stat-number">100%</div>
+    <div class="stat-label">Safety Track Record</div>
   </div>
 </div>
 
@@ -154,14 +206,13 @@
     <h2 class="section-title">Rooted in <em>Kathmandu,</em><br>Built for Adventure</h2>
     <div class="story-divider"></div>
     <p class="story-text">
-      Adventure was founded by a team of passionate explorers in Kathmandu —
-      one of Nepal's most iconic gateways to the Himalayas. We believe the mountain
-      kingdom holds some of the world's most exhilarating experiences, and we share
-      them responsibly.
+      Thrill Sphere was founded by a team of passionate explorers in Kathmandu —
+      one of the world's most iconic gateways to the high Himalayas. We believe the mountain
+      kingdom holds some of the world's most exhilarating adventures, and we aim to share them securely.
     </p>
     <p class="story-text">
-      Every trip is designed with deep local knowledge, certified safety standards,
-      and genuine care for both our clients and the environment we operate in.
+      Every trip is engineered with deep local expertise, certified safety gear,
+      and genuine support for both our guests and the environment we explore in.
     </p>
     <ul class="story-features">
       <li>
@@ -170,19 +221,19 @@
       </li>
       <li>
         <span class="feature-icon">🛡</span>
-        Government-licensed guides &amp; certified safety equipment
+        Government-licensed guides &amp; certified safety protocols
       </li>
       <li>
         <span class="feature-icon">🌿</span>
-        Eco-conscious packages for sustainable adventure tourism
+        Eco-conscious booking models for sustainable tourism
       </li>
     </ul>
-    <a href="/adventures" class="btn-dark">View Our Adventures</a>
+    <a href="#activities-anchor" class="btn-dark">Explore Challenges</a>
   </div>
 </section>
 
 
-<!-- ══════════════ GALLERY ══════════════ -->
+<!-- ══════════════ STORY GALLERY ══════════════ -->
 <section class="gallery-section">
   <div class="gallery-header">
     <p class="section-label">Gallery</p>
@@ -226,9 +277,9 @@
     <div class="testimonial-card">
       <div class="stars">★★★★★</div>
       <p class="testimonial-text">
-        "The views above Kathmandu Valley were simply breathtaking. The Adventure
-        team was professional throughout and made me feel completely at ease. I will
-        absolutely return."
+        "The views above Kathmandu Valley were simply breathtaking. The Thrill Sphere
+        team was professional throughout and made me feel completely safe. I will
+        absolutely book again."
       </p>
       <div class="testimonial-author">
         <div class="author-avatar">R</div>
@@ -256,11 +307,11 @@
     </div>
 
     <div class="testimonial-card">
-      <div class="stars">★★★★<span class="star-empty">★</span></div>
+      <div class="stars">★★★★★</div>
       <p class="testimonial-text">
-        "Three unforgettable days walking through the Langtang highlands. Our
+        "Three unforgettable days walking through the Annapurna highlands. Our
         guide had encyclopaedic knowledge of the region. The camping was
-        comfortable and well-organised."
+        comfortable and exceptionally well-organised."
       </p>
       <div class="testimonial-author">
         <div class="author-avatar">D</div>
@@ -271,7 +322,6 @@
       </div>
     </div>
 
-    <!-- Map card -->
     <div class="map-placeholder">
       <span>MAP — Kathmandu, Nepal</span>
     </div>
@@ -279,7 +329,7 @@
 </section>
 
 
-<!-- ══════════════ CONTACT / FIND US ══════════════ -->
+<!-- ══════════════ CONTACT / OFFICE LOCATION ══════════════ -->
 <section class="contact-section">
   <div class="contact-info">
     <p class="section-label">Find Us</p>
@@ -292,18 +342,18 @@
       </li>
       <li>
         <span class="contact-icon">📞</span>
-        +977-01-XXXXXXX &nbsp;·&nbsp; +977-9800000000
+        +977-01-44XXXXX &nbsp;·&nbsp; +977-9803XXXXXX
       </li>
       <li>
         <span class="contact-icon">✉</span>
-        info@adventure-ktm.com.np
+        support@thrillsphere.com.np
       </li>
       <li>
         <span class="contact-icon">🕐</span>
         Sun – Fri &nbsp;·&nbsp; 8:00 AM – 6:00 PM
       </li>
     </ul>
-    <a href="/booking" class="btn-outline-white">Book an Appointment</a>
+    <a href="/dashboard" class="btn-outline-white">Book an Appointment</a>
   </div>
   <div class="contact-map">
     <iframe
@@ -315,67 +365,9 @@
   </div>
 </section>
 
+{% endblock %}
 
-<!-- ══════════════ FOOTER ══════════════ -->
-<footer class="footer">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <div class="brand-logo">
-        <div class="logo-box">A</div>
-        <div>
-          <div class="footer-brand-name">Adventure</div>
-          <span class="footer-brand-sub">Kathmandu, Nepal</span>
-        </div>
-      </div>
-      <p>Nepal's premier adventure sports travel agency, rooted in the heart of Kathmandu. Where every heartbeat counts.</p>
-    </div>
-
-    <div class="footer-col">
-      <h4>Adventures</h4>
-      <ul>
-        <li><a href="/adventures#paragliding">Paragliding</a></li>
-        <li><a href="/adventures#rafting">River Rafting</a></li>
-        <li><a href="/adventures#trek">Himalayan Trek</a></li>
-        <li><a href="/adventures#bungee">Bungee Jump</a></li>
-        <li><a href="/adventures#zipline">Zip Line</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>Pages</h4>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/adventures">Adventures</a></li>
-        <li><a href="/mytickets">My Tickets</a></li>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/booking">Book Now</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="tel:+9779800000000">Call Us</a></li>
-        <li><a href="mailto:info@adventure-ktm.com.np">Email</a></li>
-        <li><a href="https://wa.me/9779800000000" target="_blank">WhatsApp</a></li>
-        <li><a href="#">Directions</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="footer-bottom">
-    <p class="footer-copyright">© 2024 Adventure. Kathmandu, Nepal. All rights reserved.</p>
-    <div class="footer-socials">
-      <a href="#" class="social-btn">fb</a>
-      <a href="#" class="social-btn">ig</a>
-      <a href="#" class="social-btn">yt</a>
-      <a href="#" class="social-btn">wa</a>
-    </div>
-  </div>
-</footer>
-
-
-<!-- ══════════════ SCRIPTS ══════════════ -->
+{% block scripts %}
 <script>
   // ── Hero slideshow ──
   const slides = document.querySelectorAll('.hero-slide');
@@ -420,6 +412,61 @@
     const walk = (x - startX) * 1.5;
     strip.scrollLeft = scrollLeft - walk;
   });
-</script>
 
+  // ── AJAX Wishlist Toggle ──
+  async function toggleWishlistHome(event, activityId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const btn = document.getElementById(`btn-wishlist-${activityId}`);
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    
+    try {
+      const response = await fetch("/api/wishlist/toggle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ activity_id: activityId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.saved) {
+          icon.className = 'bx bxs-heart animate-pop';
+          btn.classList.add('saved');
+        } else {
+          icon.className = 'bx bx-heart';
+          btn.classList.remove('saved');
+        }
+        
+        // Dynamic Navbar Badge Sync
+        let badge = document.querySelector(".wishlist-badge");
+        if (badge) {
+          let count = parseInt(badge.textContent) || 0;
+          count = data.saved ? count + 1 : count - 1;
+          if (count <= 0) {
+            badge.remove();
+          } else {
+            badge.textContent = count;
+          }
+        } else if (data.saved) {
+          const navLink = document.querySelector("a[href='/wishlist']");
+          if (navLink) {
+            const newBadge = document.createElement("span");
+            newBadge.className = "wishlist-badge";
+            newBadge.textContent = "1";
+            navLink.appendChild(newBadge);
+          }
+        }
+      } else if (response.status === 401) {
+        window.location.href = "/login";
+      }
+    } catch (err) {
+      console.error("AJAX Home Wishlist Error:", err);
+    }
+  }
+</script>
 {% endblock %}

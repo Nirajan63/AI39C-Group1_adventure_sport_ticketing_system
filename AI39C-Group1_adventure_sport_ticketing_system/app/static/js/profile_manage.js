@@ -9,6 +9,7 @@ const saveBtn = $('#saveBtn');
 const resetBtn = $('#resetBtn');
 const deleteBtn = $('#deleteBtn');
 
+// Helper to convert uploaded files to base64 preview strings
 function previewImage(file, target){
   if(!file) return;
 
@@ -21,127 +22,130 @@ function previewImage(file, target){
   reader.readAsDataURL(file);
 }
 
-avatarFile.addEventListener('change', e => {
-  previewImage(e.target.files[0], avatarImg);
-});
+if (avatarFile) {
+  avatarFile.addEventListener('change', e => {
+    previewImage(e.target.files[0], avatarImg);
+  });
+}
 
-coverFile.addEventListener('change', e => {
-  previewImage(e.target.files[0], coverImg);
-});
+if (coverFile) {
+  coverFile.addEventListener('change', e => {
+    previewImage(e.target.files[0], coverImg);
+  });
+}
 
-function saveProfile(){
+// Asynchronously save profile fields and system theme preferences to MySQL
+async function saveProfile(){
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+
+  const themePreference = $('#themePreference').value;
 
   const profile = {
-    firstName: $('#firstName').value,
-    lastName: $('#lastName').value,
-    email: $('#email').value,
-    phone: $('#phone').value,
-    city: $('#city').value,
+    firstName: $('#firstName').value.strip ? $('#firstName').value.strip() : $('#firstName').value.trim(),
+    lastName: $('#lastName').value.strip ? $('#lastName').value.strip() : $('#lastName').value.trim(),
+    email: $('#email').value.trim(),
+    phone: $('#phone').value.trim(),
+    city: $('#city').value.trim(),
     bio: $('#bio').value,
     language: $('#language').value,
-    role: $('#role').value,
+    role: $('#role').value.trim(),
     avatar: avatarImg.src,
-    cover: coverImg.src
+    cover: coverImg.src,
+    theme_preference: themePreference
   };
 
-  localStorage.setItem(
-    'thrillsphere_profile',
-    JSON.stringify(profile)
-  );
+  try {
+    const response = await fetch('/manage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(profile)
+    });
 
-  $('#displayName').textContent =
-    `${profile.firstName} ${profile.lastName}`;
+    const data = await response.json();
 
-  $('#displayRole').textContent =
-    profile.role || 'Adventure Seeker';
+    if (response.ok) {
+      // Keep localStorage fallback in sync
+      localStorage.setItem('thrillsphere_profile', JSON.stringify(profile));
+      localStorage.setItem('theme', themePreference);
 
-  saveBtn.textContent = 'Saved ✓';
+      // Reactively apply theme to Document body instantly without page refresh
+      if (themePreference === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+        // Update header theme icon to Sun if visible
+        const headerIcon = document.querySelector('#theme-toggle i');
+        if (headerIcon) headerIcon.className = 'bx bx-sun';
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        const headerIcon = document.querySelector('#theme-toggle i');
+        if (headerIcon) headerIcon.className = 'bx bx-moon';
+      }
 
-  setTimeout(() => {
+      // Sync display metadata
+      $('#displayName').textContent = `${profile.firstName} ${profile.lastName}`;
+      $('#displayRole').textContent = profile.role || 'Adventure Seeker';
+
+      saveBtn.textContent = 'Saved ✓';
+      saveBtn.style.background = '#00c878';
+    } else {
+      alert(data.message || 'Failed to save profile on the database server.');
+      saveBtn.textContent = 'Save Profile';
+    }
+  } catch (err) {
+    console.error("Save profile error:", err);
+    alert('Failed to connect to the server.');
     saveBtn.textContent = 'Save Profile';
-  }, 1500);
+  } finally {
+    saveBtn.disabled = false;
+    setTimeout(() => {
+      saveBtn.style.background = '';
+      saveBtn.textContent = 'Save Profile';
+    }, 2000);
+  }
 }
 
-function loadProfile(){
-
-  const raw = localStorage.getItem('thrillsphere_profile');
-
-  if(!raw) return;
-
-  const p = JSON.parse(raw);
-
-  $('#firstName').value = p.firstName || '';
-  $('#lastName').value = p.lastName || '';
-  $('#email').value = p.email || '';
-  $('#phone').value = p.phone || '';
-  $('#city').value = p.city || '';
-  $('#bio').value = p.bio || '';
-  $('#language').value = p.language || 'en';
-  $('#role').value = p.role || '';
-
-  if(p.avatar) avatarImg.src = p.avatar;
-  if(p.cover) coverImg.src = p.cover;
-
-  $('#displayName').textContent =
-    `${p.firstName} ${p.lastName}`;
-
-  $('#displayRole').textContent =
-    p.role || 'Adventure Seeker';
-}
-
+// Reset form elements to latest database-saved parameters
 function resetForm(){
-  loadProfile();
-}
-
-function deleteProfile(){
-
-  localStorage.removeItem('thrillsphere_profile');
-
-  document.getElementById('profileForm').reset();
-
   location.reload();
 }
 
-saveBtn.addEventListener('click', saveProfile);
-resetBtn.addEventListener('click', resetForm);
-deleteBtn.addEventListener('click', deleteProfile);
+// Clear profile cache
+function deleteProfile(){
+  if(confirm("Are you sure you want to clear your local profile cache? This does not delete your main login account.")) {
+    localStorage.removeItem('thrillsphere_profile');
+    location.reload();
+  }
+}
+
+if (saveBtn) saveBtn.addEventListener('click', saveProfile);
+if (resetBtn) resetBtn.addEventListener('click', resetForm);
+if (deleteBtn) deleteBtn.addEventListener('click', deleteProfile);
 
 window.addEventListener('load', () => {
-
-  loadProfile();
-
+  // Fade in animation of container elements on load
   document.querySelectorAll('.glass').forEach((card, i) => {
-
     card.style.opacity = 0;
     card.style.transform = 'translateY(30px)';
 
     setTimeout(() => {
-
-      card.style.transition = '.8s ease';
-
+      card.style.transition = '.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
       card.style.opacity = 1;
       card.style.transform = 'translateY(0)';
-
     }, i * 200);
   });
-
 });
 
+// Dynamic Ripple Effect on save buttons click
 document.querySelectorAll('.btn').forEach(btn => {
-
   btn.addEventListener('click', function(e){
-
     const ripple = document.createElement('span');
-
     ripple.classList.add('ripple');
-
     const rect = this.getBoundingClientRect();
-
     ripple.style.left = `${e.clientX - rect.left}px`;
     ripple.style.top = `${e.clientY - rect.top}px`;
-
     this.appendChild(ripple);
-
     setTimeout(() => ripple.remove(), 600);
   });
 });

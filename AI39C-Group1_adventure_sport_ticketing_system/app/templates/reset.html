@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password</title>
+    <title>Reset Password — Thrill Sphere</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="/static/css/forgot.css">
+    <link rel="stylesheet" href="/static/css/reset.css">
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -16,6 +15,36 @@
             }
         })();
     </script>
+    <style>
+        .step-panel {
+            display: none;
+            width: 100%;
+        }
+        .step-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .otp-sent-banner {
+            background: rgba(116, 148, 236, 0.1);
+            border: 1px solid rgba(116, 148, 236, 0.2);
+            color: #7494ec;
+            font-size: 0.82rem;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .otp-sent-banner i {
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -26,18 +55,44 @@
 
     <div class="container active page-enter">
         <div class="form-box register">
-            <form id="forgot-form">
-                <h1> Reset Password </h1>
+            
+            <!-- Step 1 Form: Request Verification Code -->
+            <form id="request-otp-form" class="step-panel active">
+                <h1>Forgot Password</h1>
+                <p style="margin: 15px 0; color: var(--text-color); opacity: 0.8; font-size: 0.85rem;">
+                    Enter your registered email below, and we will send you a 6-digit OTP code to verify your identity.
+                </p>
                 <div class="input-box">
-                    <input type="password" id="new-password" placeholder="New Password" required>
-                    <i class='bx bxs-lock-alt'></i>
+                    <input type="email" id="reset-email" placeholder="Email Address" required>
+                    <i class='bx bxs-envelope'></i>
                 </div>
-                <div class="input-box">
-                    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                    <i class='bx bxs-lock-alt'></i>
-                </div>
-                <button type="submit" class="btn"> Reset Password </button>
+                <button type="submit" class="btn" id="send-otp-btn">Send Verification Code</button>
             </form>
+
+            <!-- Step 2 Form: Verify OTP and Save New Password -->
+            <form id="reset-password-form" class="step-panel">
+                <h1>Reset Password</h1>
+                
+                <div class="otp-sent-banner">
+                    <i class='bx bx-info-circle'></i>
+                    <span>OTP sent! Check your inbox or mock_otp.txt.</span>
+                </div>
+
+                <div class="input-box">
+                    <input type="text" id="reset-otp" placeholder="6-Digit OTP Code" required maxlength="6" pattern="\d{6}">
+                    <i class='bx bxs-key'></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="new-password" placeholder="New Password" required minlength="6">
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="confirm-password" placeholder="Confirm Password" required minlength="6">
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                <button type="submit" class="btn" id="reset-btn">Update Password</button>
+            </form>
+
         </div>
         
         <div class="toggle-box">
@@ -51,7 +106,6 @@
     </div>
 
     <script src="/static/js/theme.js"></script>
-    <script src="/static/js/forgot.js"></script>
+    <script src="/static/js/reset.js"></script>
 </body>
-
 </html>

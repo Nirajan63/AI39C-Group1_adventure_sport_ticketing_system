@@ -1,0 +1,329 @@
+@import url('theme.css');
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--line);
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: min(100%, 1068px);
+    min-height: 88px;
+    margin: 0 auto;
+    padding: 20px 32px 0;
+    background: var(--nav-bg);
+}
+
+.brand {
+    flex: 0 0 auto;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    color: var(--text);
+}
+
+.brand em {
+    font-style: normal;
+    color: var(--accent);
+}
+
+.nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 24px;
+    min-width: 0;
+}
+
+.nav-links,
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.nav-links a {
+    position: relative;
+    padding: 11px 0 18px;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text);
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.nav-links a::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: transparent;
+    content: "";
+    border-radius: 2px;
+}
+
+.nav-links a:hover,
+.nav-links a.is-active {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.nav-links a.is-active::after {
+    background: var(--accent);
+}
+
+.icon-button,
+.user-chip,
+.logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    color: var(--text);
+    background: var(--chip-bg);
+}
+
+.icon-button {
+    width: 36px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.icon-button:hover,
+.user-chip:hover,
+.logout-button:hover {
+    background: var(--chip-hover);
+}
+
+.icon-button svg,
+.user-chip svg,
+.logout-button svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.notification-wrap {
+    position: relative;
+}
+
+.notification-button {
+    position: relative;
+    background: transparent;
+}
+
+.notification-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--nav-bg);
+    border-radius: 999px;
+    background: var(--red);
+}
+
+.notification-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    display: none;
+    width: 230px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--nav-bg);
+    box-shadow: var(--box-shadow);
+}
+
+.notification-menu.is-open {
+    display: block;
+}
+
+.menu-title {
+    margin: 0 0 8px;
+    font-weight: 700;
+}
+
+.menu-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.user-chip,
+.logout-button {
+    gap: 7px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.logout-button {
+    font-weight: 700;
+    color: var(--red);
+}
+
+.nav-toggle {
+    display: none;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 9px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--chip-bg);
+    cursor: pointer;
+}
+
+.nav-toggle span {
+    display: block;
+    height: 2px;
+    margin: 5px 0;
+    border-radius: 999px;
+    background: var(--text);
+}
+
+@media (max-width: 900px) {
+    .top-nav {
+        min-height: 72px;
+        padding: 16px 20px 0;
+        flex-wrap: wrap;
+    }
+
+    .nav-toggle {
+        display: inline-block;
+        margin-left: auto;
+    }
+
+    .nav-content {
+        display: none;
+        flex-basis: 100%;
+        align-items: stretch;
+        padding: 10px 0 16px;
+    }
+
+    .nav-content.is-open {
+        display: block;
+    }
+
+    .nav-links,
+    .nav-actions {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-links {
+        margin-bottom: 12px;
+    }
+
+    .nav-links a {
+        padding: 12px 8px;
+    }
+
+    .nav-links a::after {
+        display: none;
+    }
+
+    .icon-button,
+    .user-chip,
+    .logout-button {
+        justify-content: flex-start;
+        width: 100%;
+        height: 40px;
+    }
+
+    .icon-button {
+        padding-left: 11px;
+    }
+
+    .notification-menu {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
+    }
+
+    .page-shell {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand {
+        font-size: 1.5rem;
+    }
+}
+
+/* ═══════════════════════════════════════
+   LANGUAGE TOGGLE BUTTON
+   ═══════════════════════════════════════ */
+#langToggleBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--chip-bg);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    font-family: inherit;
+}
+#langToggleBtn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════
+   PROFILE PICTURE — push down so it
+   is not clipped by sticky nav
+   ═══════════════════════════════════════ */
+.user-avatar-img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    vertical-align: middle;
+    /* small nudge so it sits in the chip row */
+    margin-top: 2px;
+}
+
+/* manage_profile avatar preview */
+.profile-avatar-wrap {
+    /* give breathing room below the sticky header */
+    margin-top: 16px;
+}
+
+/* If the page has a big avatar at the top, keep it below the bar */
+.profile-hero-avatar,
+.manage-avatar,
+[class*="avatar-large"],
+[class*="profile-pic"] {
+    margin-top: 12px;
+}

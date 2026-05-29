@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Thrill Sphere — Kathmandu, Nepal{% endblock %}</title>
+
+    <!-- Boxicons & Google Fonts -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+    <!-- Unified CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+
+    {% block head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+    {% block styles %}{% endblock %}
+
+    <!-- Anti-Flash Theme Handler -->
+    <script>
+        (function() {
+            var userTheme = "{{ session.get('user', {}).get('theme_preference', '') }}";
+            var localTheme = localStorage.getItem('theme') || 'light';
+            var finalTheme = userTheme || localTheme;
+            if (finalTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+    </script>
+
+    <style>
+        .wishlist-badge {
+            background: #ff4f4f;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 10px;
+            margin-left: 4px;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        .user-avatar-initial {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+        .unified-footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 40px 6vw 25px;
+            color: var(--text-color);
+            margin-top: 60px;
+            transition: background-color 0.3s ease;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        .footer-brand h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #7494ec;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .footer-brand p {
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: var(--muted);
+            max-width: 320px;
+        }
+        .footer-col h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text);
+        }
+        .footer-col ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .footer-col ul li a {
+            font-size: 0.8rem;
+            color: var(--muted);
+            transition: color 0.25s ease;
+        }
+        .footer-col ul li a:hover { color: #7494ec; }
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        @media (max-width: 700px) {
+            .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+        }
+
+        /* Dark mode overrides */
+        html.dark-mode body { background: var(--page-bg); color: var(--text); }
+        html.dark-mode .stat-item { background: var(--surface) !important; }
+        html.dark-mode .stat-item:nth-child(3) { background: var(--surface2) !important; }
+        html.dark-mode .stat-label { color: var(--muted) !important; }
+        html.dark-mode .story-content { background: var(--surface) !important; }
+        html.dark-mode .story-text { color: var(--muted) !important; }
+        html.dark-mode .adventures-section { background: var(--page-bg) !important; }
+        html.dark-mode .activity-card { background: var(--surface) !important; border-color: var(--border) !important; }
+        html.dark-mode .card-meta, html.dark-mode .card-desc { color: var(--muted) !important; }
+        html.dark-mode .reviews-section, html.dark-mode .testimonials-section { background: var(--surface2) !important; }
+        html.dark-mode .review-card, html.dark-mode .testimonial-card { background: var(--surface) !important; color: var(--text) !important; }
+        html.dark-mode .review-text, html.dark-mode .testimonial-text { color: var(--muted) !important; }
+        html.dark-mode .section-title, html.dark-mode .section-heading { color: var(--text) !important; }
+        html.dark-mode .section-desc, html.dark-mode .section-sub { color: var(--muted) !important; }
+        html.dark-mode .btn-solid { background: var(--accent) !important; color: #fff !important; }
+        html.dark-mode .btn-dark { background: var(--surface) !important; color: var(--text) !important; }
+    </style>
+</head>
+<body>
+
+    <!-- ══ Navbar ══ -->
+    <header class="site-header">
+        <div class="top-nav">
+            <a href="/" class="brand">THRILL<em>SPHERE</em></a>
+
+            <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            <div class="nav-content" data-nav-content>
+                <nav class="nav-links">
+                    <a href="/" data-nav-link data-i18n="nav.home">Home</a>
+                    {% if session.get('user') %}
+                        <a href="/dashboard" data-nav-link data-i18n="nav.dashboard">Dashboard</a>
+                        <a href="/wishlist" data-nav-link>
+                            <span data-i18n="nav.wishlist">Wishlist</span>
+                            {% if wishlist_count and wishlist_count > 0 %}
+                                <span class="wishlist-badge">{{ wishlist_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="/manage" data-nav-link data-i18n="nav.profile">Profile</a>
+                    {% endif %}
+                </nav>
+
+                <div class="nav-actions">
+                    <!-- Language Toggle -->
+                    <button id="langToggleBtn" aria-label="Toggle language">नेपाली</button>
+
+                    <!-- Theme Toggle -->
+                    <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+
+                    {% if session.get('user') %}
+                        <span class="user-chip">
+                            {% if session['user'].get('avatar') %}
+                                <img src="{{ session['user']['avatar'] }}" alt="avatar" class="user-avatar-img">
+                            {% else %}
+                                <span class="user-avatar-initial">{{ session['user']['username'][0].upper() }}</span>
+                            {% endif %}
+                            {{ session['user']['username'] }}
+                        </span>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-button">
+                            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            <span data-i18n="nav.logout">Logout</span>
+                        </a>
+                    {% else %}
+                        <a href="/login" class="user-chip" data-i18n="nav.login">Login</a>
+                        <a href="/register" class="user-chip" style="background:var(--accent);color:#fff;" data-i18n="nav.register">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══ Dynamic Content ══ -->
+    {% block content %}{% endblock %}
+
+    <!-- ══ Footer ══ -->
+    <footer class="unified-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h3>Thrill Sphere</h3>
+                <p data-i18n="footer.tagline">Kathmandu's premier adventure sports booking platform. We curate secure, certified, and unforgettable adrenaline-fueled experiences in Nepal.</p>
+            </div>
+            <div class="footer-col">
+                <h4 data-i18n="footer.adventures">Adventures</h4>
+                <ul>
+                    <li><a href="/#activities-anchor" data-i18n="footer.paragliding">Paragliding</a></li>
+                    <li><a href="/#activities-anchor" data-i18n="footer.rafting">River Rafting</a></li>
+                    <li><a href="/#activities-anchor" data-i18n="footer.trekking">Himalayan Trekking</a></li>
+                    <li><a href="/#activities-anchor" data-i18n="footer.bungee">Bungee Jumping</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 data-i18n="footer.pages">Pages</h4>
+                <ul>
+                    <li><a href="/" data-i18n="footer.home">Home</a></li>
+                    <li><a href="/dashboard" data-i18n="footer.dashboard">Dashboard</a></li>
+                    <li><a href="/wishlist" data-i18n="footer.my-wishlist">My Wishlist</a></li>
+                    <li><a href="/manage" data-i18n="footer.profile-mgmt">Profile Management</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p data-i18n="footer.copyright">© 2026 Thrill Sphere. Kathmandu, Nepal. All rights reserved.</p>
+            <p data-i18n="footer.licensed">Safety Licensed &amp; Certified Agency</p>
+        </div>
+    </footer>
+
+    <!-- Global Scripts -->
+    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

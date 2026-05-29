@@ -5,16 +5,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --cream: #f5f0e8;
-  --cream-light: #faf8f4;
-  --gold: #b8962e;
-  --gold-light: #d4a843;
-  --dark: #1a1a1a;
-  --dark-mid: #2c2c2c;
-  --text-muted: #888;
+  --cream: var(--surface2);
+  --cream-light: var(--page-bg);
+  --gold: #7494ec;
+  --gold-light: #5b7cdb;
+  --dark: var(--text-color);
+  --dark-mid: var(--surface);
+  --text-muted: var(--muted);
   --white: #ffffff;
-  --border: rgba(184, 150, 46, 0.2);
+  --border: var(--line);
 }
+
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -981,4 +982,38 @@ body{
     color: black !important;
     border-bottom: 2px solid #c8a96b;
     padding-bottom: 5px;
+}
+
+/* ── WISHLIST FLOAT BUTTON FOR HOME CARD ── */
+.wishlist-float-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ff4f4f;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    z-index: 10;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.wishlist-float-btn:hover {
+    background: #ff4f4f;
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(255, 79, 79, 0.3);
+}
+
+.wishlist-float-btn:active {
+    transform: scale(0.92);
 }
