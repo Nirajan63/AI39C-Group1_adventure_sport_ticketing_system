@@ -78,56 +78,88 @@ a { text-decoration: none; }
 /* ══════════════════
    DASHBOARD LAYOUT
    ══════════════════ */
-.dash-wrapper { display: block; min-height: 100vh; background: var(--bg); }
+.dash-wrapper { display: flex; min-height: 100vh; }
+
+/* ── Horizontal Header ── */
+.navbar-horizontal {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 72px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.nav-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--text);
+}
+.nav-brand em { font-style: normal; color: var(--orange); }
+
+.nav-links {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.nav-links .nav-item {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.nav-links .nav-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+}
+
+.nav-links .nav-item.active {
+    background: rgba(116,148,236,0.12);
+    color: var(--orange);
+    border-color: rgba(116,148,236,0.2);
+}
+
+.nav-links .logout-link {
+    border: 1px solid rgba(255,79,79,0.25);
+    color: var(--red);
+}
+
+.nav-links .logout-link:hover {
+    background: rgba(255,79,79,0.08);
+    color: var(--red);
+}
 
 /* ── Main Content ── */
 .dash-main {
     margin: 0 auto;
     max-width: 1200px;
-    padding-top: 32px;
-    padding-bottom: 60px;
+    padding-top: 92px;
+    flex: 1;
     min-height: 100vh;
 }
-
-/* ── Section Tab Nav ── */
-.dash-tab-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 40px;
-    margin-bottom: 28px;
-    border-bottom: 1px solid var(--border);
-}
-
-.dash-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 10px 18px;
-    border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -1px;
-    background: none;
-    color: var(--muted);
-    font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-    border-radius: 0;
-}
-
-.dash-tab svg { flex-shrink: 0; }
-.dash-tab:hover { color: var(--text); }
-.dash-tab.active {
-    color: var(--orange);
-    border-bottom-color: var(--orange);
-    font-weight: 600;
-}
-
-html.dark-mode .dash-tab { color: var(--muted); }
-html.dark-mode .dash-tab:hover { color: var(--text); }
-html.dark-mode .dash-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
 
 /* ── Topbar ── */
 .topbar {
@@ -437,44 +469,49 @@ html.dark-mode .dash-tab.active { color: var(--orange); border-bottom-color: var
     .quick-grid, .activity-picker { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 768px) {
-    .dash-main { padding-top: 16px; }
-    .topbar, .dash-section, .dash-tab-nav { padding-left: 20px; padding-right: 20px; }
+    .navbar-horizontal { height: auto; padding: 16px 0; position: static; }
+    .nav-container { flex-direction: column; gap: 16px; padding: 0 20px; }
+    .nav-links { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .dash-main { padding-top: 20px; }
+    .topbar, .dash-section { padding-left: 20px; padding-right: 20px; }
     .stats-grid { grid-template-columns: 1fr; }
     .quick-grid, .activity-picker { grid-template-columns: repeat(2, 1fr); }
     .book-form-grid { grid-template-columns: 1fr; }
     .profile-grid { grid-template-columns: 1fr; }
 }
 
-/* ══════════════════
-   DARK MODE OVERRIDES
-   ══════════════════ */
-html.dark-mode .dash-wrapper { background: var(--page-bg); }
-html.dark-mode .navbar-horizontal { background: var(--surface); border-bottom-color: var(--border); }
-html.dark-mode .stat-card { background: var(--surface); border-color: var(--border); }
-html.dark-mode .stat-label { color: var(--muted); }
-html.dark-mode .stat-value { color: var(--text); }
-html.dark-mode .panel { background: var(--surface); border-color: var(--border); }
-html.dark-mode .panel-header h3 { color: var(--text); }
-html.dark-mode .booking-card { background: var(--surface2); border-color: var(--border); }
-html.dark-mode .booking-name { color: var(--text); }
-html.dark-mode .booking-pills span { background: var(--surface); border-color: var(--border); color: var(--muted); }
-html.dark-mode .quick-card { background: var(--surface2); border-color: var(--border); }
-html.dark-mode .quick-card p { color: var(--text); }
-html.dark-mode .activity-option { background: var(--surface); border-color: var(--border); }
-html.dark-mode .activity-option p { color: var(--text); }
-html.dark-mode .activity-option.selected { background: rgba(116,148,236,0.12); }
-html.dark-mode .book-form-card { background: var(--surface); border-color: var(--border); }
-html.dark-mode .book-form-card h3 { color: var(--text); }
-html.dark-mode .form-group label { color: var(--muted); }
-html.dark-mode .form-group input,
-html.dark-mode .form-group select { background: var(--surface2); border-color: var(--border); color: var(--text); }
-html.dark-mode .form-group select option { background: var(--surface2); }
-html.dark-mode .total-preview { background: var(--surface2); border-color: var(--border); color: var(--muted); }
-html.dark-mode .filter-btn { background: none; border-color: var(--border); color: var(--muted); }
-html.dark-mode .section-heading { color: var(--text); }
-html.dark-mode .topbar-greeting { color: var(--muted); }
-html.dark-mode .topbar-name { color: var(--text); }
-html.dark-mode .topbar-date { color: var(--muted); }
-html.dark-mode .empty-state h3 { color: var(--text); }
-html.dark-mode .empty-state p { color: var(--muted); }
-html.dark-mode body { background: var(--page-bg); }
+/* ── Booking Cancel Button ── */
+.booking-cancel-btn {
+    margin-top: 6px;
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255, 79, 79, 0.35);
+    background: rgba(255, 79, 79, 0.06);
+    color: var(--red);
+    font-family: 'Poppins', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.booking-cancel-btn:hover:not(:disabled) {
+    background: rgba(255, 79, 79, 0.12);
+    border-color: rgba(255, 79, 79, 0.6);
+    transform: translateY(-1px);
+}
+
+.booking-cancel-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Cancelled status badge ── */
+.booking-status.cancelled {
+    background: rgba(255, 79, 79, 0.1);
+    color: var(--red);
+    border: 1px solid rgba(255, 79, 79, 0.25);
+}

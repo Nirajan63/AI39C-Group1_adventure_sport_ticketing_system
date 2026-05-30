@@ -136,3 +136,46 @@ function bindBookForm() {
         }
     });
 }
+
+// ── Cancel booking ─────────────────────────────────────────────────
+function cancelBooking(bookingId, btn) {
+    if (!confirm('Are you sure you want to cancel this booking? This cannot be undone.')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Cancelling…';
+
+    var formData = new FormData();
+    formData.append('booking_id', bookingId);
+
+    fetch('/cancel-booking', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            // Update status badge
+            var card = btn.closest('.booking-card');
+            var badge = card.querySelector('.booking-status');
+            badge.className = 'booking-status cancelled';
+            badge.textContent = 'Cancelled';
+            badge.setAttribute('data-status', 'cancelled');
+            card.setAttribute('data-status', 'cancelled');
+
+            // Remove cancel button
+            btn.remove();
+
+            // Dim the card slightly
+            card.style.opacity = '0.65';
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'Cancel';
+            alert(data.error || 'Could not cancel booking. Please try again.');
+        }
+    })
+    .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Cancel';
+        alert('Network error. Please try again.');
+    });
+}
