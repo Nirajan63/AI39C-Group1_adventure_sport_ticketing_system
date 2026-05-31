@@ -16,7 +16,7 @@ if os.path.exists(env_path):
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'sportadventure-secret-key-12345'
     DEBUG = True
-    
+
     
     SMTP_SERVER = os.environ.get('SMTP_SERVER') or 'smtp.gmail.com'
     SMTP_PORT = int(os.environ.get('SMTP_PORT') or 587)
