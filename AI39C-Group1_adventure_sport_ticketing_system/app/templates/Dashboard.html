@@ -1,6 +1,11 @@
-{% extends "Base.html" %}
+{% extends "base.html" %}
 {% block title %}Dashboard — Thrill Sphere{% endblock %}
-{% block head %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment_modal.css') }}">
+{% endblock %}
 
 {% block content %}
 <!-- ══ HORIZONTAL TOP NAVBAR ══ -->
@@ -390,8 +395,8 @@
   window.THRILL_BOOKINGS     = {{ bookings     | tojson | safe }};
   window.THRILL_AVAILABILITY = {{ availability | tojson | safe }};
 </script>
-<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='payment-assets.js') }}"></script>
-<script src="{{ url_for('static', filename='calendar.js') }}"></script>
-<script src="{{ url_for('static', filename='payment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment-assets.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 {% endblock %}

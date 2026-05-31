@@ -395,6 +395,43 @@ class AuthController(BaseController):
         cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = %s", (user_id,))
         w_row = cursor.fetchone()
         wishlist_count = w_row["count"] if w_row else 0
+
+        # Calculate dynamic activity availability metrics based on all active bookings
+        CAPACITIES = {
+            "Paragliding": 10,
+            "Bungee Jumping": 15,
+            "White Water Rafting": 20,
+            "Trekking": 15,
+            "Canyoning": 10,
+            "Zip-lining": 20
+        }
+        
+        cursor.execute("SELECT activity, date, SUM(people) as booked_count FROM bookings WHERE status != 'cancelled' GROUP BY activity, date")
+        avail_rows = cursor.fetchall()
+        availability = {}
+        for row in avail_rows:
+            act_name = row["activity"]
+            date_str = row["date"].strftime("%Y-%m-%d") if hasattr(row["date"], "strftime") else str(row["date"])
+            booked = int(row["booked_count"])
+            capacity = CAPACITIES.get(act_name, 15)
+            remaining = max(0, capacity - booked)
+            fill_pct = min(100, int((booked / capacity) * 100))
+            
+            if remaining == 0:
+                status = "soldout"
+            elif remaining <= 3:
+                status = "limited"
+            else:
+                status = "available"
+                
+            if date_str not in availability:
+                availability[date_str] = {}
+            availability[date_str][act_name] = {
+                "status": status,
+                "remaining": remaining,
+                "capacity": capacity,
+                "fill_pct": fill_pct
+            }
         
         conn.close()
 
@@ -436,8 +473,44 @@ class AuthController(BaseController):
             stats=stats,
             bookings=bookings_list,
             activities=ACTIVITIES,
-            wishlist_count=wishlist_count
+            wishlist_count=wishlist_count,
+            availability=availability
         )
+
+    # ── CANCEL BOOKING ─────────────────────────────────────────────────────
+    def cancel_booking(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        booking_id = request.form.get("booking_id")
+        if not booking_id:
+            return jsonify({"success": False, "error": "Missing booking ID"}), 400
+
+        user_id = self.get_current_user_id()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            # Verify the booking belongs to this user and is currently confirmed
+            cursor.execute("SELECT * FROM bookings WHERE id = %s AND user_id = %s", (booking_id, user_id))
+            booking = cursor.fetchone()
+            if not booking:
+                conn.close()
+                return jsonify({"success": False, "error": "Booking not found"}), 404
+
+            if booking["status"] != "confirmed":
+                conn.close()
+                return jsonify({"success": False, "error": "Only confirmed bookings can be cancelled"}), 400
+
+            # Update status to cancelled
+            cursor.execute("UPDATE bookings SET status = 'cancelled' WHERE id = %s", (booking_id,))
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True}), 200
+        except Exception as e:
+            print("Error cancelling booking:", e)
+            conn.close()
+            return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
 
     # ── BOOK ACTIVITY ──────────────────────────────────────────────────────
     def book_activity(self):

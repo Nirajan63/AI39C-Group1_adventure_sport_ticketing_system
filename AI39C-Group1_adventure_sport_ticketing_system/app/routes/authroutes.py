@@ -36,6 +36,7 @@ class AuthRoutes:
         # API Routes
         self.bp.route("/signup", methods=["POST"])(AuthController.signup)
         self.bp.route("/book", methods=["POST"])(self.controller.book_activity)
+        self.bp.route("/cancel-booking", methods=["POST"])(self.controller.cancel_booking)
         self.bp.route("/api/wishlist/toggle", methods=["POST"])(self.controller.toggle_wishlist)
         
         self.bp.route("/api/auth/google-login/send-otp", methods=["POST"])(

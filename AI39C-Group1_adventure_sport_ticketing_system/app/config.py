@@ -20,7 +20,7 @@ class Config:
     # MySQL Configuration
     MYSQL_HOST = os.environ.get("MYSQL_HOST") or "localhost"
     MYSQL_USER = os.environ.get("MYSQL_USER") or "root"
-    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD") or "Nirajan@123"
+    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD") or "nilam1234"
     MYSQL_DB = os.environ.get("MYSQL_DB") or "class_db"
 
     SMTP_SERVER = os.environ.get("SMTP_SERVER") or "smtp.gmail.com"
