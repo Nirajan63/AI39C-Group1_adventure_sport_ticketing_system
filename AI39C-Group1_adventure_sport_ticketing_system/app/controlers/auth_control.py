@@ -1,10 +1,11 @@
 from flask import render_template, request, session, redirect, url_for, flash, jsonify
-from app.controlers.baseController import BaseController
-from app.models.database import get_db_connection
-from app.utils.email import send_email
+import sqlite3
 import random
 import time
 import os
+from app.models.database import get_db_connection
+from app.utils.email import send_email
+from app.controlers.baseController import BaseController
 
 # OTP Store for tracking validation codes in-memory (expires_at used for validation check)
 otp_store = {}
@@ -12,6 +13,7 @@ otp_store = {}
 # Activities Metadata Definition
 ACTIVITIES = {
     "paragliding": {
+        "id": "paragliding",
         "name": "Paragliding",
         "price": 4500.0,
         "location": "Pokhara",
@@ -20,6 +22,7 @@ ACTIVITIES = {
         "pic": "Paragliding_Pic.jpg"
     },
     "bungee": {
+        "id": "bungee",
         "name": "Bungee Jumping",
         "price": 6500.0,
         "location": "Bhote Koshi",
@@ -28,6 +31,7 @@ ACTIVITIES = {
         "pic": "BungeeJump_Pic.jpg"
     },
     "rafting": {
+        "id": "rafting",
         "name": "White Water Rafting",
         "price": 3500.0,
         "location": "Trishuli",
@@ -36,6 +40,7 @@ ACTIVITIES = {
         "pic": "Rafting_Pic.jpg"
     },
     "trekking": {
+        "id": "trekking",
         "name": "Trekking",
         "price": 2500.0,
         "location": "Annapurna",
@@ -44,6 +49,7 @@ ACTIVITIES = {
         "pic": "Trekking_Pic.jpeg"
     },
     "canyoning": {
+        "id": "canyoning",
         "name": "Canyoning",
         "price": 5000.0,
         "location": "Jalbire",
@@ -52,6 +58,7 @@ ACTIVITIES = {
         "pic": "Canyoning_Pic.jpg"
     },
     "ziplining": {
+        "id": "ziplining",
         "name": "Zip-lining",
         "price": 2000.0,
         "location": "Chitwan",
@@ -73,13 +80,13 @@ class AuthController(BaseController):
         if user:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = %s", (user["id"],))
+            cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user["id"],))
             row = cursor.fetchone()
             if row:
                 wishlist_count = row["count"]
             
             # Fetch saved activity IDs for pre-filling heart icons
-            cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = %s", (user["id"],))
+            cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = ?", (user["id"],))
             saved_wishlist = [w["activity_id"] for w in cursor.fetchall()]
             conn.close()
             
@@ -110,7 +117,7 @@ class AuthController(BaseController):
             # Check database for username OR email matching
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s", (username, username))
+            cursor.execute("SELECT * FROM users WHERE username = ? OR email = ?", (username, username))
             user_data = cursor.fetchone()
             conn.close()
 
@@ -176,20 +183,20 @@ class AuthController(BaseController):
         cursor = conn.cursor()
         
         # Check if username exists
-        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+        cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
         if cursor.fetchone():
             conn.close()
             return jsonify({'message': 'Username already exists', 'status': 'error'}), 400
             
         # Check if email exists
-        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
         if cursor.fetchone():
             conn.close()
             return jsonify({'message': 'Email already exists', 'status': 'error'}), 400
             
         try:
             cursor.execute(
-                'INSERT INTO users (username, email, password) VALUES (%s, %s, %s)', 
+                'INSERT INTO users (username, email, password) VALUES (?, ?, ?)', 
                 (username, email, password)
             )
             conn.commit()
@@ -281,7 +288,7 @@ class AuthController(BaseController):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
         user = cursor.fetchone()
         
         if not user:
@@ -290,7 +297,7 @@ class AuthController(BaseController):
             username = base_username
             counter = 1
             while True:
-                cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+                cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
                 if not cursor.fetchone():
                     break
                 username = f"{base_username}{counter}"
@@ -298,12 +305,12 @@ class AuthController(BaseController):
                 
             random_password = f"google_{random.randint(10000000, 99999999)}"
             cursor.execute(
-                'INSERT INTO users (username, email, password) VALUES (%s, %s, %s)', 
+                'INSERT INTO users (username, email, password) VALUES (?, ?, ?)', 
                 (username, email, random_password)
             )
             conn.commit()
             
-            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
             user = cursor.fetchone()
             
         conn.close()
@@ -366,7 +373,7 @@ class AuthController(BaseController):
         cursor = conn.cursor()
         
         # Keep session user metadata fresh
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         db_user = cursor.fetchone()
         if db_user:
             session["user"] = {
@@ -388,11 +395,11 @@ class AuthController(BaseController):
             user = session["user"]
 
         # Fetch bookings
-        cursor.execute("SELECT * FROM bookings WHERE user_id = %s ORDER BY id DESC", (user_id,))
+        cursor.execute("SELECT * FROM bookings WHERE user_id = ? ORDER BY id DESC", (user_id,))
         bookings_data = cursor.fetchall()
         
         # Fetch wishlist count for badge
-        cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user_id,))
         w_row = cursor.fetchone()
         wishlist_count = w_row["count"] if w_row else 0
 
@@ -492,7 +499,7 @@ class AuthController(BaseController):
         cursor = conn.cursor()
         try:
             # Verify the booking belongs to this user and is currently confirmed
-            cursor.execute("SELECT * FROM bookings WHERE id = %s AND user_id = %s", (booking_id, user_id))
+            cursor.execute("SELECT * FROM bookings WHERE id = ? AND user_id = ?", (booking_id, user_id))
             booking = cursor.fetchone()
             if not booking:
                 conn.close()
@@ -503,7 +510,7 @@ class AuthController(BaseController):
                 return jsonify({"success": False, "error": "Only confirmed bookings can be cancelled"}), 400
 
             # Update status to cancelled
-            cursor.execute("UPDATE bookings SET status = 'cancelled' WHERE id = %s", (booking_id,))
+            cursor.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", (booking_id,))
             conn.commit()
             conn.close()
             return jsonify({"success": True}), 200
@@ -519,7 +526,9 @@ class AuthController(BaseController):
 
         if request.method == "POST":
             activity_id = request.form.get("activity_id", "").strip().lower()
+
             date = request.form.get("date", "")
+
             try:
                 people = int(request.form.get("people", 1))
             except ValueError:
@@ -546,9 +555,10 @@ class AuthController(BaseController):
                 cursor = conn.cursor()
                 try:
                     cursor.execute(
-                        "INSERT INTO bookings (user_id, activity, date, people, price, total, status) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                        "INSERT INTO bookings (user_id, activity, date, people, price, total, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
                         (user_id, activity_name, date, people, price, total, "confirmed")
                     )
+                    conn.commit()
                     flash(f"🎉 {activity_name} booked successfully!")
                 except Exception as e:
                     print("Error saving booking:", e)
@@ -556,6 +566,7 @@ class AuthController(BaseController):
                 conn.close()
 
         return redirect(url_for("auth.dashboard"))
+
 
     # ── PROFILE MANAGEMENT ─────────────────────────────────────────────────
     def manage(self):
@@ -598,13 +609,14 @@ class AuthController(BaseController):
                 # Update user columns
                 cursor.execute("""
                     UPDATE users 
-                    SET first_name = %s, last_name = %s, email = %s, phone = %s, city = %s,
-                        bio = %s, language = %s, role = %s, avatar = %s, cover = %s, theme_preference = %s 
-                    WHERE id = %s
+                    SET first_name = ?, last_name = ?, email = ?, phone = ?, city = ?,
+                        bio = ?, language = ?, role = ?, avatar = ?, cover = ?, theme_preference = ? 
+                    WHERE id = ?
                 """, (first_name, last_name, email, phone, city, bio, language, role, avatar, cover, theme_pref, user_id))
+                conn.commit()
                 
                 # Fetch fresh updated record
-                cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+                cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
                 db_user = cursor.fetchone()
                 
                 # Update session keys
@@ -629,7 +641,7 @@ class AuthController(BaseController):
                     return jsonify({"message": "Profile updated successfully!", "status": "success", "user": session["user"]}), 200
                 flash("Profile updated successfully!", "success")
             except Exception as e:
-                print("Error updating profile in MySQL:", e)
+                print("Error updating profile in SQLite:", e)
                 if request.is_json:
                     return jsonify({"message": f"Profile update failed: {str(e)}", "status": "error"}), 500
                 flash("Failed to update profile.", "danger")
@@ -639,11 +651,11 @@ class AuthController(BaseController):
         # Render GET page with synced DB record
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         db_user = cursor.fetchone()
         
         # Fetch wishlist count for badge
-        cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user_id,))
         w_row = cursor.fetchone()
         wishlist_count = w_row["count"] if w_row else 0
         conn.close()
@@ -660,7 +672,7 @@ class AuthController(BaseController):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = ?", (user_id,))
         wish_rows = cursor.fetchall()
         
         # Fresh wishlist count
@@ -700,17 +712,18 @@ class AuthController(BaseController):
         cursor = conn.cursor()
         
         # Check if already saved
-        cursor.execute("SELECT * FROM wishlist WHERE user_id = %s AND activity_id = %s", (user_id, activity_id))
+        cursor.execute("SELECT * FROM wishlist WHERE user_id = ? AND activity_id = ?", (user_id, activity_id))
         existing = cursor.fetchone()
         
         saved = False
         try:
             if existing:
-                cursor.execute("DELETE FROM wishlist WHERE user_id = %s AND activity_id = %s", (user_id, activity_id))
+                cursor.execute("DELETE FROM wishlist WHERE user_id = ? AND activity_id = ?", (user_id, activity_id))
                 saved = False
             else:
-                cursor.execute("INSERT INTO wishlist (user_id, activity_id) VALUES (%s, %s)", (user_id, activity_id))
+                cursor.execute("INSERT INTO wishlist (user_id, activity_id) VALUES (?, ?)", (user_id, activity_id))
                 saved = True
+            conn.commit()
         except Exception as e:
             print("Error toggling wishlist item:", e)
             conn.close()
@@ -733,7 +746,7 @@ class AuthController(BaseController):
                 # Verify email exists in database
                 conn = get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+                cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
                 user_data = cursor.fetchone()
                 conn.close()
 
@@ -804,14 +817,14 @@ class AuthController(BaseController):
                 # Clear OTP record
                 otp_store.pop(email, None)
 
-                # Update user password in MySQL
+                # Update user password in SQLite
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 try:
-                    cursor.execute("UPDATE users SET password = %s WHERE email = %s", (new_password, email))
+                    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (new_password, email))
                     conn.commit()
                 except Exception as e:
-                    print("Error updating password in MySQL:", e)
+                    print("Error updating password in SQLite:", e)
                     conn.close()
                     return jsonify({"message": "Database update failed.", "status": "error"}), 500
 

@@ -1,280 +1,270 @@
-/* =============================================================
-   PROFILE_MANAGE.CSS — Unified Thrill Sphere Style
-   ============================================================= */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-body {
-  overflow-x: hidden;
-  padding: 48px 6vw 30px;   /* extra top padding so content clears sticky nav */
+body{
+  font-family:Inter,sans-serif;
+  background:#08111f;
+  color:white;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding:30px;
+
+  background:
+  linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.85)),
+  url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop')
+  center/cover fixed;
 }
 
-.bg-overlay {
-  display: none; /* Handled by global layout gradient */
+.bg-overlay{
+  position:fixed;
+  inset:0;
+  backdrop-filter:blur(4px);
+  z-index:-1;
 }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 30px;
+.topbar{
+  max-width:1400px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
 }
 
-.glass {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: var(--box-shadow);
-  color: var(--text-color);
-  transition: background-color 0.3s, border-color 0.3s;
+.brand{
+  display:flex;
+  align-items:center;
+  gap:15px;
 }
 
-.cover-wrap {
-  height: 180px;
-  position: relative;
+.logo{
+  width:55px;
+  height:55px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#00d2a0,#ff7b00);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:900;
+  color:#08111f;
+  box-shadow:0 0 25px rgba(255,123,0,.45);
 }
 
-.cover-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.container{
+  max-width:1400px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:360px 1fr;
+  gap:25px;
 }
 
-.profile-content {
-  padding: 25px;
-  text-align: center;
+.glass{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(18px);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,.4);
 }
 
-.avatar-wrap {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin: -40px auto 20px;   /* was -80px; raised so sticky nav doesn't clip it */
-  border: 4px solid var(--surface);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  background: var(--surface2);
-  position: relative;
-  z-index: 1;
+.cover-wrap{
+  height:220px;
 }
 
-.avatar-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.cover-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
 
-#displayName {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-color);
+.profile-content{
+  padding:25px;
+  text-align:center;
 }
 
-#displayRole {
-  color: var(--muted);
-  margin-top: 6px;
-  font-size: 0.85rem;
+.avatar-wrap{
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  overflow:hidden;
+  margin:-95px auto 20px;
+  border:5px solid rgba(255,255,255,.15);
+  box-shadow:0 0 30px rgba(255,123,0,.4);
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 25px;
+.avatar-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
 
-.stat {
-  background: var(--surface2);
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  transition: all 0.3s;
+#displayRole{
+  color:#b8c5d6;
+  margin-top:8px;
 }
 
-.stat span {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #7494ec;
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:25px;
 }
 
-.stat p {
-  font-size: 0.72rem;
-  color: var(--muted);
-  margin-top: 4px;
+.stat{
+  background:rgba(255,255,255,.05);
+  padding:15px;
+  border-radius:16px;
 }
 
-.form-card {
-  padding: 35px;
+.stat span{
+  font-size:24px;
+  font-weight:800;
+  color:#00d2a0;
 }
 
-.form-header h1 {
-  font-size: 2.1rem;
-  font-weight: 800;
-  margin-bottom: 8px;
-  color: var(--text-color);
+.form-card{
+  padding:35px;
 }
 
-.form-header p {
-  color: var(--muted);
-  margin-bottom: 30px;
-  font-size: 0.9rem;
+.form-header h1{
+  font-size:38px;
+  margin-bottom:10px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.form-header p{
+  color:#b8c5d6;
+  margin-bottom:30px;
 }
 
-.field {
-  margin-bottom: 20px;
-  text-align: left;
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
 }
 
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--text-color);
+.field{
+  margin-bottom:20px;
 }
 
-input, textarea, select {
-  width: 100%;
-  padding: 14px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--input-color);
-  outline: none;
-  font-family: inherit;
-  font-size: 0.88rem;
-  transition: all 0.3s;
+label{
+  display:block;
+  margin-bottom:10px;
+  font-weight:600;
+}
+
+input, textarea, select{
+  width:100%;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:white;
+  outline:none;
+  transition:.3s;
 }
 
 input:focus,
 textarea:focus,
-select:focus {
-  border-color: #7494ec;
-  transform: translateY(-1px);
-  box-shadow: 0 0 0 3px rgba(116, 148, 236, 0.15);
+select:focus{
+  border-color:#ff7b00;
+  transform:translateY(-2px);
+  box-shadow:0 0 0 4px rgba(255,123,0,.15);
 }
 
-textarea {
-  min-height: 100px;
-  resize: vertical;
+textarea{
+  min-height:130px;
+  resize:vertical;
 }
 
-.actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
+.actions{
+  display:flex;
+  gap:15px;
+  margin-top:20px;
 }
 
-.btn {
-  border: none;
-  cursor: pointer;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: hidden;
+.btn{
+  border:none;
+  cursor:pointer;
+  padding:14px 22px;
+  border-radius:16px;
+  font-weight:700;
+  transition:.3s;
+  position:relative;
+  overflow:hidden;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
+.btn:hover{
+  transform:translateY(-3px);
 }
 
-.btn:active {
-  transform: scale(0.97);
+.primary{
+  background:linear-gradient(135deg,#ff7b00,#ffb067);
+  color:#08111f;
 }
 
-.primary {
-  background: #7494ec;
-  color: #fff;
+.outline{
+  background:transparent;
+  color:white;
+  border:1px solid rgba(255,255,255,.15);
 }
 
-.primary:hover {
-  background: #5b7cdb;
-  box-shadow: 0 4px 15px rgba(116, 148, 236, 0.3);
+.danger{
+  background:linear-gradient(135deg,#ff4b4b,#ff7474);
+  color:white;
 }
 
-.outline {
-  background: transparent;
-  color: var(--text-color);
-  border: 1.5px solid var(--border);
+.small{
+  padding:10px 18px;
+  margin-top:15px;
 }
 
-.outline:hover {
-  background: rgba(116, 148, 236, 0.08);
-  border-color: #7494ec;
+.ripple{
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,.5);
+  transform:translate(-50%,-50%);
+  animation:ripple .6s linear;
 }
 
-.danger {
-  background: rgba(255, 79, 79, 0.1);
-  color: #ff4f4f;
-  border: 1px solid rgba(255, 79, 79, 0.2);
-}
-
-.danger:hover {
-  background: #ff4f4f;
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(255, 79, 79, 0.3);
-}
-
-.small {
-  padding: 8px 16px;
-  font-size: 0.78rem;
-  margin-top: 15px;
-}
-
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: translate(-50%, -50%);
-  animation: ripple 0.6s linear;
-}
-
-@keyframes ripple {
-  from {
-    width: 0;
-    height: 0;
-    opacity: 1;
+@keyframes ripple{
+  from{
+    width:0;
+    height:0;
+    opacity:1;
   }
-  to {
-    width: 300px;
-    height: 300px;
-    opacity: 0;
+
+  to{
+    width:400px;
+    height:400px;
+    opacity:0;
   }
 }
 
-@media(max-width: 1000px) {
-  .container {
-    grid-template-columns: 1fr;
+@media(max-width:1000px){
+  .container{
+    grid-template-columns:1fr;
   }
 }
 
-@media(max-width: 700px) {
-  body {
-    padding: 15px;
+@media(max-width:700px){
+
+  body{
+    padding:15px;
   }
 
-  .grid {
-    grid-template-columns: 1fr;
+  .grid{
+    grid-template-columns:1fr;
   }
 
-  .actions {
-    flex-direction: column;
+  .actions{
+    flex-direction:column;
+  }
+
+  .topbar{
+    flex-direction:column;
+    gap:15px;
   }
 }
