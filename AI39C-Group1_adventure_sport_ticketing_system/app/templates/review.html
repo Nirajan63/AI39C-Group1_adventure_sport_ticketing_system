@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/review.css') }}">
+
+<section class="review-section">
+
+    <div class="review-container">
+
+        <!-- LEFT SIDE -->
+        <div class="review-list">
+
+            <h1 class="review-title">Adventure Reviews</h1>
+
+            {% for item in reviews %}
+
+            <div class="review-card">
+
+                <div class="review-header">
+
+                    <div class="review-user">
+                        <div class="review-avatar">
+                            {{ item.name[0] }}
+                        </div>
+
+                        <div>
+                            <h3>{{ item.name }}</h3>
+                            <p>{{ item.created_at }}</p>
+                        </div>
+                    </div>
+
+                    <div class="review-stars">
+                        {% for i in range(item.rating) %}
+                        ★
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <p class="review-text">
+                    "{{ item.review }}"
+                </p>
+
+                <span class="review-activity">
+                    {{ item.activity }}
+                </span>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="review-form-container">
+
+            <h2>Share Your Experience</h2>
+
+            <form
+                action="{{ url_for('review.add_review') }}"
+                method="POST"
+                class="review-form"
+            >
+
+                <label>Your Name</label>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Full name"
+                    required
+                >
+
+                <label>Activity</label>
+                <input
+                    type="text"
+                    name="activity"
+                    placeholder="Paragliding"
+                    required
+                >
+
+                <label>Rating</label>
+
+                <select name="rating" required>
+                    <option value="5">★★★★★</option>
+                    <option value="4">★★★★</option>
+                    <option value="3">★★★</option>
+                    <option value="2">★★</option>
+                    <option value="1">★</option>
+                </select>
+
+                <label>Your Review</label>
+
+                <textarea
+                    name="review"
+                    rows="6"
+                    placeholder="Tell us about your experience..."
+                    required
+                ></textarea>
+
+                <button type="submit">
+                    SUBMIT REVIEW
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
