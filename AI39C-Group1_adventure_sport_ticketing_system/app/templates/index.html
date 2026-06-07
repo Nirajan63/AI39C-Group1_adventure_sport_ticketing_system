@@ -1,21 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block title %}Quick Links — Thrill Sphere{% endblock %}
 
-    <title>Quick Links</title>
-
+{% block head %}
     <!-- Font Awesome -->
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
 
-    <link rel="stylesheet" href="quicklink.css">
-</head>
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/quicklink.css') }}">
+{% endblock %}
 
-<body>
-
+{% block content %}
     <!-- Bottom Share Section -->
     <div class="share-wrapper">
 
@@ -42,8 +38,8 @@
         </div>
 
     </div>
+{% endblock %}
 
-<script src="script.js"></script>
-
-</body>
-</html>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
