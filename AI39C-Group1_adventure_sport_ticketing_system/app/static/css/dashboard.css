@@ -479,3 +479,9 @@ a { text-decoration: none; }
     .book-form-grid { grid-template-columns: 1fr; }
     .profile-grid { grid-template-columns: 1fr; }
 }
+
+/* Hide duplicate main navbar on user dashboard */
+.site-header {
+    display: none !important;
+}
+

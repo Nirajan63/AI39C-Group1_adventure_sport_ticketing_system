@@ -11,8 +11,9 @@
 <!-- ══ HORIZONTAL TOP NAVBAR ══ -->
 <header class="navbar-horizontal">
   <div class="nav-container">
-    <div class="nav-brand">THRILL<em>SPHERE</em></div>
+    <a href="/" class="nav-brand" style="text-decoration: none;">THRILL<em>SPHERE</em></a>
     <nav class="nav-links">
+      <a href="/" class="nav-item" style="text-decoration: none;">Home</a>
       <a class="nav-item active" onclick="switchSection('overview', this)">Overview</a>
       <a class="nav-item" onclick="switchSection('bookings', this)">My Bookings</a>
       <a class="nav-item" onclick="switchSection('book-new', this)">Book Activity</a>
@@ -340,10 +341,14 @@
       <h2 class="section-heading">My Profile</h2>
       <div class="profile-card">
         <div class="profile-header">
-          <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
+          {% if user.avatar %}
+            <img src="{{ user.avatar }}" alt="avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); flex-shrink: 0; box-shadow: 0 0 18px rgba(116,148,236,0.25);">
+          {% else %}
+            <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
+          {% endif %}
           <div class="profile-details">
-            <h2>{{ user.username }}</h2>
-            <p>Adventure Enthusiast · Member since {{ user.joined }}</p>
+            <h2>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
+            <p>{{ user.role or 'Adventure Seeker' }} · Member since {{ user.joined }}</p>
             <div class="badge-grid">
               <span class="badge">🏔️ Trekker</span>
               <span class="badge">🪂 Sky Diver</span>
@@ -353,12 +358,15 @@
           </div>
         </div>
         <div class="profile-grid">
-          <div class="profile-field"><label>Full Name</label><span>{{ user.username }}</span></div>
+          <div class="profile-field"><label>Full Name</label><span>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span></div>
           <div class="profile-field"><label>Email</label><span>{{ user.email }}</span></div>
-          <div class="profile-field"><label>Phone</label><span>+977-98XXXXXXXX</span></div>
-          <div class="profile-field"><label>Location</label><span>Kathmandu, Nepal</span></div>
+          <div class="profile-field"><label>Phone</label><span>{{ user.phone or 'Not set' }}</span></div>
+          <div class="profile-field"><label>Location</label><span>{{ user.city or 'Kathmandu, Nepal' }}</span></div>
           <div class="profile-field"><label>Member Since</label><span>{{ user.joined }}</span></div>
           <div class="profile-field"><label>Account Status</label><span style="color:var(--green);font-weight:600;">✓ Active</span></div>
+        </div>
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+          <a href="/manage" class="btn-primary" style="width: auto; text-decoration: none;">Edit Profile</a>
         </div>
       </div>
 
