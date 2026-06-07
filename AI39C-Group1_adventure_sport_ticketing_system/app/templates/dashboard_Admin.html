@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -803,6 +803,6 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='dashboard_Admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard_Admin.js') }}"></script>
 </body>
 </html>
