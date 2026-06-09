@@ -879,6 +879,20 @@ a { text-decoration: none; }
     box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
+.form-group input[readonly],
+.form-group textarea[readonly] {
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: not-allowed;
+    border-color: var(--border);
+}
+
+.form-group input[readonly]:focus,
+.form-group textarea[readonly]:focus {
+    border-color: var(--border);
+    box-shadow: none;
+}
+
 .form-group input::placeholder { color: var(--muted); }
 .form-group select option { background: var(--surface); color: var(--text); }
 
@@ -913,10 +927,11 @@ a { text-decoration: none; }
     background: rgba(30,41,59,0.45);
     backdrop-filter: blur(6px);
     display: none;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 500;
-    padding: 20px;
+    padding: 40px 20px;
+    overflow-y: auto;
 }
 
 .modal-overlay.active { display: flex; }
@@ -930,6 +945,10 @@ a { text-decoration: none; }
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     overflow: hidden;
     animation: slideUpModal 0.28s cubic-bezier(0.16,1,0.3,1);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+    align-self: flex-start;
 }
 
 .modal-card.modal-sm { max-width: 440px; }
@@ -941,6 +960,7 @@ a { text-decoration: none; }
     justify-content: space-between;
     align-items: center;
     background: var(--surface2);
+    flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -961,7 +981,7 @@ a { text-decoration: none; }
 }
 .modal-close:hover { color: var(--danger); }
 
-.modal-body { padding: 24px; }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
 
 .detail-strip {
     display: grid;

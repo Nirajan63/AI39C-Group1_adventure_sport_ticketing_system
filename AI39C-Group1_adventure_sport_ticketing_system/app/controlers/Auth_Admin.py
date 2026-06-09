@@ -6,43 +6,33 @@ from app.controlers.baseController import BaseController
 from app.models.database import get_db_connection
 from werkzeug.security import check_password_hash, generate_password_hash
 
+
 # ── Helper to log audit actions ──────────────────────────────────────────
 def log_audit(admin_id, action, target, details=""):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    db = Database()
     try:
-        cursor.execute(
-            "INSERT INTO audit_logs (admin_id, action, target_record, details) VALUES (?, ?, ?, ?)",
+        db.execute(
+            "INSERT INTO audit_logs (admin_id, action, target_record, details) VALUES (%s, %s, %s, %s)",
             (admin_id, action, target, details)
         )
-        conn.commit()
     except Exception as e:
         print("[AUDIT ERROR]:", e)
     finally:
-        conn.close()
+        db.close()
 
 
 # ── Helper to send in-app notifications ──────────────────────────────────
 def send_notification(user_id, title, message):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    db = Database()
     try:
-        cursor.execute(
-            "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
+        db.execute(
+            "INSERT INTO notifications (user_id, title, message, status) VALUES (%s, %s, %s, 'unread')",
             (user_id, title, message)
         )
-        conn.commit()
     except Exception as e:
         print("[NOTIFICATION ERROR]:", e)
     finally:
-        conn.close()
-
-
-# ── Password verification helper ──────────────────────────────────────────
-def verify_password(stored_password, entered_password):
-    if stored_password.startswith("pbkdf2:sha256:") or stored_password.startswith("scrypt:"):
-        return check_password_hash(stored_password, entered_password)
-    return stored_password == entered_password
+        db.close()
 
 
 # ── Decorator to enforce admin/staff role ───────────────────────────────
@@ -51,33 +41,27 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if "user" not in session:
             return redirect(url_for("auth_admin.login_admin"))
-        
         # Re-validate role AND status from DB on every protected request
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT role, status FROM users WHERE id = ?",
+        # This ensures role demotions and suspensions take effect immediately.
+        db = Database()
+        db_user = db.fetch_one(
+            "SELECT role, status FROM users WHERE id = %s",
             (session["user"]["id"],)
         )
-        db_user = cursor.fetchone()
-        conn.close()
-        
+        db.close()
         if not db_user:
             session.clear()
             flash("Account not found. Please log in again.", "danger")
             return redirect(url_for("auth_admin.login_admin"))
-            
-        if db_user["status"] == "suspended":
+        if db_user.get("status") == "suspended":
             session.clear()
             flash("Your account has been suspended. Please contact support.", "danger")
             return redirect(url_for("auth.login"))
-            
-        live_role = db_user["role"]
+        live_role = db_user.get("role")
         if live_role not in ["admin", "super_admin", "staff"]:
             session.clear()
             flash("Access denied: Administrative permissions required.", "danger")
             return redirect(url_for("auth.login"))
-            
         # Keep session role in sync with DB
         session["user"]["role"] = live_role
         return f(*args, **kwargs)
@@ -85,6 +69,9 @@ def admin_required(f):
 
 
 class AuthController_Admin(BaseController):
+
+    def __init__(self):
+        self.user_model = User()
 
     # ── ADMIN LOGIN ────────────────────────────────────────────────────────
     def login_admin(self):
@@ -102,27 +89,26 @@ class AuthController_Admin(BaseController):
                 return render_template("login_Admin.html")
 
             # Check users
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE email = ? OR username = ?", (username, username))
-            user_data = cursor.fetchone()
-            conn.close()
+            user_data = self.user_model.find_by("email", username)
+            if not user_data:
+                user_data = self.user_model.find_by("name", username)
 
             if user_data:
-                if verify_password(user_data["password"], password):
+                user = User.from_db(user_data)
+                if user.check_password(password):
                     # Check role
                     if user_data["role"] not in ["admin", "super_admin", "staff"]:
                         flash("Access denied: Account is not an administrator.", "danger")
                         return render_template("login_Admin.html")
                     # Check status
-                    if user_data["status"] == "suspended":
+                    if user_data.get("status") == "suspended":
                         flash("Account suspended.", "danger")
                         return render_template("login_Admin.html")
 
                     session["user"] = {
                         "id":       user_data["id"],
-                        "name":     user_data["username"],
-                        "username": user_data["username"],
+                        "name":     user_data["name"],
+                        "username": user_data["name"],
                         "email":    user_data["email"],
                         "role":     user_data["role"],
                         "joined":   "May 2026",
@@ -130,7 +116,7 @@ class AuthController_Admin(BaseController):
                     log_audit(user_data["id"], "Login", f"User #{user_data['id']}", "Successful admin login")
 
                     # Force password change if flagged (e.g. first-time seeded admin)
-                    if user_data["must_change_password"] == 1:
+                    if user_data.get("must_change_password") == 1:
                         session["force_pw_change"] = True
                         flash("⚠️ You must change your default password before continuing.", "warning")
                         return redirect(url_for("auth_admin.change_password_admin"))
@@ -175,19 +161,14 @@ class AuthController_Admin(BaseController):
                 flash("Passwords do not match.", "danger")
                 return render_template("change_password_Admin.html")
 
+            from werkzeug.security import generate_password_hash
             user_id = session["user"]["id"]
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    "UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?",
-                    (generate_password_hash(new_pw), user_id)
-                )
-                conn.commit()
-            except Exception as e:
-                print("Error changing password:", e)
-            finally:
-                conn.close()
+            db = Database()
+            db.execute(
+                "UPDATE users SET password = %s, must_change_password = 0 WHERE id = %s",
+                (generate_password_hash(new_pw), user_id)
+            )
+            db.close()
 
             # Clear forced change flag
             session.pop("force_pw_change", None)
@@ -200,23 +181,22 @@ class AuthController_Admin(BaseController):
     # ── ADMIN DASHBOARD VIEW ───────────────────────────────────────────────
     @admin_required
     def dashboard_admin(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        db = Database()
         
         # Gather overview counts
-        total_users = cursor.execute("SELECT COUNT(*) AS total FROM users").fetchone()["total"]
-        total_activities = cursor.execute("SELECT COUNT(*) AS total FROM activities").fetchone()["total"]
-        total_bookings = cursor.execute("SELECT COUNT(*) AS total FROM bookings").fetchone()["total"]
-        active_bookings = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE status = 'confirmed'").fetchone()["total"]
-        completed_activities = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE status = 'completed'").fetchone()["total"]
-        cancelled_bookings = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE status = 'cancelled'").fetchone()["total"]
+        total_users = db.fetch_one("SELECT COUNT(*) AS total FROM users")["total"]
+        total_activities = db.fetch_one("SELECT COUNT(*) AS total FROM activities")["total"]
+        total_bookings = db.fetch_one("SELECT COUNT(*) AS total FROM bookings")["total"]
+        active_bookings = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE status = 'confirmed'")["total"]
+        completed_activities = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE status = 'completed'")["total"]
+        cancelled_bookings = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE status = 'cancelled'")["total"]
         
         # Payment indicators
-        total_revenue = cursor.execute("SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled'").fetchone()["total"] or 0
-        monthly_revenue = cursor.execute(
+        total_revenue = db.fetch_one("SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled'")["total"] or 0
+        monthly_revenue = db.fetch_one(
             "SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled' AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')"
-        ).fetchone()["total"] or 0
-        pending_payments = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE payment_status = 'pending'").fetchone()["total"]
+        )["total"] or 0
+        pending_payments = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE payment_status = 'pending'")["total"]
 
         stats = {
             "total_users": total_users,
@@ -231,12 +211,12 @@ class AuthController_Admin(BaseController):
         }
 
         # Fetch activities for calendar mapping
-        activities_data = cursor.execute("SELECT * FROM activities").fetchall()
+        activities_data = db.fetch_all("SELECT * FROM activities")
         activities_dict = {}
         for a in activities_data:
             activities_dict[a['id']] = dict(a)
 
-        conn.close()
+        db.close()
 
         return render_template(
             "dashboard_Admin.html",
@@ -248,18 +228,16 @@ class AuthController_Admin(BaseController):
     # ── ACTIVITY CRUD ENDPOINTS ────────────────────────────────────────────
     @admin_required
     def api_activities(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
+        db = Database()
         if request.method == "GET":
-            activities = [dict(a) for a in cursor.execute("SELECT * FROM activities").fetchall()]
-            conn.close()
+            activities = db.fetch_all("SELECT * FROM activities")
+            db.close()
             return jsonify(activities)
 
         elif request.method == "POST":
             # Guard permission
             if session["user"].get("role") == "staff":
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Permission denied"}), 403
 
             data = request.json
@@ -277,23 +255,22 @@ class AuthController_Admin(BaseController):
             available_dates = data.get("available_dates", "").strip()
 
             if not act_id or not name:
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "ID and Name are required"}), 400
 
             # Check if exists
-            exists = cursor.execute("SELECT * FROM activities WHERE id = ?", (act_id,)).fetchone()
+            exists = db.fetch_one("SELECT * FROM activities WHERE id = %s", (act_id,))
             if exists:
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Activity ID already exists"}), 400
 
-            cursor.execute(
+            db.execute(
                 "INSERT INTO activities (id, name, description, category, price, duration, capacity, img, pic, location, difficulty, status, available_dates) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)",
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', %s)",
                 (act_id, name, description, category, price, duration, capacity, img, pic, location, difficulty, available_dates)
             )
-            conn.commit()
             log_audit(session["user"]["id"], "Create Activity", act_id, f"Created activity: {name}")
-            conn.close()
+            db.close()
             return jsonify({"success": True, "message": "Activity created successfully"})
 
     @admin_required
@@ -302,9 +279,7 @@ class AuthController_Admin(BaseController):
         if session["user"].get("role") == "staff":
             return jsonify({"success": False, "message": "Permission denied"}), 403
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
+        db = Database()
         if request.method == "PUT":
             data = request.json
             name = data.get("name", "").strip()
@@ -321,41 +296,51 @@ class AuthController_Admin(BaseController):
             available_dates = data.get("available_dates", "").strip()
 
             if not name:
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Name is required"}), 400
 
-            cursor.execute(
-                "UPDATE activities SET name=?, description=?, category=?, price=?, duration=?, capacity=?, img=?, pic=?, location=?, difficulty=?, status=?, available_dates=? WHERE id=?",
+            # ── FIX #08: Fetch old price for notification diff ─────────────
+            old_activity = db.fetch_one("SELECT price FROM activities WHERE id = %s", (activity_id,))
+            old_price = float(old_activity["price"]) if old_activity else price
+            price_changed = old_price != price
+
+            db.execute(
+                "UPDATE activities SET name=%s, description=%s, category=%s, price=%s, duration=%s, capacity=%s, img=%s, pic=%s, location=%s, difficulty=%s, status=%s, available_dates=%s WHERE id=%s",
                 (name, description, category, price, duration, capacity, img, pic, location, difficulty, status, available_dates, activity_id)
             )
-            conn.commit()
             log_audit(session["user"]["id"], "Update Activity", activity_id, f"Updated activity: {name} (Status: {status})")
 
-            # Notify affected users whose upcoming bookings reference this activity
+            # Notify affected users with context-aware message
             try:
-                affected = cursor.execute(
-                    "SELECT DISTINCT user_id FROM bookings WHERE activity = ? AND status = 'confirmed'",
+                affected = db.fetch_all(
+                    "SELECT DISTINCT user_id FROM bookings WHERE activity = %s AND status = 'confirmed'",
                     (name,)
-                ).fetchall()
-                notify_msg = (
-                    f"The activity '{name}' has been updated by our team. "
-                    f"Please review your booking details to confirm availability."
                 )
+                if price_changed:
+                    notify_msg = (
+                        f"The activity '{name}' has been updated. The listed price has changed from "
+                        f"NPR {int(old_price):,} to NPR {int(price):,} for new bookings. "
+                        f"Your existing confirmed booking price is unaffected."
+                    )
+                else:
+                    notify_msg = (
+                        f"The activity '{name}' has been updated by our team. "
+                        f"Please review your booking details to confirm availability."
+                    )
                 for row in affected:
                     send_notification(row["user_id"], f"Activity Updated: {name}", notify_msg)
             except Exception as notif_err:
                 import logging
                 logging.getLogger(__name__).warning("Activity edit notification failed: %s", notif_err)
 
-            conn.close()
+            db.close()
             return jsonify({"success": True, "message": "Activity updated successfully"})
 
         elif request.method == "DELETE":
             # Archive instead of physical delete
-            cursor.execute("UPDATE activities SET status = 'archived' WHERE id = ?", (activity_id,))
-            conn.commit()
+            db.execute("UPDATE activities SET status = 'archived' WHERE id = %s", (activity_id,))
             log_audit(session["user"]["id"], "Archive Activity", activity_id, f"Archived activity ID: {activity_id}")
-            conn.close()
+            db.close()
             return jsonify({"success": True, "message": "Activity archived successfully"})
 
     @admin_required
@@ -371,51 +356,47 @@ class AuthController_Admin(BaseController):
         if not source_id or not new_id or not new_name:
             return jsonify({"success": False, "message": "All duplicate parameters are required"}), 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        source = cursor.execute("SELECT * FROM activities WHERE id = ?", (source_id,)).fetchone()
+        db = Database()
+        source = db.fetch_one("SELECT * FROM activities WHERE id = %s", (source_id,))
         if not source:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Source activity not found"}), 404
 
-        exists = cursor.execute("SELECT * FROM activities WHERE id = ?", (new_id,)).fetchone()
+        exists = db.fetch_one("SELECT * FROM activities WHERE id = %s", (new_id,))
         if exists:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Duplicate ID already exists"}), 400
 
-        cursor.execute(
+        db.execute(
             "INSERT INTO activities (id, name, description, category, price, duration, capacity, img, pic, location, difficulty, status, available_dates) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)",
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', %s)",
             (new_id, new_name, source["description"], source["category"], source["price"], source["duration"],
              source["capacity"], source["img"], source["pic"], source["location"], source["difficulty"], source["available_dates"])
         )
-        conn.commit()
         log_audit(session["user"]["id"], "Duplicate Activity", new_id, f"Duplicated activity from {source_id} to {new_id}")
-        conn.close()
+        db.close()
         return jsonify({"success": True, "message": "Activity duplicated successfully"})
 
     # ── BOOKING MANAGEMENT ENDPOINTS ───────────────────────────────────────
     @admin_required
     def api_bookings(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        db = Database()
         query = """
-            SELECT b.*, u.username AS user_name, u.email AS user_email
+            SELECT b.*, u.name AS user_name, u.email AS user_email
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             ORDER BY b.id DESC
         """
-        bookings = [dict(row) for row in cursor.execute(query).fetchall()]
-        conn.close()
+        bookings = db.fetch_all(query)
+        db.close()
         return jsonify(bookings)
 
     @admin_required
     def api_booking_detail(self, booking_id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        booking = cursor.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        db = Database()
+        booking = db.fetch_one("SELECT * FROM bookings WHERE id = %s", (booking_id,))
         if not booking:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Booking not found"}), 404
 
         if request.method == "PUT":
@@ -425,56 +406,82 @@ class AuthController_Admin(BaseController):
             internal_notes = data.get("internal_notes", booking["internal_notes"])
             date = data.get("date", booking["date"])
             people = int(data.get("people", booking["people"]))
-            price = float(data.get("price", booking["price"]))
+
+            # ── FIX #02: Lock price on confirmed payments ──────────────────
+            # If the booking has already been paid, the price is immutable.
+            # Reject any attempt to change it, using the stored value instead.
+            submitted_price = float(data.get("price", booking["price"]))
+            if booking["payment_status"] == "confirmed" and submitted_price != float(booking["price"]):
+                db.close()
+                return jsonify({
+                    "success": False,
+                    "message": "Price cannot be changed for a confirmed payment. Booking price is locked."
+                }), 400
+            price = float(booking["price"]) if booking["payment_status"] == "confirmed" else submitted_price
             total = price * people
 
             # Guard refund action to admin/super_admin
             if payment_status == "refunded" and session["user"].get("role") == "staff":
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Permission denied for refund operations"}), 403
 
-            cursor.execute(
-                "UPDATE bookings SET status=?, payment_status=?, internal_notes=?, date=?, people=?, price=?, total=? WHERE id=?",
+            # ── FIX #09: Capacity validation on date/people change ─────────
+            # If date or people count changed, verify the target date's capacity.
+            date_changed = date != booking["date"]
+            people_changed = people != booking["people"]
+            if date_changed or people_changed:
+                activity = db.fetch_one("SELECT capacity FROM activities WHERE name = %s", (booking["activity"],))
+                if activity:
+                    cap = int(activity["capacity"])
+                    # Sum existing bookings for that activity+date, excluding current booking
+                    existing = db.fetch_one(
+                        "SELECT COALESCE(SUM(people), 0) AS booked FROM bookings "
+                        "WHERE activity = %s AND date = %s AND status != 'cancelled' AND id != %s",
+                        (booking["activity"], date, booking_id)
+                    )
+                    already_booked = int(existing["booked"]) if existing else 0
+                    if already_booked + people > cap:
+                        db.close()
+                        return jsonify({
+                            "success": False,
+                            "message": f"Capacity exceeded for {booking['activity']} on {date}. "
+                                       f"Only {cap - already_booked} slot(s) available."
+                        }), 409
+
+            db.execute(
+                "UPDATE bookings SET status=%s, payment_status=%s, internal_notes=%s, date=%s, people=%s, price=%s, total=%s WHERE id=%s",
                 (status, payment_status, internal_notes, date, people, price, total, booking_id)
             )
-            conn.commit()
 
             # Send Notification
             note_title = f"Booking #{booking_id} Updated"
             note_msg = f"Your booking for {booking['activity']} on {date} has been updated to: Status: {status}, Payment: {payment_status}."
-            
-            # Use SQLite notifications
-            cursor.execute(
-                "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
-                (booking["user_id"], note_title, note_msg)
-            )
-            conn.commit()
+            send_notification(booking["user_id"], note_title, note_msg)
 
             log_audit(
-                session["user"]["id"], 
-                "Modify Booking", 
-                f"Booking #{booking_id}", 
-                f"Status: {status}, Payment: {payment_status}, Date: {date}"
+                session["user"]["id"],
+                "Modify Booking",
+                f"Booking #{booking_id}",
+                f"Status: {status}, Payment: {payment_status}, Date: {date}, People: {people}, Price: NPR {price}"
             )
-            conn.close()
+            db.close()
             return jsonify({"success": True, "message": "Booking updated successfully"})
 
     # ── PAYMENT MANAGEMENT ENDPOINTS ───────────────────────────────────────
     @admin_required
     def api_payments(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        db = Database()
         # Include ALL bookings that have a payment record — status confirmed OR pending OR refunded
         query = """
             SELECT b.id AS booking_id, b.activity, b.date, b.total, b.payment_status,
                    b.payment_method, b.txn_code, b.status,
-                   u.username AS user_name, u.email AS user_email
+                   u.name AS user_name, u.email AS user_email
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             ORDER BY b.id DESC
         """
-        payments = [dict(p) for p in cursor.execute(query).fetchall()]
-        conn.close()
+        payments = db.fetch_all(query)
+        db.close()
         return jsonify(payments)
 
     @admin_required
@@ -484,25 +491,17 @@ class AuthController_Admin(BaseController):
         if not booking_id:
             return jsonify({"success": False, "message": "Booking ID required"}), 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        booking = cursor.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        db = Database()
+        booking = db.fetch_one("SELECT * FROM bookings WHERE id = %s", (booking_id,))
         if not booking:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Booking not found"}), 404
 
-        cursor.execute("UPDATE bookings SET payment_status = 'confirmed', status = 'confirmed' WHERE id = ?", (booking_id,))
-        conn.commit()
+        db.execute("UPDATE bookings SET payment_status = 'confirmed', status = 'confirmed' WHERE id = %s", (booking_id,))
         
-        # Send notification
-        cursor.execute(
-            "INSERT INTO notifications (user_id, title, message, status) VALUES (?, 'Payment Confirmed', ?, 'unread')",
-            (booking["user_id"], f"Your payment for booking #{booking_id} has been verified and confirmed.")
-        )
-        conn.commit()
-        
+        send_notification(booking["user_id"], "Payment Confirmed", f"Your payment for booking #{booking_id} has been verified and confirmed.")
         log_audit(session["user"]["id"], "Verify Payment", f"Booking #{booking_id}", "Verified QR payment")
-        conn.close()
+        db.close()
         return jsonify({"success": True, "message": "Payment verified and booking confirmed"})
 
     @admin_required
@@ -515,25 +514,17 @@ class AuthController_Admin(BaseController):
         if not booking_id:
             return jsonify({"success": False, "message": "Booking ID required"}), 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        booking = cursor.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        db = Database()
+        booking = db.fetch_one("SELECT * FROM bookings WHERE id = %s", (booking_id,))
         if not booking:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Booking not found"}), 404
 
-        cursor.execute("UPDATE bookings SET payment_status = 'refunded', status = 'cancelled' WHERE id = ?", (booking_id,))
-        conn.commit()
+        db.execute("UPDATE bookings SET payment_status = 'refunded', status = 'cancelled' WHERE id = %s", (booking_id,))
         
-        # Send notification
-        cursor.execute(
-            "INSERT INTO notifications (user_id, title, message, status) VALUES (?, 'Refund Issued', ?, 'unread')",
-            (booking["user_id"], f"A refund of NPR {booking['total']} has been issued for booking #{booking_id}.")
-        )
-        conn.commit()
-        
+        send_notification(booking["user_id"], "Refund Issued", f"A refund of NPR {booking['total']} has been issued for booking #{booking_id}.")
         log_audit(session["user"]["id"], "Refund Payment", f"Booking #{booking_id}", f"Refunded amount: NPR {booking['total']}")
-        conn.close()
+        db.close()
         return jsonify({"success": True, "message": "Refund processed successfully"})
 
     @admin_required
@@ -546,44 +537,35 @@ class AuthController_Admin(BaseController):
         if not booking_id:
             return jsonify({"success": False, "message": "Booking ID required"}), 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        booking = cursor.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        db = Database()
+        booking = db.fetch_one("SELECT * FROM bookings WHERE id = %s", (booking_id,))
         if not booking:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "Booking not found"}), 404
 
-        cursor.execute(
-            "UPDATE bookings SET payment_status = 'confirmed', status = 'confirmed', payment_method = ?, txn_code = ? WHERE id = ?",
+        db.execute(
+            "UPDATE bookings SET payment_status = 'confirmed', status = 'confirmed', payment_method = %s, txn_code = %s WHERE id = %s",
             (method, txn_ref or f"MANUAL-{int(datetime.now().timestamp())}", booking_id)
         )
-        conn.commit()
         
-        # Send notification
-        cursor.execute(
-            "INSERT INTO notifications (user_id, title, message, status) VALUES (?, 'Payment Confirmed', ?, 'unread')",
-            (booking["user_id"], f"Your manual payment ({method}) for booking #{booking_id} has been recorded.")
-        )
-        conn.commit()
-        
+        send_notification(booking["user_id"], "Payment Confirmed", f"Your manual payment ({method}) for booking #{booking_id} has been recorded.")
         log_audit(session["user"]["id"], "Manual Payment Recorded", f"Booking #{booking_id}", f"Recorded manual payment via {method}")
-        conn.close()
+        db.close()
         return jsonify({"success": True, "message": "Manual payment recorded successfully"})
 
     # ── USER MANAGEMENT ENDPOINTS ──────────────────────────────────────────
     @admin_required
     def api_users(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        db = Database()
         query = """
-            SELECT id, username AS name, email, role, status, created_at,
+            SELECT id, name, email, role, status, created_at,
             (SELECT COUNT(*) FROM bookings WHERE user_id = users.id) AS bookings_count,
             (SELECT SUM(total) FROM bookings WHERE user_id = users.id AND status != 'cancelled') AS total_spent
             FROM users
             ORDER BY id DESC
         """
-        users = [dict(u) for u in cursor.execute(query).fetchall()]
-        conn.close()
+        users = db.fetch_all(query)
+        db.close()
         return jsonify(users)
 
     @admin_required
@@ -592,55 +574,104 @@ class AuthController_Admin(BaseController):
         if session["user"].get("role") == "staff":
             return jsonify({"success": False, "message": "Permission denied"}), 403
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        user_row = cursor.execute("SELECT id, role FROM users WHERE id = ?", (user_id,)).fetchone()
+        db = Database()
+        user_row = db.fetch_one("SELECT id, role FROM users WHERE id = %s", (user_id,))
         if not user_row:
-            conn.close()
+            db.close()
             return jsonify({"success": False, "message": "User not found"}), 404
 
         if request.method == "PUT":
             data = request.json
-            name = data.get("name")
-            email = data.get("email")
+            name = data.get("name", "").strip()
+            email = data.get("email", "").strip()
             role = data.get("role")
             status = data.get("status")
 
             # Prevent self-suspension or self-demotion
             if user_id == session["user"]["id"]:
                 if status == "suspended" or role != session["user"]["role"]:
-                    conn.close()
+                    db.close()
                     return jsonify({"success": False, "message": "Self-modifying status or role is prohibited"}), 400
 
             # Super admin gate: only super_admin can modify other admins
             if user_row["role"] in ["admin", "super_admin"] and session["user"]["role"] != "super_admin" and user_id != session["user"]["id"]:
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Only Super Admin can modify administrative users"}), 403
 
-            # Update details
-            cursor.execute(
-                "UPDATE users SET username=?, email=?, role=?, status=? WHERE id=?",
-                (name, email, role, status, user_id)
+            # ── FIX #06: Prevent privilege escalation ──────────────────────
+            # A regular admin must not be able to assign admin-tier roles.
+            if role in ["admin", "super_admin"] and session["user"]["role"] != "super_admin":
+                db.close()
+                return jsonify({"success": False, "message": "Only Super Admin can assign privileged roles"}), 403
+
+            # Fetch existing data for audit diff and identity guard
+            existing_user = db.fetch_one("SELECT name, email, role, status FROM users WHERE id = %s", (user_id,))
+            if not existing_user:
+                db.close()
+                return jsonify({"success": False, "message": "User not found"}), 404
+
+            # ── FIX #04 & #05: Identity fields (name/email) ───────────────
+            # Only super_admin may change name or email.
+            # Always validate email uniqueness before applying.
+            new_name = existing_user["name"]
+            new_email = existing_user["email"]
+            identity_changed = False
+
+            if name and name != existing_user["name"]:
+                if session["user"]["role"] != "super_admin":
+                    db.close()
+                    return jsonify({"success": False, "message": "Only Super Admin can change a user's name"}), 403
+                new_name = name
+                identity_changed = True
+
+            if email and email != existing_user["email"]:
+                if session["user"]["role"] != "super_admin":
+                    db.close()
+                    return jsonify({"success": False, "message": "Only Super Admin can change a user's email"}), 403
+                # ── FIX #05: Email uniqueness check ───────────────────────
+                duplicate = db.fetch_one(
+                    "SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id)
+                )
+                if duplicate:
+                    db.close()
+                    return jsonify({"success": False, "message": "That email address is already registered to another account"}), 409
+                new_email = email
+                identity_changed = True
+
+            # Build audit details
+            audit_parts = []
+            if new_name != existing_user["name"]:
+                audit_parts.append(f"name: '{existing_user['name']}'→'{new_name}'")
+            if new_email != existing_user["email"]:
+                audit_parts.append(f"email: '{existing_user['email']}'→'{new_email}'")
+            if role != existing_user["role"]:
+                audit_parts.append(f"role: '{existing_user['role']}'→'{role}'")
+            if status != existing_user["status"]:
+                audit_parts.append(f"status: '{existing_user['status']}'→'{status}'")
+            audit_details = "; ".join(audit_parts) if audit_parts else "No changes detected"
+
+            db.execute(
+                "UPDATE users SET name=%s, email=%s, role=%s, status=%s WHERE id=%s",
+                (new_name, new_email, role, status, user_id)
             )
-            conn.commit()
-            log_audit(session["user"]["id"], "Update User Profile", f"User #{user_id}", f"Set role: {role}, status: {status}")
-            conn.close()
+            # ── FIX #11: Full identity-aware audit log ─────────────────────
+            log_audit(session["user"]["id"], "Update User Profile", f"User #{user_id}", audit_details)
+            db.close()
             return jsonify({"success": True, "message": "User updated successfully"})
 
         elif request.method == "DELETE":
             # Only super_admin can delete users
             if session["user"].get("role") != "super_admin":
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Only Super Admin can delete user accounts"}), 403
 
             if user_id == session["user"]["id"]:
-                conn.close()
+                db.close()
                 return jsonify({"success": False, "message": "Self-deletion is prohibited"}), 400
 
-            cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-            conn.commit()
+            db.execute("DELETE FROM users WHERE id = %s", (user_id,))
             log_audit(session["user"]["id"], "Delete User Account", f"User #{user_id}", f"Permanently deleted account")
-            conn.close()
+            db.close()
             return jsonify({"success": True, "message": "User deleted permanently"})
 
     # ── NOTIFICATIONS ENDPOINT ─────────────────────────────────────────────
@@ -654,6 +685,19 @@ class AuthController_Admin(BaseController):
         if not user_id or not title or not message:
             return jsonify({"success": False, "message": "All message fields are required"}), 400
 
+        # ── FIX #07: Server-side input length limits ───────────────────────
+        if len(title) > 120:
+            return jsonify({"success": False, "message": "Alert title must be 120 characters or fewer"}), 400
+        if len(message) > 600:
+            return jsonify({"success": False, "message": "Notification message must be 600 characters or fewer"}), 400
+
+        # Verify the target user actually exists
+        db = Database()
+        target = db.fetch_one("SELECT id FROM users WHERE id = %s", (user_id,))
+        db.close()
+        if not target:
+            return jsonify({"success": False, "message": "Target user not found"}), 404
+
         send_notification(user_id, title, message)
         log_audit(session["user"]["id"], "Send Notification", f"User #{user_id}", f"Dispatched notification: {title}")
         return jsonify({"success": True, "message": "Notification sent successfully"})
@@ -661,13 +705,12 @@ class AuthController_Admin(BaseController):
     # ── AUDIT LOGS ENDPOINT ────────────────────────────────────────────────
     @admin_required
     def api_audit_logs(self):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        logs = [dict(row) for row in cursor.execute("""
-            SELECT a.*, u.username AS admin_name
+        db = Database()
+        logs = db.fetch_all("""
+            SELECT a.*, u.name AS admin_name
             FROM audit_logs a
             LEFT JOIN users u ON a.admin_id = u.id
             ORDER BY a.id DESC
-        """).fetchall()]
-        conn.close()
+        """)
+        db.close()
         return jsonify(logs)

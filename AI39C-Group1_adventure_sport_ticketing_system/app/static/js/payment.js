@@ -331,6 +331,19 @@
                 paidInput.name  = 'payment_done';
                 paidInput.value = '1';
                 form.appendChild(paidInput);
+
+                var methodInput = document.createElement('input');
+                methodInput.type  = 'hidden';
+                methodInput.name  = 'payment_method';
+                methodInput.value = state.method;
+                form.appendChild(methodInput);
+
+                var txnInputEl = document.createElement('input');
+                txnInputEl.type  = 'hidden';
+                txnInputEl.name  = 'txn_code';
+                txnInputEl.value = state.txnCode;
+                form.appendChild(txnInputEl);
+
                 form.submit();
             }
         }

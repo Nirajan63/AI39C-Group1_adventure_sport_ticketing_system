@@ -991,6 +991,16 @@
             return;
         }
 
+        // ── FIX #07: Client-side length limits (mirrors server validation) ─
+        if (title.length > 120) {
+            showAlert('Alert title must be 120 characters or fewer', 'danger');
+            return;
+        }
+        if (msg.length > 600) {
+            showAlert('Notification message must be 600 characters or fewer', 'danger');
+            return;
+        }
+
         fetch('/admin/api/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
@@ -1143,13 +1153,38 @@
         document.getElementById('bkFormPaymentStatus').value = booking.payment_status || 'confirmed';
         document.getElementById('bkFormNotes').value = booking.internal_notes || '';
 
-        // Dynamic total math on keypress
+        // ── FIX #02: Lock price + people when payment is confirmed ────────
+        // A confirmed payment freezes the financial terms of the booking.
+        const isPaidConfirmed = (booking.payment_status || 'confirmed') === 'confirmed';
+        const priceField  = document.getElementById('bkFormPrice');
+        const peopleField = document.getElementById('bkFormPeople');
+
+        priceField.readOnly  = isPaidConfirmed;
+        peopleField.readOnly = isPaidConfirmed;
+
+        if (isPaidConfirmed) {
+            priceField.title  = 'Price is locked — payment has been confirmed';
+            peopleField.title = 'Participant count is locked — payment has been confirmed';
+            priceField.style.background  = 'var(--surface2)';
+            peopleField.style.background = 'var(--surface2)';
+            const lockNote = document.getElementById('bkPriceLockNote');
+            if (lockNote) lockNote.style.display = 'inline';
+        } else {
+            priceField.title  = '';
+            peopleField.title = '';
+            priceField.style.background  = '';
+            peopleField.style.background = '';
+            const lockNote = document.getElementById('bkPriceLockNote');
+            if (lockNote) lockNote.style.display = 'none';
+        }
+
+        // Dynamic total math on keypress (only when unlocked)
         const calcTotal = () => {
             const p = parseFloat(document.getElementById('bkFormPrice').value) || 0;
             const n = parseInt(document.getElementById('bkFormPeople').value) || 1;
             document.getElementById('bkDetailTotal').value = `NPR ${(p * n).toLocaleString()}`;
         };
-        document.getElementById('bkFormPrice').oninput = calcTotal;
+        document.getElementById('bkFormPrice').oninput = isPaidConfirmed ? null : calcTotal;
         document.getElementById('bkFormPeople').oninput = calcTotal;
 
         // Staff limitation checks
@@ -1202,6 +1237,43 @@
         document.getElementById('userFormRole').value = user.role;
         document.getElementById('userFormStatus').value = user.status || 'active';
 
+        // ── FIX #04: Lock name/email fields for non-super_admin ───────────
+        // Only super_admin is permitted to change user identity data.
+        const isSuperAdmin = window.THRILL_ADMIN_ROLE === 'super_admin';
+        const nameField  = document.getElementById('userFormName');
+        const emailField = document.getElementById('userFormEmail');
+
+        nameField.readOnly  = !isSuperAdmin;
+        emailField.readOnly = !isSuperAdmin;
+
+        if (!isSuperAdmin) {
+            nameField.style.background  = 'var(--surface2)';
+            emailField.style.background = 'var(--surface2)';
+            nameField.title  = 'Only Super Admin can change a user\'s name';
+            emailField.title = 'Only Super Admin can change a user\'s email';
+        } else {
+            nameField.style.background  = '';
+            emailField.style.background = '';
+            nameField.title  = '';
+            emailField.title = '';
+        }
+
+        // ── FIX #06: Filter role dropdown to prevent privilege escalation ──
+        // A regular admin cannot assign admin-tier roles.
+        const roleSelect = document.getElementById('userFormRole');
+        Array.from(roleSelect.options).forEach(opt => {
+            if (['admin', 'super_admin'].includes(opt.value) && !isSuperAdmin) {
+                opt.disabled = true;
+                opt.title = 'Only Super Admin can assign this role';
+            } else {
+                opt.disabled = false;
+                opt.title = '';
+            }
+        });
+        // If currently selected role is privileged and user is not super_admin,
+        // keep it displayed but non-editable (it was already set by super_admin).
+        roleSelect.disabled = !isSuperAdmin && ['admin', 'super_admin'].includes(user.role);
+
         refs.userModal.classList.add('active');
     };
 
@@ -1212,10 +1284,12 @@
     window.submitUserForm = function (e) {
         e.preventDefault();
         const id = document.getElementById('userFormId').value;
+        const roleEl = document.getElementById('userFormRole');
         const payload = {
             name: document.getElementById('userFormName').value.trim(),
             email: document.getElementById('userFormEmail').value.trim(),
-            role: document.getElementById('userFormRole').value,
+            // Read role via selectedOptions to handle disabled select correctly
+            role: roleEl.options[roleEl.selectedIndex]?.value || roleEl.value,
             status: document.getElementById('userFormStatus').value
         };
 
@@ -1311,6 +1385,33 @@
     // Close manual payment modal on overlay click
     document.getElementById('manualPaymentModal')?.addEventListener('click', function (e) {
         if (e.target === this) closeManualPaymentModal();
+    });
+
+    // ── FIX #10: Backdrop-click close for ALL modals ──────────────────────
+    const modalCloseMap = {
+        'activityModal':      () => closeActivityModal(),
+        'bookingModal':       () => closeBookingModal(),
+        'userModal':          () => closeUserModal(),
+        'duplicateModal':     () => closeDuplicateModal(),
+        'manualPaymentModal': () => closeManualPaymentModal(),
+    };
+    Object.entries(modalCloseMap).forEach(([id, fn]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', function (e) {
+                if (e.target === this) fn();
+            });
+        }
+    });
+
+    // ── FIX #01: Global Escape key listener closes any open modal ─────────
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('activityModal')?.classList.contains('active'))      { closeActivityModal();      return; }
+        if (document.getElementById('bookingModal')?.classList.contains('active'))       { closeBookingModal();       return; }
+        if (document.getElementById('userModal')?.classList.contains('active'))          { closeUserModal();          return; }
+        if (document.getElementById('duplicateModal')?.classList.contains('active'))     { closeDuplicateModal();     return; }
+        if (document.getElementById('manualPaymentModal')?.classList.contains('active')) { closeManualPaymentModal(); return; }
     });
 
     // ── Helper Utilities ──────────────────────────────────────────────────

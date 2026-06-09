@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -455,21 +455,21 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="notifTitle">Alert Title</label>
-                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" required>
+                            <label for="notifTitle">Alert Title <small class="text-secondary">(max 120 chars)</small></label>
+                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" maxlength="120" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="notifMessage">Notification Message</label>
-                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." required></textarea>
+                            <label for="notifMessage">Notification Message <small class="text-secondary">(max 600 chars)</small></label>
+                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." maxlength="600" required></textarea>
                         </div>
 
                         <div class="form-group">
                             <label>Delivery Channel</label>
                             <div class="checkbox-group">
-                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification</label>
-                                <label><input type="checkbox" checked disabled> Email Dispatcher (Simulated)</label>
-                                <label><input type="checkbox" disabled> SMS Dispatcher (Future API integration)</label>
+                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification <small class="text-secondary">(active)</small></label>
+                                <label><input type="checkbox" disabled> Email Dispatcher <small class="text-secondary">(not connected — dev mode only)</small></label>
+                                <label><input type="checkbox" disabled> SMS Dispatcher <small class="text-secondary">(future integration)</small></label>
                             </div>
                         </div>
 
@@ -656,7 +656,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="bkFormPrice">Unit Cost (NPR)</label>
+                        <label for="bkFormPrice">Unit Cost (NPR) <small id="bkPriceLockNote" class="text-secondary" style="display:none">🔒 Locked — payment confirmed</small></label>
                         <input type="number" id="bkFormPrice" required>
                     </div>
                     <div class="form-group">
@@ -803,6 +803,6 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard_Admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='dashboard_Admin.js') }}"></script>
 </body>
 </html>

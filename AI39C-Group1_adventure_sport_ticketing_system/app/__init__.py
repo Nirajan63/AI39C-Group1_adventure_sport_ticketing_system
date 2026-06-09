@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from app.config import Config
 from app.routes.authroutes import AuthRoutes
-from app.routes.adminroutes import AdminRoutes
+from app.routes.AuthRoutes_Admin import AdminRoutes
 
 def create_app():
     app = Flask(__name__)
