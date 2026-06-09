@@ -214,7 +214,7 @@ class AuthController_Admin(BaseController):
         # Payment indicators
         total_revenue = cursor.execute("SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled'").fetchone()["total"] or 0
         monthly_revenue = cursor.execute(
-            "SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled' AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')"
+            "SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled' AND DATE_FORMAT(date, '%%Y-%%m') = DATE_FORMAT(NOW(), '%%Y-%%m')"
         ).fetchone()["total"] or 0
         pending_payments = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE payment_status = 'pending'").fetchone()["total"]
 
@@ -324,6 +324,11 @@ class AuthController_Admin(BaseController):
                 conn.close()
                 return jsonify({"success": False, "message": "Name is required"}), 400
 
+            # ── FIX #08: Fetch old price for notification diff ─────────────
+            old_activity = cursor.execute("SELECT price FROM activities WHERE id = ?", (activity_id,)).fetchone()
+            old_price = float(old_activity["price"]) if old_activity else price
+            price_changed = old_price != price
+
             cursor.execute(
                 "UPDATE activities SET name=?, description=?, category=?, price=?, duration=?, capacity=?, img=?, pic=?, location=?, difficulty=?, status=?, available_dates=? WHERE id=?",
                 (name, description, category, price, duration, capacity, img, pic, location, difficulty, status, available_dates, activity_id)
@@ -337,10 +342,17 @@ class AuthController_Admin(BaseController):
                     "SELECT DISTINCT user_id FROM bookings WHERE activity = ? AND status = 'confirmed'",
                     (name,)
                 ).fetchall()
-                notify_msg = (
-                    f"The activity '{name}' has been updated by our team. "
-                    f"Please review your booking details to confirm availability."
-                )
+                if price_changed:
+                    notify_msg = (
+                        f"The activity '{name}' has been updated. The listed price has changed from "
+                        f"NPR {int(old_price):,} to NPR {int(price):,} for new bookings. "
+                        f"Your existing confirmed booking price is unaffected."
+                    )
+                else:
+                    notify_msg = (
+                        f"The activity '{name}' has been updated by our team. "
+                        f"Please review your booking details to confirm availability."
+                    )
                 for row in affected:
                     send_notification(row["user_id"], f"Activity Updated: {name}", notify_msg)
             except Exception as notif_err:
@@ -425,13 +437,43 @@ class AuthController_Admin(BaseController):
             internal_notes = data.get("internal_notes", booking["internal_notes"])
             date = data.get("date", booking["date"])
             people = int(data.get("people", booking["people"]))
-            price = float(data.get("price", booking["price"]))
+
+            # ── FIX #02: Lock price on confirmed payments ──────────────────
+            submitted_price = float(data.get("price", booking["price"]))
+            if booking["payment_status"] == "confirmed" and submitted_price != float(booking["price"]):
+                conn.close()
+                return jsonify({
+                    "success": False,
+                    "message": "Price cannot be changed for a confirmed payment. Booking price is locked."
+                }), 400
+            price = float(booking["price"]) if booking["payment_status"] == "confirmed" else submitted_price
             total = price * people
 
             # Guard refund action to admin/super_admin
             if payment_status == "refunded" and session["user"].get("role") == "staff":
                 conn.close()
                 return jsonify({"success": False, "message": "Permission denied for refund operations"}), 403
+
+            # ── FIX #09: Capacity validation on date/people change ─────────
+            date_changed = date != booking["date"]
+            people_changed = people != booking["people"]
+            if date_changed or people_changed:
+                activity_row = cursor.execute("SELECT capacity FROM activities WHERE name = ?", (booking["activity"],)).fetchone()
+                if activity_row:
+                    cap = int(activity_row["capacity"])
+                    existing = cursor.execute(
+                        "SELECT COALESCE(SUM(people), 0) AS booked FROM bookings "
+                        "WHERE activity = ? AND date = ? AND status != 'cancelled' AND id != ?",
+                        (booking["activity"], date, booking_id)
+                    ).fetchone()
+                    already_booked = int(existing["booked"]) if existing else 0
+                    if already_booked + people > cap:
+                        conn.close()
+                        return jsonify({
+                            "success": False,
+                            "message": f"Capacity exceeded for {booking['activity']} on {date}. "
+                                       f"Only {cap - already_booked} slot(s) available."
+                        }), 409
 
             cursor.execute(
                 "UPDATE bookings SET status=?, payment_status=?, internal_notes=?, date=?, people=?, price=?, total=? WHERE id=?",
@@ -617,13 +659,65 @@ class AuthController_Admin(BaseController):
                 conn.close()
                 return jsonify({"success": False, "message": "Only Super Admin can modify administrative users"}), 403
 
+            # ── FIX #06: Prevent privilege escalation ──────────────────────
+            if role in ["admin", "super_admin"] and session["user"]["role"] != "super_admin":
+                conn.close()
+                return jsonify({"success": False, "message": "Only Super Admin can assign privileged roles"}), 403
+
+            # Fetch existing data for audit diff and identity guard
+            existing_user = cursor.execute("SELECT username AS name, email, role, status FROM users WHERE id = ?", (user_id,)).fetchone()
+            if not existing_user:
+                conn.close()
+                return jsonify({"success": False, "message": "User not found"}), 404
+
+            # ── FIX #04 & #05: Identity fields (name/email) ───────────────
+            new_name = existing_user["name"]
+            new_email = existing_user["email"]
+            identity_changed = False
+
+            if name and name != existing_user["name"]:
+                if session["user"]["role"] != "super_admin":
+                    conn.close()
+                    return jsonify({"success": False, "message": "Only Super Admin can change a user's name"}), 403
+                new_name = name
+                identity_changed = True
+
+            if email and email != existing_user["email"]:
+                if session["user"]["role"] != "super_admin":
+                    conn.close()
+                    return jsonify({"success": False, "message": "Only Super Admin can change a user's email"}), 403
+                
+                # ── FIX #05: Email uniqueness check ───────────────────────
+                duplicate = cursor.execute(
+                    "SELECT id FROM users WHERE email = ? AND id != ?", (email, user_id)
+                ).fetchone()
+                if duplicate:
+                    conn.close()
+                    return jsonify({"success": False, "message": "That email address is already registered to another account"}), 409
+                new_email = email
+                identity_changed = True
+
+            # Build audit details
+            audit_parts = []
+            if new_name != existing_user["name"]:
+                audit_parts.append(f"name: '{existing_user['name']}'→'{new_name}'")
+            if new_email != existing_user["email"]:
+                audit_parts.append(f"email: '{existing_user['email']}'→'{new_email}'")
+            if role != existing_user["role"]:
+                audit_parts.append(f"role: '{existing_user['role']}'→'{role}'")
+            if status != existing_user["status"]:
+                audit_parts.append(f"status: '{existing_user['status']}'→'{status}'")
+            audit_details = "; ".join(audit_parts) if audit_parts else "No changes detected"
+
             # Update details
             cursor.execute(
                 "UPDATE users SET username=?, email=?, role=?, status=? WHERE id=?",
-                (name, email, role, status, user_id)
+                (new_name, new_email, role, status, user_id)
             )
             conn.commit()
-            log_audit(session["user"]["id"], "Update User Profile", f"User #{user_id}", f"Set role: {role}, status: {status}")
+            
+            # ── FIX #11: Full identity-aware audit log ─────────────────────
+            log_audit(session["user"]["id"], "Update User Profile", f"User #{user_id}", audit_details)
             conn.close()
             return jsonify({"success": True, "message": "User updated successfully"})
 
@@ -654,9 +748,68 @@ class AuthController_Admin(BaseController):
         if not user_id or not title or not message:
             return jsonify({"success": False, "message": "All message fields are required"}), 400
 
+        # ── FIX #07: Server-side input length limits ───────────────────────
+        if len(title) > 120:
+            return jsonify({"success": False, "message": "Alert title must be 120 characters or fewer"}), 400
+        if len(message) > 600:
+            return jsonify({"success": False, "message": "Notification message must be 600 characters or fewer"}), 400
+
+        # Verify the target user actually exists
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        target = cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,)).fetchone()
+        conn.close()
+        if not target:
+            return jsonify({"success": False, "message": "Target user not found"}), 404
+
         send_notification(user_id, title, message)
         log_audit(session["user"]["id"], "Send Notification", f"User #{user_id}", f"Dispatched notification: {title}")
         return jsonify({"success": True, "message": "Notification sent successfully"})
+
+    @admin_required
+    def api_send_event_email(self):
+        data = request.json
+        activity_name = data.get("activity_name", "").strip()
+        subject = data.get("subject", "").strip()
+        message = data.get("message", "").strip()
+
+        if not activity_name or not subject or not message:
+            return jsonify({"success": False, "message": "Activity name, subject, and message are required"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all users booked for this activity
+        users = cursor.execute("""
+            SELECT DISTINCT u.id, u.email, u.username 
+            FROM bookings b 
+            JOIN users u ON b.user_id = u.id 
+            WHERE LOWER(b.activity) = LOWER(?) AND b.status = 'confirmed'
+        """, (activity_name,)).fetchall()
+
+        if not users:
+            conn.close()
+            return jsonify({"success": False, "message": "No confirmed users found for this activity."}), 404
+
+        from app.utils.email import send_email
+
+        count = 0
+        for user in users:
+            # Insert into notifications table
+            cursor.execute(
+                "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
+                (user["id"], subject, message)
+            )
+            # Send simulated/actual email
+            html_content = f"<p>Hello {user['username']},</p><p>{message}</p>"
+            send_email(user["email"], subject, html_content, message)
+            count += 1
+
+        conn.commit()
+        log_audit(session["user"]["id"], "Send Event Email", f"Event: {activity_name}", f"Sent email to {count} users.")
+        conn.close()
+
+        return jsonify({"success": True, "message": f"Email sent to {count} users successfully!"})
 
     # ── AUDIT LOGS ENDPOINT ────────────────────────────────────────────────
     @admin_required

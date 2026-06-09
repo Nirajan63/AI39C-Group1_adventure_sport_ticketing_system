@@ -27,6 +27,7 @@ class AdminRoutes:
         self.bp.route("/api/users", methods=["GET"])(self.controller.api_users)
         self.bp.route("/api/users/<int:user_id>", methods=["PUT", "DELETE"])(self.controller.api_user_detail)
         self.bp.route("/api/notifications", methods=["POST"])(self.controller.api_notifications)
+        self.bp.route("/api/send-event-email", methods=["POST"])(self.controller.api_send_event_email)
         self.bp.route("/api/audit-logs", methods=["GET"])(self.controller.api_audit_logs)
 
         return self.bp

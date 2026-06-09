@@ -455,13 +455,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="notifTitle">Alert Title</label>
-                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" required>
+                            <label for="notifTitle">Alert Title <small class="text-secondary">(max 120 chars)</small></label>
+                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" maxlength="120" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="notifMessage">Notification Message</label>
-                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." required></textarea>
+                            <label for="notifMessage">Notification Message <small class="text-secondary">(max 600 chars)</small></label>
+                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." maxlength="600" required></textarea>
                         </div>
 
                         <div class="form-group">
@@ -474,6 +474,40 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block">Broadcast Message</button>
+                    </form>
+                </div>
+
+                <!-- NEW: Event Mass Email Dispatcher -->
+                <div class="card max-w-lg" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3>Event Mass Email Dispatcher</h3>
+                        <p class="text-secondary">Send simultaneous emails to all users registered for a specific event</p>
+                    </div>
+                    <form class="card-body" id="eventEmailForm" onsubmit="dispatchEventEmail(event)">
+                        <div class="form-group">
+                            <label for="eventEmailSelect">Select Event / Activity</label>
+                            <select id="eventEmailSelect" required>
+                                <option value="">-- Choose Activity --</option>
+                                <option value="Paragliding">Paragliding</option>
+                                <option value="Bungee Jumping">Bungee Jumping</option>
+                                <option value="River Rafting">River Rafting</option>
+                                <option value="Himalayan Trekking">Himalayan Trekking</option>
+                                <option value="Canyoning">Canyoning</option>
+                                <option value="Zip-lining">Zip-lining</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventEmailSubject">Email Subject</label>
+                            <input type="text" id="eventEmailSubject" placeholder="e.g. Important Update for your Booking" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventEmailMessage">Email Message</label>
+                            <textarea id="eventEmailMessage" rows="5" placeholder="Type instructions or details to email..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Send Mass Email</button>
                     </form>
                 </div>
             </section>
@@ -656,7 +690,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="bkFormPrice">Unit Cost (NPR)</label>
+                        <label for="bkFormPrice">Unit Cost (NPR) <small id="bkPriceLockNote" class="text-secondary" style="display:none">🔒 Locked — payment confirmed</small></label>
                         <input type="number" id="bkFormPrice" required>
                     </div>
                     <div class="form-group">
@@ -804,5 +838,54 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/dashboard_Admin.js') }}"></script>
+    <script>
+        async function dispatchEventEmail(e) {
+            e.preventDefault();
+            const activityName = document.getElementById('eventEmailSelect').value;
+            const subject = document.getElementById('eventEmailSubject').value;
+            const message = document.getElementById('eventEmailMessage').value;
+
+            if(!activityName || !subject || !message) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            if(!confirm(`Are you sure you want to send this email to ALL users booked for ${activityName}?`)) return;
+
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/send-event-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN || ''
+                    },
+                    body: JSON.stringify({
+                        activity_name: activityName,
+                        subject: subject,
+                        message: message
+                    })
+                });
+
+                const data = await res.json();
+                if(data.success) {
+                    alert('Success: ' + data.message);
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(err) {
+                console.error(err);
+                alert('An error occurred while sending emails.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>

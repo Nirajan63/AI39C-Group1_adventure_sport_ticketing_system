@@ -5,17 +5,9 @@
 }
 
 body{
-  font-family:Inter,sans-serif;
-  background:#08111f;
-  color:white;
+  /* Removed hardcoded background so base.html theme variables apply correctly */
   min-height:100vh;
   overflow-x:hidden;
-  padding:30px;
-
-  background:
-  linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.85)),
-  url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop')
-  center/cover fixed;
 }
 
 .bg-overlay{
@@ -23,6 +15,10 @@ body{
   inset:0;
   backdrop-filter:blur(4px);
   z-index:-1;
+  /* Apply the cool background only in dark mode or as a subtle overlay, 
+     but let's just make it subtle so it doesn't break light mode */
+  background: var(--bg-color);
+  opacity: 0.9;
 }
 
 .topbar{
@@ -62,12 +58,12 @@ body{
 }
 
 .glass{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
   backdrop-filter:blur(18px);
   border-radius:24px;
   overflow:hidden;
-  box-shadow:0 10px 40px rgba(0,0,0,.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 .cover-wrap{
@@ -102,7 +98,7 @@ body{
 }
 
 #displayRole{
-  color:#b8c5d6;
+  color: var(--muted);
   margin-top:8px;
 }
 
@@ -114,7 +110,8 @@ body{
 }
 
 .stat{
-  background:rgba(255,255,255,.05);
+  background: var(--bg-color);
+  border: 1px solid var(--border);
   padding:15px;
   border-radius:16px;
 }
@@ -135,7 +132,7 @@ body{
 }
 
 .form-header p{
-  color:#b8c5d6;
+  color: var(--muted);
   margin-bottom:30px;
 }
 
@@ -159,9 +156,9 @@ input, textarea, select{
   width:100%;
   padding:16px;
   border-radius:16px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.04);
-  color:white;
+  border:1px solid var(--border);
+  background: var(--bg-color);
+  color: var(--text-color);
   outline:none;
   transition:.3s;
 }
@@ -207,8 +204,8 @@ textarea{
 
 .outline{
   background:transparent;
-  color:white;
-  border:1px solid rgba(255,255,255,.15);
+  color: var(--text-color);
+  border:1px solid var(--border);
 }
 
 .danger{

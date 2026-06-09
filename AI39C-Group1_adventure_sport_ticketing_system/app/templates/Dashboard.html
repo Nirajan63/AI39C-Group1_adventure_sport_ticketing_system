@@ -17,7 +17,13 @@
       <a class="nav-item active" onclick="switchSection('overview', this)">Overview</a>
       <a class="nav-item" onclick="switchSection('bookings', this)">My Bookings</a>
       <a class="nav-item" onclick="switchSection('book-new', this)">Book Activity</a>
-      <a class="nav-item" onclick="switchSection('events', this)">Events</a>
+      <a class="nav-item" onclick="switchSection('events', this)">Calender</a>
+      <a class="nav-item" onclick="switchSection('notifications', this)">
+        Notifications
+        {% if notifications and notifications | selectattr('status', 'equalto', 'unread') | list | length > 0 %}
+          <span class="notif-badge" style="background: var(--orange); color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 4px; font-weight: 700;">{{ notifications | selectattr('status', 'equalto', 'unread') | list | length }}</span>
+        {% endif %}
+      </a>
       <a class="nav-item" onclick="switchSection('profile', this)">My Profile</a>
       <a href="{{ url_for('auth.logout') }}" class="nav-item logout-link">Logout</a>
     </nav>
@@ -393,6 +399,40 @@
       </div>
     </section>
 
+    <!-- ══ NOTIFICATIONS SECTION ══ -->
+    <section class="dash-section" id="notifications">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Your Notifications</h3>
+        </div>
+        <div class="notifications-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+          {% if notifications %}
+            {% for n in notifications %}
+              <div class="notification-item {% if n.status == 'unread' %}unread{% endif %}" id="notif-{{ n.id }}" style="padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: {% if n.status == 'unread' %}rgba(99,102,241,0.05){% else %}rgba(255,255,255,0.01){% endif %}; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s;">
+                <div style="flex-grow: 1; margin-right: 15px;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-weight: 700; color: #fff; font-size: 15px;">{{ n.title }}</span>
+                    {% if n.status == 'unread' %}
+                      <span class="unread-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--orange); display: inline-block;"></span>
+                    {% endif %}
+                  </div>
+                  <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">{{ n.message }}</p>
+                  <small style="font-size: 11px; color: var(--text-muted);">{{ n.timestamp }}</small>
+                </div>
+                {% if n.status == 'unread' %}
+                  <button class="btn-read" onclick="markAsRead({{ n.id }})" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: #fff; font-size: 12px; cursor: pointer; transition: all 0.2s;">Mark Read</button>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <p>You have no notifications at this time.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 {% endblock %}
@@ -402,6 +442,35 @@
 <script>
   window.THRILL_BOOKINGS     = {{ bookings     | tojson | safe }};
   window.THRILL_AVAILABILITY = {{ availability | tojson | safe }};
+
+  function markAsRead(id) {
+      fetch('/read-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id })
+      }).then(res => res.json()).then(data => {
+          if (data.success) {
+              const item = document.getElementById('notif-' + id);
+              if (item) {
+                  item.style.background = 'rgba(255,255,255,0.01)';
+                  const dot = item.querySelector('.unread-dot');
+                  if (dot) dot.remove();
+                  const btn = item.querySelector('.btn-read');
+                  if (btn) btn.remove();
+              }
+              // Update badge count
+              const badge = document.querySelector('.notif-badge');
+              if (badge) {
+                  const count = parseInt(badge.textContent, 10) - 1;
+                  if (count > 0) {
+                      badge.textContent = count;
+                  } else {
+                      badge.remove();
+                  }
+              }
+          }
+      });
+  }
 </script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/payment-assets.js') }}"></script>
