@@ -496,8 +496,9 @@ def get_published_events(filters, page=1, per_page=6):
     else:
         query += " ORDER BY date_time ASC"
 
-    # Count total matched
-    count_query = f"SELECT COUNT(*) as count FROM ({query}) AS temp_count"
+    # Count total matched — strip ORDER BY before wrapping in subquery (MySQL doesn't allow it)
+    count_base = query.split(" ORDER BY")[0]
+    count_query = f"SELECT COUNT(*) as count FROM ({count_base}) AS temp_count"
     cursor.execute(count_query, params)
     row = cursor.fetchone()
     total_events = row["count"] if row else 0
@@ -597,4 +598,3 @@ def create_booking(user_id, activity_id, booking_date, people):
         conn.close()
         return booking_id
     return None
-
