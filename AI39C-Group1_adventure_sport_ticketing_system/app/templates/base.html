@@ -236,13 +236,13 @@
             <a href="{{ url_for('event.events_page') }}" class="nav-item">Events</a>
             <a href="{{ url_for('auth.gallery') }}" class="nav-item">Gallery</a>
             <a href="{{ url_for('auth.reviews') }}" class="nav-item">Reviews</a>
-            {% if session.get('user_id') %}
+            {% if session.get('user') %}
                         <a href="/dashboard" data-nav-link data-i18n="nav.dashboard">Dashboard</a>
-                        <a href="/wishlist" data-nav-link>
-                            <span data-i18n="nav.wishlist">Wishlist</span>
-                            {% if wishlist_count and wishlist_count > 0 %}
-                                <span class="wishlist-badge">{{ wishlist_count }}</span>
-                            {% endif %}
+                        <a href="/wishlist" data-nav-link class="nav-wishlist-link">
+                           <span data-i18n="nav.wishlist">Wishlist</span>
+                           {% if wishlist_count and wishlist_count > 0 %}
+                               <span class="wishlist-badge">{{ wishlist_count }}</span>
+                           {% endif %}
                         </a>
                         <a href="/manage" data-nav-link data-i18n="nav.profile">Profile</a>
                     {% endif %}
