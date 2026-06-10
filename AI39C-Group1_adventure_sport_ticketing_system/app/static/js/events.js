@@ -683,7 +683,7 @@ let hasTimelineLoaded = false;
 
 async function initTimelinePlanner() {
     if (hasTimelineLoaded) return;
-    
+
     const weekStrip = document.getElementById('week-strip');
     if (weekStrip) {
         weekStrip.innerHTML = '<div class="skeleton-pulse" style="grid-column: 1/-1; height: 60px; border-radius: 12px; opacity: 0.3;"></div>';
@@ -691,8 +691,8 @@ async function initTimelinePlanner() {
 
     try {
         const response = await fetch('/api/events?page=1&per_page=100');
-        if (!response.ok) throw new Error('Failed to fetch events for timeline');
-        
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
         const data = await response.json();
         allEventsList = data.events || [];
         allEventsList.forEach(evt => {
@@ -704,17 +704,12 @@ async function initTimelinePlanner() {
         renderTimeline();
     } catch (err) {
         console.error('Timeline initialization error:', err);
+        // Reset flag so clicking the button again retries the fetch
+        hasTimelineLoaded = false;
+        if (weekStrip) weekStrip.innerHTML = '';
         const container = document.getElementById('timeline-container');
         if (container) {
-            container.innerHTML = `
-                <div class="timeline-empty-card">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <h4>Failed to Load Schedule</h4>
-                    <p>There was an error pulling the upcoming events. Please try again.</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="timeline-empty-card"><h4>Failed to Load Schedule</h4><p>There was an error pulling the upcoming events.</p><button class="btn-suggest-all" onclick="initTimelinePlanner()">Retry</button></div>';
         }
     }
 }
