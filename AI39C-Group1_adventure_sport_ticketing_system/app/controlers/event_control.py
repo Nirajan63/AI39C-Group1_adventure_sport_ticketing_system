@@ -23,6 +23,17 @@ class EventController(BaseController):
             wishlist_count = row["count"] if row else 0
             conn.close()
 
+        # Fetch wishlist IDs for the template
+        user_wishlist_ids = []
+        if user:
+            from app.models.database import get_db_connection
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = ?", (user["id"],))
+            rows = cursor.fetchall()
+            user_wishlist_ids = [row["activity_id"] for row in rows]
+            conn.close()
+
         categories = get_distinct_categories()
         locations = get_distinct_locations()
         featured = get_featured_events()
@@ -32,6 +43,7 @@ class EventController(BaseController):
             "events.html",
             user=user,
             wishlist_count=wishlist_count,
+            user_wishlist_ids=user_wishlist_ids,
             categories=categories,
             locations=locations,
             featured_events=featured,
