@@ -26,3 +26,4 @@ class Config:
         os.environ.get("SMTP_SENDER")
         or "SportAdventure Support <no-reply@sportadventure.com>"
     )
+ 
