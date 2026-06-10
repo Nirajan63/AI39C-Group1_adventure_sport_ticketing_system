@@ -15,3 +15,4 @@ class EventRoutes:
         self.bp.route("/api/events/book", methods=["POST"])(c.api_book_event)
         
         return self.bp
+ 
