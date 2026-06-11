@@ -3,7 +3,8 @@ from flask_cors import CORS
 import secrets
 from app.config import Config
 from app.routes.authroutes import AuthRoutes
-from app.routes.AuthRoutes_Admin import AdminRoutes
+from app.routes.adminroutes import AuthRoutes_Admin
+from app.routes.eventroutes import EventRoutes
 
 def generate_csrf_token():
     """Generate or retrieve a per-session CSRF token."""
@@ -57,14 +58,16 @@ def create_app():
             abort(403)
 
     auth_route = AuthRoutes()
-    app.register_blueprint(auth_route.register())
+    auth_route.register()
+    app.register_blueprint(auth_route.bp)
 
-    admin_route = AdminRoutes()
-    app.register_blueprint(admin_route.register())
+    admin_route = AuthRoutes_Admin()
+    admin_route.register()
+    app.register_blueprint(admin_route.bp)
 
-    from app.routes.eventroutes import EventRoutes
     event_route = EventRoutes()
-    app.register_blueprint(event_route.register())
+    event_route.register()
+    app.register_blueprint(event_route.bp)
 
     @app.context_processor
     def inject_user_wishlist():
