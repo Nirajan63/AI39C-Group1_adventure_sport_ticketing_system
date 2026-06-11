@@ -4,6 +4,8 @@ from flask import render_template, request, session, redirect, url_for, flash, j
 from datetime import datetime
 from app.controlers.baseController import BaseController
 from app.models.database import get_db_connection
+from app.models.user import User
+from app.models.data import Database
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -91,7 +93,7 @@ class AuthController_Admin(BaseController):
             # Check users
             user_data = self.user_model.find_by("email", username)
             if not user_data:
-                user_data = self.user_model.find_by("name", username)
+                user_data = self.user_model.find_by("username", username)
 
             if user_data:
                 user = User.from_db(user_data)
@@ -106,12 +108,11 @@ class AuthController_Admin(BaseController):
                         return render_template("login_Admin.html")
 
                     session["user"] = {
-                        "id":       user_data["id"],
-                        "name":     user_data["name"],
-                        "username": user_data["name"],
-                        "email":    user_data["email"],
-                        "role":     user_data["role"],
-                        "joined":   "May 2026",
+                        "id": user_data["id"],
+                        "username": user_data["username"],
+                        "email": user_data["email"],
+                        "role": user_data["role"],
+                        "joined": "May 2026",
                     }
                     log_audit(user_data["id"], "Login", f"User #{user_data['id']}", "Successful admin login")
 
@@ -192,11 +193,11 @@ class AuthController_Admin(BaseController):
         cancelled_bookings = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE status = 'cancelled'")["total"]
         
         # Payment indicators
-        total_revenue = cursor.execute("SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled'").fetchone()["total"] or 0
-        monthly_revenue = cursor.execute(
+        total_revenue = db.fetch_one("SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled'")["total"] or 0
+        monthly_revenue = db.fetch_one(
             "SELECT SUM(total) AS total FROM bookings WHERE payment_status = 'confirmed' AND status != 'cancelled' AND DATE_FORMAT(date, '%%Y-%%m') = DATE_FORMAT(NOW(), '%%Y-%%m')"
-        ).fetchone()["total"] or 0
-        pending_payments = cursor.execute("SELECT COUNT(*) AS total FROM bookings WHERE payment_status = 'pending'").fetchone()["total"]
+        )["total"] or 0
+        pending_payments = db.fetch_one("SELECT COUNT(*) AS total FROM bookings WHERE payment_status = 'pending'")["total"]
 
         stats = {
             "total_users": total_users,
@@ -382,7 +383,7 @@ class AuthController_Admin(BaseController):
     def api_bookings(self):
         db = Database()
         query = """
-            SELECT b.*, u.name AS user_name, u.email AS user_email
+            SELECT b.*, u.username AS user_name, u.email AS user_email
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             ORDER BY b.id DESC
@@ -410,7 +411,7 @@ class AuthController_Admin(BaseController):
             # ── FIX #02: Lock price on confirmed payments ──────────────────
             submitted_price = float(data.get("price", booking["price"]))
             if booking["payment_status"] == "confirmed" and submitted_price != float(booking["price"]):
-                conn.close()
+                db.close()
                 return jsonify({
                     "success": False,
                     "message": "Price cannot be changed for a confirmed payment. Booking price is locked."
@@ -427,24 +428,24 @@ class AuthController_Admin(BaseController):
             date_changed = date != booking["date"]
             people_changed = people != booking["people"]
             if date_changed or people_changed:
-                activity_row = cursor.execute("SELECT capacity FROM activities WHERE name = ?", (booking["activity"],)).fetchone()
+                activity_row = db.fetch_one("SELECT capacity FROM activities WHERE name = %s", (booking["activity"],))
                 if activity_row:
                     cap = int(activity_row["capacity"])
-                    existing = cursor.execute(
+                    existing = db.fetch_one(
                         "SELECT COALESCE(SUM(people), 0) AS booked FROM bookings "
-                        "WHERE activity = ? AND date = ? AND status != 'cancelled' AND id != ?",
+                        "WHERE activity = %s AND date = %s AND status != 'cancelled' AND id != %s",
                         (booking["activity"], date, booking_id)
-                    ).fetchone()
+                    )
                     already_booked = int(existing["booked"]) if existing else 0
                     if already_booked + people > cap:
-                        conn.close()
+                        db.close()
                         return jsonify({
                             "success": False,
                             "message": f"Capacity exceeded for {booking['activity']} on {date}. "
                                        f"Only {cap - already_booked} slot(s) available."
                         }), 409
 
-            cursor.execute(
+            db.execute(
                 "UPDATE bookings SET status=?, payment_status=?, internal_notes=?, date=?, people=?, price=?, total=? WHERE id=?",
                 (status, payment_status, internal_notes, date, people, price, total, booking_id)
             )
@@ -471,7 +472,7 @@ class AuthController_Admin(BaseController):
         query = """
             SELECT b.id AS booking_id, b.activity, b.date, b.total, b.payment_status,
                    b.payment_method, b.txn_code, b.status,
-                   u.name AS user_name, u.email AS user_email
+                   u.username AS user_name, u.email AS user_email
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             ORDER BY b.id DESC
@@ -554,7 +555,7 @@ class AuthController_Admin(BaseController):
     def api_users(self):
         db = Database()
         query = """
-            SELECT id, name, email, role, status, created_at,
+            SELECT id, username AS name, email, role, status, created_at,
             (SELECT COUNT(*) FROM bookings WHERE user_id = users.id) AS bookings_count,
             (SELECT SUM(total) FROM bookings WHERE user_id = users.id AND status != 'cancelled') AS total_spent
             FROM users
@@ -757,7 +758,7 @@ class AuthController_Admin(BaseController):
     def api_audit_logs(self):
         db = Database()
         logs = db.fetch_all("""
-            SELECT a.*, u.name AS admin_name
+            SELECT a.*, u.username AS admin_name
             FROM audit_logs a
             LEFT JOIN users u ON a.admin_id = u.id
             ORDER BY a.id DESC
