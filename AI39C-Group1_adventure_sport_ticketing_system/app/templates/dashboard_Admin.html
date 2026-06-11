@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -467,9 +467,9 @@
                         <div class="form-group">
                             <label>Delivery Channel</label>
                             <div class="checkbox-group">
-                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification</label>
-                                <label><input type="checkbox" checked disabled> Email Dispatcher (Simulated)</label>
-                                <label><input type="checkbox" disabled> SMS Dispatcher (Future API integration)</label>
+                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification <small class="text-secondary">(active)</small></label>
+                                <label><input type="checkbox" disabled> Email Dispatcher <small class="text-secondary">(not connected — dev mode only)</small></label>
+                                <label><input type="checkbox" disabled> SMS Dispatcher <small class="text-secondary">(future integration)</small></label>
                             </div>
                         </div>
 

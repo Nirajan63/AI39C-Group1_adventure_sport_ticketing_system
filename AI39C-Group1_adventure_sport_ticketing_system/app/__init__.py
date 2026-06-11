@@ -3,7 +3,7 @@ from flask_cors import CORS
 import secrets
 from app.config import Config
 from app.routes.authroutes import AuthRoutes
-from app.routes.adminroutes import AdminRoutes
+from app.routes.AuthRoutes_Admin import AdminRoutes
 
 def generate_csrf_token():
     """Generate or retrieve a per-session CSRF token."""

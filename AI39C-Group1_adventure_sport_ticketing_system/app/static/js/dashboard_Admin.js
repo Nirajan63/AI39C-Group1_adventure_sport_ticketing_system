@@ -991,7 +991,7 @@
             return;
         }
 
-        // ── FIX #07: Client-side input length limits ───────────────────────
+        // ── FIX #07: Client-side length limits (mirrors server validation) ─
         if (title.length > 120) {
             showAlert('Alert title must be 120 characters or fewer', 'danger');
             return;
