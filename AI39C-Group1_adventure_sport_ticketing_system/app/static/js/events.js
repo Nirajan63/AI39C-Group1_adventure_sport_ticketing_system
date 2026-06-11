@@ -16,7 +16,7 @@ let activeFilters = {
 };
 
 // DOM Elements
-let searchInput, categoryPills, locationSelect, sortSelect, dateStartInput, dateEndInput, priceRange, priceDisplay, eventsGrid, btnReset, loadMoreTrigger, detailsModal, modalOverlay;
+let eventsFilterSearch, categoryPills, locationSelect, sortSelect, dateStartInput, dateEndInput, priceRange, priceDisplay, eventsGrid, btnReset, loadMoreTrigger, detailsModal, modalOverlay;
 
 // Debounce helper to avoid hitting the server on every keystroke/slider adjustment
 function debounce(func, delay) {
@@ -30,7 +30,7 @@ function debounce(func, delay) {
 // Initialise Elements
 document.addEventListener('DOMContentLoaded', () => {
     // Select elements
-    searchInput = document.getElementById('search-input');
+    eventsFilterSearch = document.getElementById('search-input');
     categoryPills = document.querySelectorAll('.category-pill');
     locationSelect = document.getElementById('location-select');
     sortSelect = document.getElementById('sort-select');
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modalOverlay = document.getElementById('modal-overlay');
 
     // Bind event listeners if elements exist
-    if (searchInput) searchInput.addEventListener('input', debounce(handleSearchChange, 350));
+    if (eventsFilterSearch) eventsFilterSearch.addEventListener('input', debounce(handleSearchChange, 350));
     if (locationSelect) locationSelect.addEventListener('change', handleFilterChange);
     if (sortSelect) sortSelect.addEventListener('change', handleFilterChange);
     if (dateStartInput) dateStartInput.addEventListener('change', handleFilterChange);
@@ -142,7 +142,7 @@ function handleFilterChange() {
 }
 
 function resetAllFilters() {
-    if (searchInput) searchInput.value = '';
+    if (eventsFilterSearch) eventsFilterSearch.value = '';
     if (locationSelect) locationSelect.value = '';
     if (sortSelect) sortSelect.value = 'upcoming';
     if (dateStartInput) dateStartInput.value = '';
@@ -315,17 +315,11 @@ function renderEvents(events, append = false) {
             </div>
         ` : '';
 
-        // Check if in wishlist from navbar user cache if logged in
+        // Check if in wishlist from user wishlist ids
         let savedClass = '';
-        try {
-            const wishlistBadge = document.querySelector('.wishlist-badge');
-            // Alternatively, we can check if it is active. On page load we match it from session.
-            // For AJAX, let's look at DOM references
-            const existingBtn = document.querySelector(`.wishlist-btn[data-activity-id="event_${evt.id}"]`);
-            if (existingBtn && existingBtn.classList.contains('is-saved')) {
-                savedClass = 'is-saved';
-            }
-        } catch (e) {}
+        if (window.userWishlistIds && window.userWishlistIds.includes(`event_${evt.id}`)) {
+            savedClass = 'is-saved';
+        }
 
         cardsHtml += `
             <div class="event-card" style="animation-delay: ${idx * 0.05}s">
@@ -394,7 +388,7 @@ async function toggleEventWishlist(event, activityId) {
         return;
     }
 
-    const btn = event.currentTarget;
+    const btn = event.currentTarget || event.target.closest('.wishlist-btn') || event.target;
     btn.disabled = true;
 
     try {
@@ -406,14 +400,24 @@ async function toggleEventWishlist(event, activityId) {
             body: JSON.stringify({ activity_id: activityId })
         });
 
+        if (response.status === 401) {
+            window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
+            return;
+        }
         if (!response.ok) throw new Error('Wishlist toggle request failed');
         const data = await response.json();
 
         if (data.status === 'success') {
             if (data.saved) {
                 btn.classList.add('is-saved');
+                if (window.userWishlistIds && !window.userWishlistIds.includes(activityId)) {
+                    window.userWishlistIds.push(activityId);
+                }
             } else {
                 btn.classList.remove('is-saved');
+                if (window.userWishlistIds) {
+                    window.userWishlistIds = window.userWishlistIds.filter(id => id !== activityId);
+                }
             }
 
             // Sync other buttons for the same event on page if they exist
@@ -511,7 +515,7 @@ async function openDetailsModal(eventId) {
         const dateInput = document.getElementById('booking-date');
         if (dateInput) {
             // Set date value to match event date (YYYY-MM-DD format)
-            const dateStr = selectedEvent.date_time.split('T')[0];
+            const dateStr = getEventDateStr(selectedEvent);
             dateInput.value = dateStr;
             dateInput.min = dateStr; // Cannot book past or before this exact day
             dateInput.max = dateStr;
@@ -681,6 +685,24 @@ function showToastMessage(category, message) {
 let allEventsList = [];
 let hasTimelineLoaded = false;
 
+function getEventDateStr(evt) {
+    if (!evt || !evt.date_time) return '';
+    const raw = String(evt.date_time);
+    if (raw.length >= 10 && raw.charAt(4) === '-' && raw.charAt(7) === '-') {
+        return raw.substring(0, 10);
+    }
+    try {
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+    } catch (e) {}
+    return raw.substring(0, 10);
+}
+
 async function initTimelinePlanner() {
     if (hasTimelineLoaded) return;
 
@@ -740,7 +762,7 @@ function buildWeekStripCalendar() {
 
     let pillsHtml = '';
     days.forEach(day => {
-        const hasEvent = allEventsList.some(evt => evt.date_time.split('T')[0] === day.isoDate);
+        const hasEvent = allEventsList.some(evt => getEventDateStr(evt) === day.isoDate);
         const dotHtml = hasEvent ? '<span class="has-event-dot"></span>' : '';
         const todayClass = day.dayName === 'Today' ? 'is-today' : '';
 
@@ -870,7 +892,7 @@ function renderTimeline(filteredDate = null) {
 
     let events = [...allEventsList];
     if (filteredDate) {
-        events = events.filter(evt => evt.date_time.split('T')[0] === filteredDate);
+        events = events.filter(evt => getEventDateStr(evt) === filteredDate);
     }
 
     if (events.length === 0) {
@@ -899,7 +921,7 @@ function renderTimeline(filteredDate = null) {
 
     const groups = {};
     events.forEach(evt => {
-        const dateStr = evt.date_time.split('T')[0];
+        const dateStr = getEventDateStr(evt);
         if (!groups[dateStr]) {
             groups[dateStr] = [];
         }
@@ -907,7 +929,8 @@ function renderTimeline(filteredDate = null) {
     });
 
     let timelineHtml = '';
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     Object.keys(groups).forEach(dateStr => {
         const groupEvents = groups[dateStr];
@@ -953,3 +976,8 @@ function renderTimeline(filteredDate = null) {
 
     container.innerHTML = timelineHtml;
 }
+
+// Expose handlers for inline onclick attributes in server-rendered markup
+window.toggleEventWishlist = toggleEventWishlist;
+window.initTimelinePlanner = initTimelinePlanner;
+window.handleDayPillClick = handleDayPillClick;

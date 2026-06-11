@@ -26,6 +26,23 @@ def get_db_connection():
     )
     return conn
 
+
+def _normalize_event_row(row):
+    """Ensure PyMySQL datetime values serialize consistently for JSON/API consumers."""
+    if not row:
+        return row
+    d = dict(row)
+    dt = d.get("date_time")
+    if dt is not None:
+        if hasattr(dt, "strftime"):
+            d["date_time"] = dt.strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            s = str(dt).strip()
+            if "T" not in s and " " in s:
+                s = s.replace(" ", "T", 1)
+            d["date_time"] = s[:19] if len(s) >= 19 else s
+    return d
+
 def create_database_if_not_exists():
     host = os.environ.get("MYSQL_HOST", "localhost")
     user = os.environ.get("MYSQL_USER", "root")
@@ -449,7 +466,7 @@ def get_event_by_id(event_id):
     cursor.execute("SELECT * FROM events WHERE id = ?", (event_id,))
     event = cursor.fetchone()
     conn.close()
-    return event
+    return _normalize_event_row(event)
 
 def get_published_events(filters, page=1, per_page=6):
     conn = get_db_connection()
@@ -511,7 +528,7 @@ def get_published_events(filters, page=1, per_page=6):
     rows = cursor.fetchall()
     conn.close()
 
-    events_list = [dict(row) for row in rows]
+    events_list = [_normalize_event_row(row) for row in rows]
 
     import math
     total_pages = math.ceil(total_events / per_page)
@@ -532,7 +549,7 @@ def get_featured_events():
     )
     rows = cursor.fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    return [_normalize_event_row(r) for r in rows]
 
 def get_distinct_categories():
     conn = get_db_connection()

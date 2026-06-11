@@ -292,7 +292,9 @@
     </header>
 
     <!-- ══ Dynamic Content ══ -->
-    {% block content %}{% endblock %}
+    <main class="page-shell {% block page_shell_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
 
     <!-- ══ Footer ══ -->
     <footer class="unified-footer">
@@ -330,12 +332,13 @@
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
     <script>
-        // Global Search Autosuggestion
+        // Global Search Autosuggestion (scoped to avoid clashing with events.js)
+        (function () {
         const searchInput = document.getElementById('globalSearchInput');
         const searchSuggestions = document.getElementById('searchSuggestions');
         let searchTimeout;
 
-        if (searchInput) {
+        if (searchInput && searchSuggestions) {
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
                 clearTimeout(searchTimeout);
@@ -399,6 +402,7 @@
                 }
             });
         }
+        })();
     </script>
     {% block scripts %}{% endblock %}
 </body>
