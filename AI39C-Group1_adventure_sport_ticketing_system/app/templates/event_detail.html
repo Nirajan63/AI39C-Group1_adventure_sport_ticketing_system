@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} — Thrill Sphere{% endblock %}
+
+{% block page_shell_class %}page-shell--event-detail{% endblock %}
+
+{% block styles %}
+<!-- Leaflet Map CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/event_detail.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    
+    <!-- Floating Back & Action Bar -->
+    <div class="action-bar">
+        <a href="{{ url_for('event.events_page') }}" class="btn-back">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back to Events</span>
+        </a>
+        
+        <button class="wishlist-btn {% if 'event_' ~ (event.id|string) in user_wishlist_ids %}is-saved{% endif %}" 
+                data-activity-id="event_{{ event.id }}" 
+                onclick="toggleDetailWishlist(event, 'event_{{ event.id }}')"
+                aria-label="Add to Wishlist">
+            <svg class="heart-icon" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span class="wishlist-text">{% if 'event_' ~ (event.id|string) in user_wishlist_ids %}Saved to Wishlist{% else %}Add to Wishlist{% endif %}</span>
+        </button>
+    </div>
+
+    <!-- Header Hero Banner -->
+    <div class="detail-hero">
+        <img class="hero-image" src="{{ url_for('static', filename='images/' + (event.image_url or 'Mountain-Main.png')) }}" alt="{{ event.title }}" onerror="this.src='{{ url_for('static', filename='images/Mountain-Main.png') }}';">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="tags-row">
+                <span class="category-tag">{{ event.category }}</span>
+                {% if event.badge %}
+                <span class="badge-tag {{ event.badge|lower }}">{{ event.badge }}</span>
+                {% endif %}
+            </div>
+            <h1 class="event-title">{{ event.title }}</h1>
+            <div class="quick-meta">
+                <div class="meta-item">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="currentColor"/></svg>
+                    <span>{{ event.location }}</span>
+                </div>
+                <div class="meta-item">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="event-datetime-raw" data-time="{{ event.date_time }}">{{ event.date_time }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout Grid -->
+    <div class="detail-grid">
+        
+        <!-- Left Column (Description, Organizer, Location Map) -->
+        <div class="left-col">
+            <section class="info-section">
+                <h2>Adventure Overview</h2>
+                <div class="description-text">
+                    {{ event.description or 'No detailed description available for this adventure. Prepare yourself for an unforgettable experience!' }}
+                </div>
+            </section>
+            
+            <section class="info-section organizer-section">
+                <h2>Organizer Information</h2>
+                <div class="organizer-card">
+                    <div class="org-avatar">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="org-details">
+                        <h3 class="org-name">{{ event.organizer_name or 'Thrill Sphere Organizer' }}</h3>
+                        <p class="org-subtitle">Official Host & Safety Coordinator</p>
+                        <div class="org-contact-list">
+                            <a href="tel:{{ event.organizer_phone or '+977-9876543210' }}" class="org-contact-item">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                <span>{{ event.organizer_phone or '+977-9876543210' }}</span>
+                            </a>
+                            <a href="mailto:{{ event.organizer_email or 'organizer@thrillsphere.com' }}" class="org-contact-item">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                <span>{{ event.organizer_email or 'organizer@thrillsphere.com' }}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section map-section">
+                <h2>Event Location</h2>
+                <div class="map-container-wrap">
+                    <div id="map"></div>
+                    <div class="map-meta">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span>{{ event.location }} (Venue details will be sent in ticket confirmation)</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column (Booking Widget) -->
+        <div class="right-col">
+            <div class="booking-widget sticky-widget">
+                <div class="widget-header">
+                    <div class="price-box">
+                        <span class="price-sub">Ticket Price</span>
+                        <span class="price-main">NPR {{ "{:,}".format(event.price) }}</span>
+                    </div>
+                    <div class="duration-box">
+                        <span class="duration-label">Duration</span>
+                        <span class="duration-value">{{ event.duration or '3 hours' }}</span>
+                    </div>
+                </div>
+
+                <div class="availability-meter">
+                    <div class="meter-info">
+                        <span>Availability Status</span>
+                        <span id="seats-left-text" data-left="{{ event.tickets_left }}" style="font-weight: 700;">{{ event.tickets_left }} seats left</span>
+                    </div>
+                    <div class="meter-progress-bg">
+                        <div id="seats-progress-bar" class="meter-progress-fill {% if event.tickets_left <= 5 %}low{% endif %}" style="width: {{ (event.tickets_left / 50) * 100 }}%"></div>
+                    </div>
+                </div>
+
+                <form class="checkout-form" id="booking-form" onsubmit="submitDetailBooking(event)">
+                    <div class="form-group">
+                        <label for="booking-date-field">Choose Date</label>
+                        <input type="date" id="booking-date-field" value="{{ event.date_time.split('T')[0] }}" min="{{ event.date_time.split('T')[0] }}" max="{{ event.date_time.split('T')[0] }}" readonly required>
+                        <small class="form-note">This event takes place on a specific scheduled day.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="booking-tickets">Number of Tickets</label>
+                        <div class="quantity-selector">
+                            <button type="button" class="qty-btn minus" onclick="updateQty(-1)">-</button>
+                            <input type="number" id="booking-tickets" min="1" max="{{ event.tickets_left }}" value="1" readonly required>
+                            <button type="button" class="qty-btn plus" onclick="updateQty(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="price-summary">
+                        <span>Total Price</span>
+                        <span id="checkout-total-price">NPR {{ "{:,}".format(event.price) }}</span>
+                    </div>
+
+                    <button type="submit" id="btn-detail-book-now" class="btn-checkout" {% if event.tickets_left <= 0 %}disabled{% endif %}>
+                        {% if event.tickets_left <= 0 %}Sold Out{% else %}Confirm Booking{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet Map JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    // Bind event data for scripts
+    const eventData = {
+        id: {{ event.id }},
+        title: {{ event.title|tojson }},
+        price: {{ event.price }},
+        ticketsLeft: {{ event.tickets_left }},
+        latitude: {{ event.latitude or 27.7172 }},
+        longitude: {{ event.longitude or 85.3240 }}
+    };
+
+    // Format dates on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateEl = document.querySelector('.event-datetime-raw');
+        if (dateEl) {
+            const rawTime = dateEl.getAttribute('data-time');
+            if (rawTime) {
+                try {
+                    const d = new Date(rawTime);
+                    dateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' @ ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                } catch(err) {}
+            }
+        }
+
+        // Initialize Map
+        try {
+            const map = L.map('map', {
+                scrollWheelZoom: false
+            }).setView([eventData.latitude, eventData.longitude], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            const customIcon = L.divIcon({
+                className: 'custom-map-pin',
+                html: `<div class="pin-pulse"></div><div class="pin-dot"></div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            L.marker([eventData.latitude, eventData.longitude], { icon: customIcon }).addTo(map)
+                .bindPopup(`<strong>${eventData.title}</strong><br/>Adventure Zone`)
+                .openPopup();
+        } catch (e) {
+            console.error("Leaflet Map failed to load:", e);
+        }
+    });
+
+    // Wishlist Toggle
+    async function toggleDetailWishlist(event, activityId) {
+        event.preventDefault();
+        
+        const wishlistLink = document.querySelector('.nav-wishlist-link');
+        if (!wishlistLink) {
+            window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
+            return;
+        }
+
+        const btn = event.currentTarget;
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/wishlist/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ activity_id: activityId })
+            });
+
+            if (!response.ok) throw new Error('Wishlist toggle request failed');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const textEl = btn.querySelector('.wishlist-text');
+                if (data.saved) {
+                    btn.classList.add('is-saved');
+                    if (textEl) textEl.textContent = "Saved to Wishlist";
+                    showToastMessage('success', "Event added to your wishlist!");
+                } else {
+                    btn.classList.remove('is-saved');
+                    if (textEl) textEl.textContent = "Add to Wishlist";
+                    showToastMessage('success', "Event removed from your wishlist.");
+                }
+
+                // Update badge count
+                const badge = document.querySelector('.wishlist-badge');
+                if (badge) {
+                    let count = parseInt(badge.textContent) || 0;
+                    let newCount = data.saved ? count + 1 : count - 1;
+                    if (newCount <= 0) {
+                        badge.remove();
+                    } else {
+                        badge.textContent = newCount;
+                    }
+                } else if (data.saved) {
+                    const navLink = document.querySelector('.nav-wishlist-link');
+                    if (navLink) {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'wishlist-badge';
+                        newBadge.textContent = '1';
+                        navLink.appendChild(newBadge);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Wishlist toggle error:', err);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Quantity Picker logic
+    function updateQty(delta) {
+        const input = document.getElementById('booking-tickets');
+        if (!input) return;
+        
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        
+        if (val < 1) val = 1;
+        if (val > eventData.ticketsLeft) val = eventData.ticketsLeft;
+        
+        input.value = val;
+        
+        // Update price
+        const totalCost = eventData.price * val;
+        const totalSpan = document.getElementById('checkout-total-price');
+        if (totalSpan) {
+            totalSpan.textContent = `NPR ${totalCost.toLocaleString()}`;
+        }
+    }
+
+    // Submit Booking
+    async function submitDetailBooking(event) {
+        event.preventDefault();
+        
+        const ticketsInput = document.getElementById('booking-tickets');
+        const dateInput = document.getElementById('booking-date-field');
+        const btnBook = document.getElementById('btn-detail-book-now');
+        if (!ticketsInput || !dateInput || !btnBook) return;
+
+        btnBook.disabled = true;
+        btnBook.textContent = 'Processing...';
+
+        try {
+            const response = await fetch('/api/events/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_id: eventData.id,
+                    date: dateInput.value,
+                    people: parseInt(ticketsInput.value) || 1
+                })
+            });
+
+            const data = await response.json();
+            
+            if (response.status === 401) {
+                window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
+                return;
+            }
+
+            if (response.ok && data.status === 'success') {
+                showToastMessage('success', data.message);
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
+            } else {
+                showToastMessage('error', data.message || 'Booking failed.');
+                btnBook.disabled = false;
+                btnBook.textContent = 'Confirm Booking';
+            }
+
+        } catch (err) {
+            console.error('Booking submission error:', err);
+            showToastMessage('error', 'Connection error. Please try again.');
+            btnBook.disabled = false;
+            btnBook.textContent = 'Confirm Booking';
+        }
+    }
+
+    // Toast helper
+    function showToastMessage(category, message) {
+        const container = document.getElementById('global-toast-container') || document.body;
+        const toast = document.createElement('div');
+        toast.className = `toast-msg-item ${category}`;
+        
+        let iconSvg = '';
+        if (category === 'success') {
+            iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+        } else {
+            iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+        }
+        
+        toast.innerHTML = `
+            <div class="toast-icon">${iconSvg}</div>
+            <div class="toast-text">${message}</div>
+            <button class="toast-close-btn">&times;</button>
+        `;
+        
+        toast.onclick = () => toast.remove();
+        
+        if (container === document.body) {
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.right = '24px';
+            toast.style.zIndex = '9999';
+        }
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.transition = 'transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease';
+            toast.style.transform = 'translateY(-20px) scale(0.9)';
+            toast.style.opacity = '0';
+            toast.style.filter = 'blur(4px)';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+</script>
+{% endblock %}

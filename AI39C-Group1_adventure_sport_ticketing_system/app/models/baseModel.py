@@ -17,7 +17,7 @@ from .data import Database
 # Whitelist of columns that may be interpolated into SQL identifiers.
 # This prevents SQL injection via find_by(column, ...) and find_all(order_by=...).
 _SAFE_COLUMNS = {
-    "id", "name", "email", "role", "status", "created_at",
+    "id", "name", "username", "email", "role", "status", "created_at",
     "user_id", "activity", "date", "people", "price", "total",
     "payment_status", "payment_method", "txn_code",
     "admin_id", "action", "target_record", "timestamp",

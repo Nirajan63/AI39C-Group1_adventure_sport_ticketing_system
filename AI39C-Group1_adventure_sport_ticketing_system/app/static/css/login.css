@@ -147,6 +147,26 @@ form {
     transition: color 0.3s ease;
 }
 
+.input-box.password-container input {
+    padding-right: 50px;
+}
+
+.input-box.password-container input::-ms-reveal,
+.input-box.password-container input::-ms-clear {
+    display: none;
+}
+
+.input-box.password-container i.eye-icon {
+    right: 20px;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.input-box.password-container i.eye-icon:hover {
+    color: var(--text-color);
+    transform: translateY(-50%) scale(1.1);
+}
+
 .forgot-link {
     margin: -15px 0 15px;
 }

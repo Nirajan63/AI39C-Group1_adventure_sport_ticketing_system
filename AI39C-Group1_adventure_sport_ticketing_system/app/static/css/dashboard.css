@@ -255,6 +255,24 @@ a { text-decoration: none; }
 .booking-status.confirmed { background: rgba(0,200,120,0.12); color: var(--green); border: 1px solid rgba(0,200,120,0.3); }
 .booking-status.completed { background: rgba(79,172,254,0.12); color: var(--blue);  border: 1px solid rgba(79,172,254,0.3); }
 
+.booking-cancel-btn {
+    margin-top: 8px;
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.booking-cancel-btn:hover {
+    background: var(--red);
+    color: white;
+}
+
 /* ══════════════════
    QUICK GRID
    ══════════════════ */

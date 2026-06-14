@@ -1,6 +1,24 @@
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Show/Hide password toggle logic
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('signup-password');
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (type === 'password') {
+                togglePassword.classList.remove('bx-hide');
+                togglePassword.classList.add('bx-show');
+            } else {
+                togglePassword.classList.remove('bx-show');
+                togglePassword.classList.add('bx-hide');
+            }
+        });
+    }
+
     const signupForm = document.getElementById('signup-form');
     if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {

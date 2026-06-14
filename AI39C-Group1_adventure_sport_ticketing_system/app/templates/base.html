@@ -138,6 +138,85 @@
         html.dark-mode .section-desc, html.dark-mode .section-sub { color: var(--muted) !important; }
         html.dark-mode .btn-solid { background: var(--accent) !important; color: #fff !important; }
         html.dark-mode .btn-dark { background: var(--surface) !important; color: var(--text) !important; }
+
+        /* Search Bar & Autosuggestions */
+        .nav-search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 5px 15px;
+            border: 1px solid var(--border);
+            margin-right: 15px;
+        }
+        .nav-search input {
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 5px;
+            color: var(--text-color);
+            font-family: inherit;
+            width: 200px;
+        }
+        .nav-search i {
+            color: var(--muted);
+        }
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .search-suggestions.show {
+            display: flex;
+        }
+        .suggestion-item {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover {
+            background: rgba(116, 148, 236, 0.1);
+        }
+        .suggestion-item img {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .suggestion-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .suggestion-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .suggestion-cat {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+        @media (max-width: 768px) {
+            .nav-search { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -153,20 +232,30 @@
 
             <div class="nav-content" data-nav-content>
                 <nav class="nav-links">
-                    <a href="/" data-nav-link data-i18n="nav.home">Home</a>
-                    {% if session.get('user') %}
+            <a href="{{ url_for('auth.home') }}" class="nav-item">Explore</a>
+            <a href="{{ url_for('event.events_page') }}" class="nav-item">Events</a>
+            <a href="{{ url_for('auth.gallery') }}" class="nav-item">Gallery</a>
+            <a href="{{ url_for('auth.reviews') }}" class="nav-item">Reviews</a>
+            {% if session.get('user') %}
                         <a href="/dashboard" data-nav-link data-i18n="nav.dashboard">Dashboard</a>
-                        <a href="/wishlist" data-nav-link>
-                            <span data-i18n="nav.wishlist">Wishlist</span>
-                            {% if wishlist_count and wishlist_count > 0 %}
-                                <span class="wishlist-badge">{{ wishlist_count }}</span>
-                            {% endif %}
+                        <a href="/wishlist" data-nav-link class="nav-wishlist-link">
+                           <span data-i18n="nav.wishlist">Wishlist</span>
+                           {% if wishlist_count and wishlist_count > 0 %}
+                               <span class="wishlist-badge">{{ wishlist_count }}</span>
+                           {% endif %}
                         </a>
                         <a href="/manage" data-nav-link data-i18n="nav.profile">Profile</a>
                     {% endif %}
                 </nav>
 
                 <div class="nav-actions">
+                    <!-- Search Bar -->
+                    <div class="nav-search">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="globalSearchInput" placeholder="Search adventures..." autocomplete="off">
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div>
+
                     <!-- Language Toggle -->
                     <button id="langToggleBtn" aria-label="Toggle language">नेपाली</button>
 
@@ -176,6 +265,11 @@
                     </button>
 
                     {% if session.get('user') %}
+                        <!-- Notifications -->
+                        <button class="icon-button" aria-label="Notifications" onclick="alert('Notifications will appear here.')">
+                            <i class='bx bxs-bell' style="font-size:1.2rem; color:var(--text-color);"></i>
+                        </button>
+                        
                         <span class="user-chip">
                             {% if session['user'].get('avatar') %}
                                 <img src="{{ session['user']['avatar'] }}" alt="avatar" class="user-avatar-img">
@@ -198,7 +292,9 @@
     </header>
 
     <!-- ══ Dynamic Content ══ -->
-    {% block content %}{% endblock %}
+    <main class="page-shell {% block page_shell_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
 
     <!-- ══ Footer ══ -->
     <footer class="unified-footer">
@@ -235,6 +331,79 @@
     <!-- Global Scripts -->
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
+    <script>
+        // Global Search Autosuggestion (scoped to avoid clashing with events.js)
+        (function () {
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        let searchTimeout;
+
+        if (searchInput && searchSuggestions) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 1) {
+                    searchSuggestions.classList.remove('show');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            searchSuggestions.innerHTML = '';
+                            if (data.length > 0) {
+                                data.forEach(item => {
+                                    const a = document.createElement('a');
+                                    a.className = 'suggestion-item';
+                                    a.href = `/activity/${item.id}`;
+                                    
+                                    const img = document.createElement('img');
+                                    img.src = `/static/images/${item.img}`;
+                                    img.onerror = function() { this.src = '/static/images/Mountain-Main.png'; };
+                                    
+                                    const info = document.createElement('div');
+                                    info.className = 'suggestion-info';
+                                    
+                                    const name = document.createElement('span');
+                                    name.className = 'suggestion-name';
+                                    name.textContent = item.name;
+                                    
+                                    const cat = document.createElement('span');
+                                    cat.className = 'suggestion-cat';
+                                    cat.textContent = item.category;
+                                    
+                                    info.appendChild(name);
+                                    info.appendChild(cat);
+                                    
+                                    a.appendChild(img);
+                                    a.appendChild(info);
+                                    
+                                    searchSuggestions.appendChild(a);
+                                });
+                                searchSuggestions.classList.add('show');
+                            } else {
+                                searchSuggestions.innerHTML = '<div class="suggestion-item"><span class="suggestion-name" style="color:var(--muted)">No results found</span></div>';
+                                searchSuggestions.classList.add('show');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Search error:', err);
+                    }
+                }, 300);
+            });
+
+            // Close suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                    searchSuggestions.classList.remove('show');
+                }
+            });
+        }
+        })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
