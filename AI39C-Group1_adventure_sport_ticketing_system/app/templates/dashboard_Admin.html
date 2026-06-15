@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -76,9 +76,25 @@
             </div>
         </aside>
 
-       
+        <!-- Main Workspace Area -->
+        <main class="main-content">
+            <!-- Header bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <span id="page-subtitle" class="text-secondary">Welcome back to the command center</span>
+                </div>
+                <div class="top-bar-right">
+                    <div class="date-indicator">
+                        <i class="bx bx-calendar-event"></i>
+                        <span id="current-date">June 5, 2026</span>
+                    </div>
+                </div>
+            </header>
 
-    
+            <!-- Alerts Container -->
+            <div id="alertContainer"></div>
+
             <!-- TAB 1: OVERVIEW -->
             <section class="admin-section active" id="sec-overview">
                 <!-- Statistic Grid -->
@@ -121,8 +137,173 @@
                     </div>
                 </div>
 
-               
-            
+                <!-- Sub-stats row -->
+                <div class="sub-stats-row">
+                    <div class="sub-stat-card">
+                        <i class="bx bx-check-circle text-emerald"></i>
+                        <div>
+                            <h4>{{ stats.active_bookings }}</h4>
+                            <span>Active Bookings</span>
+                        </div>
+                    </div>
+                    <div class="sub-stat-card">
+                        <i class="bx bx-x-circle text-rose"></i>
+                        <div>
+                            <h4>{{ stats.cancelled_bookings }}</h4>
+                            <span>Cancelled</span>
+                        </div>
+                    </div>
+                    <div class="sub-stat-card">
+                        <i class="bx bx-trophy text-indigo"></i>
+                        <div>
+                            <h4>{{ stats.completed_activities }}</h4>
+                            <span>Completed</span>
+                        </div>
+                    </div>
+                    <div class="sub-stat-card">
+                        <i class="bx bx-time text-amber"></i>
+                        <div>
+                            <h4>{{ stats.pending_payments }}</h4>
+                            <span>Pending Payments</span>
+                        </div>
+                    </div>
+                    <div class="sub-stat-card">
+                        <i class="bx bx-trending-up text-emerald"></i>
+                        <div>
+                            <h4>NPR {{ "{:,.0f}".format(stats.monthly_revenue) }}</h4>
+                            <span>Revenue This Month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Area -->
+                <div class="charts-row">
+                    <div class="chart-box card">
+                        <div class="card-header">
+                            <h3>Revenue Trends</h3>
+                            <span class="text-secondary">Weekly and monthly transaction patterns</span>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box card">
+                        <div class="card-header">
+                            <h3>Popular Activities</h3>
+                            <span class="text-secondary">Booking distributions by activity type</span>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="popularityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings & Audit Trail summary -->
+                <div class="dashboard-split">
+                    <div class="card split-box">
+                        <div class="card-header">
+                            <h3>Recent Bookings</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="switchAdminTab('bookings')">View All</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="recentBookingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Activity</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card split-box">
+                        <div class="card-header">
+                            <h3>Recent Audit Actions</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="switchAdminTab('audit-logs')">View Logs</button>
+                        </div>
+                        <div class="audit-list" id="recentAuditList">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ACTIVITIES -->
+            <section class="admin-section" id="sec-activities">
+                <div class="actions-bar">
+                    <div class="search-box">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="activitySearchInput" placeholder="Search activities..." oninput="filterActivities()">
+                    </div>
+                    {% if user.role != 'staff' %}
+                    <button class="btn btn-primary" onclick="openActivityModal()"><i class="bx bx-plus"></i> Add Activity</button>
+                    {% endif %}
+                </div>
+
+                <div class="activities-grid" id="activitiesContainer">
+                    <!-- Dynamic Activity Cards populated via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 3: BOOKINGS -->
+            <section class="admin-section" id="sec-bookings">
+                <div class="actions-bar filter-bar">
+                    <div class="search-box flex-grow">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="bookingSearchInput" placeholder="Search by name, email or ID..." oninput="filterBookingsTable()">
+                    </div>
+                    <div class="filters-group">
+                        <select id="filterActivity" onchange="filterBookingsTable()">
+                            <option value="">All Activities</option>
+                            <!-- Options dynamically populated -->
+                        </select>
+                        <select id="filterBookingStatus" onchange="filterBookingsTable()">
+                            <option value="">All Booking Statuses</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select id="filterPaymentStatus" onchange="filterBookingsTable()">
+                            <option value="">All Payment Statuses</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending">Pending</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table" id="mainBookingsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User Details</th>
+                                    <th>Activity</th>
+                                    <th>Date</th>
+                                    <th>Slots</th>
+                                    <th>Total (NPR)</th>
+                                    <th>Booking Status</th>
+                                    <th>Payment Status</th>
+                                    <th>Txn Code</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 4: PAYMENTS -->
             <section class="admin-section" id="sec-payments">
                 <div class="payment-metrics metrics-grid">
@@ -185,7 +366,257 @@
                 </div>
             </section>
 
-            <!-- ── MODAL: BOOKING DETAIL / UPDATE ── -->
+            <!-- TAB 5: USERS -->
+            <section class="admin-section" id="sec-users">
+                <div class="actions-bar">
+                    <div class="search-box flex-grow">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="userSearchInput" placeholder="Search by name or email..." oninput="filterUsersTable()">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Account Status</th>
+                                    <th>Total Bookings</th>
+                                    <th>Total Spent</th>
+                                    <th>Registered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: EVENT PLANNER & CALENDAR -->
+            <section class="admin-section" id="sec-calendar">
+                <div class="calendar-layout">
+                    <!-- Left calendar grid -->
+                    <div class="calendar-container card">
+                        <div class="calendar-header-row">
+                            <h2 id="adminCalMonthYear">June 2026</h2>
+                            <div class="cal-nav-group">
+                                <button class="btn btn-icon" id="adminCalPrev"><i class="bx bx-chevron-left"></i></button>
+                                <button class="btn btn-icon" id="adminCalNext"><i class="bx bx-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="cal-legend">
+                            <span class="legend-item"><span class="legend-dot bg-success"></span> Available</span>
+                            <span class="legend-item"><span class="legend-dot bg-warning"></span> Limited Slots</span>
+                            <span class="legend-item"><span class="legend-dot bg-danger"></span> Sold Out</span>
+                            <span class="legend-item"><span class="legend-dot bg-gray"></span> Empty/Unavailable</span>
+                        </div>
+                        <div class="admin-calendar-grid" id="adminCalGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right panel for date specific controls -->
+                    <div class="calendar-side-panel card">
+                        <div class="side-panel-header">
+                            <h3 id="adminCalSelectedDate">Select a Date</h3>
+                            <p class="text-secondary">Manage capacity and schedule slots</p>
+                        </div>
+                        <div class="side-panel-body" id="adminCalDetailsList">
+                            <div class="empty-state">
+                                <i class="bx bx-calendar"></i>
+                                <p>Select a date on the calendar to view and manage available slots and user bookings.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: NOTIFICATIONS DISPATCHER -->
+            <section class="admin-section" id="sec-notifications">
+                <div class="card max-w-lg">
+                    <div class="card-header">
+                        <h3>Dispatch Alert Notification</h3>
+                        <p class="text-secondary">Send dynamic alerts directly to a customer's personal dashboard feed</p>
+                    </div>
+                    <form class="card-body" id="notificationForm" onsubmit="dispatchNotification(event)">
+                        <div class="form-group">
+                            <label for="notifUserSelect">Select Customer Account</label>
+                            <select id="notifUserSelect" required>
+                                <option value="">-- Choose User --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notifTitle">Alert Title <small class="text-secondary">(max 120 chars)</small></label>
+                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" maxlength="120" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notifMessage">Notification Message <small class="text-secondary">(max 600 chars)</small></label>
+                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." maxlength="600" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Delivery Channel</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification <small class="text-secondary">(active)</small></label>
+                                <label><input type="checkbox" disabled> Email Dispatcher <small class="text-secondary">(not connected — dev mode only)</small></label>
+                                <label><input type="checkbox" disabled> SMS Dispatcher <small class="text-secondary">(future integration)</small></label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Broadcast Message</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB 8: AUDIT LOGS -->
+            <section class="admin-section" id="sec-audit-logs">
+                <div class="actions-bar">
+                    <div class="search-box flex-grow">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="auditSearchInput" placeholder="Filter logs by admin, action, target or details..." oninput="filterAuditLogsTable()">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table" id="auditLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Admin User</th>
+                                    <th>Action</th>
+                                    <th>Target Record</th>
+                                    <th>Action Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ── MODAL: ACTIVITY CREATE/EDIT ── -->
+    <div class="modal-overlay" id="activityModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="activityModalTitle">Create Dynamic Activity</h3>
+                <button class="modal-close" onclick="closeActivityModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="activityForm" onsubmit="submitActivityForm(event)">
+                <input type="hidden" id="actFormMode" value="create"> <!-- create | edit -->
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="actIdInput">Activity ID (slug, lowercase)</label>
+                        <input type="text" id="actIdInput" placeholder="e.g. bungee" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="actNameInput">Activity Display Name</label>
+                        <input type="text" id="actNameInput" placeholder="e.g. Bungee Jumping" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="actPriceInput">Price (NPR)</label>
+                        <input type="number" id="actPriceInput" placeholder="4500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="actCapacityInput">Capacity Limit (per day)</label>
+                        <input type="number" id="actCapacityInput" placeholder="20" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="actLocationInput">Location</label>
+                        <input type="text" id="actLocationInput" placeholder="e.g. Pokhara" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="actDurationInput">Duration</label>
+                        <input type="text" id="actDurationInput" placeholder="e.g. 1 hour" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="actDifficultyInput">Difficulty Level</label>
+                        <select id="actDifficultyInput">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="actCategoryInput">Category</label>
+                        <input type="text" id="actCategoryInput" placeholder="e.g. Extreme Sports" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="actImgSelect">Icon File</label>
+                        <select id="actImgSelect">
+                            <option value="Paragliding.png">Paragliding Icon</option>
+                            <option value="Bungee-jumping.png">Bungee Icon</option>
+                            <option value="Rafting.png">Rafting Icon</option>
+                            <option value="Trekking_.png">Trekking Icon</option>
+                            <option value="Canyoning.png">Canyoning Icon</option>
+                            <option value="Zip_lining.png">Zip-lining Icon</option>
+                            <option value="Mountain-Main.png">Mountain/Generic Icon</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="actPicSelect">Cover Picture File</label>
+                        <select id="actPicSelect">
+                            <option value="Paragliding_Pic.jpg">Paragliding Picture</option>
+                            <option value="BungeeJump_Pic.jpg">Bungee Jump Picture</option>
+                            <option value="Rafting_Pic.jpg">Rafting Picture</option>
+                            <option value="Trekking_Pic.jpeg">Trekking Picture</option>
+                            <option value="Canyoning_Pic.jpg">Canyoning Picture</option>
+                            <option value="ZipLining_Pic.jpg">Zip-lining Picture</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="actDatesInput">Restrict Available Dates (Comma separated e.g. 2026-06-05,2026-06-06 - Leave empty for open schedule)</label>
+                    <input type="text" id="actDatesInput" placeholder="e.g. 2026-06-05,2026-06-06">
+                </div>
+
+                <div class="form-group">
+                    <label for="actDescInput">Description Details</label>
+                    <textarea id="actDescInput" rows="3" placeholder="Describe the adventure layout..."></textarea>
+                </div>
+
+                <div class="form-group" id="actStatusFormGroup" style="display:none;">
+                    <label for="actStatusInput">Status State</label>
+                    <select id="actStatusInput">
+                        <option value="active">Active (Display on site)</option>
+                        <option value="disabled">Disabled (Do not show on site)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Submit Details</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── MODAL: BOOKING DETAIL / UPDATE ── -->
     <div class="modal-overlay" id="bookingModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -262,3 +693,116 @@
             </form>
         </div>
     </div>
+
+    <!-- ── MODAL: USER DETAIL / UPDATE ── -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3>Manage User Account</h3>
+                <button class="modal-close" onclick="closeUserModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="userForm" onsubmit="submitUserForm(event)">
+                <input type="hidden" id="userFormId">
+
+                <div class="form-group">
+                    <label for="userFormName">Full Name</label>
+                    <input type="text" id="userFormName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="userFormEmail">Email Address</label>
+                    <input type="email" id="userFormEmail" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userFormRole">Account Role</label>
+                        <select id="userFormRole">
+                            <option value="user">User</option>
+                            <option value="staff">Staff/Operator</option>
+                            <option value="admin">Administrator</option>
+                            <option value="super_admin">Super Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userFormStatus">Account Status</label>
+                        <select id="userFormStatus">
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Update Account Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── MODAL: ACTIVITY DUPLICATION ── -->
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3>Duplicate Activity</h3>
+                <button class="modal-close" onclick="closeDuplicateModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="duplicateForm" onsubmit="submitDuplicateForm(event)">
+                <input type="hidden" id="dupSourceId">
+
+                <div class="form-group">
+                    <label for="dupNewId">New Activity Slug (lowercase ID)</label>
+                    <input type="text" id="dupNewId" placeholder="e.g. bungee-v2" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="dupNewName">New Activity Display Name</label>
+                    <input type="text" id="dupNewName" placeholder="e.g. Bungee Jump (Weekend)" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Duplicate Activity Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- ── MODAL: MANUAL PAYMENT ENTRY ── -->
+    <div class="modal-overlay" id="manualPaymentModal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3>Record Manual Payment</h3>
+                <button class="modal-close" onclick="closeManualPaymentModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="manualPaymentForm" onsubmit="submitManualPayment(event)">
+                <div class="form-group">
+                    <label for="mpBookingId">Booking ID <span style="color:#ef4444">*</span></label>
+                    <input type="number" id="mpBookingId" placeholder="e.g. 42" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="mpMethod">Payment Method <span style="color:#ef4444">*</span></label>
+                    <select id="mpMethod" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="eSewa">eSewa</option>
+                        <option value="Khalti">Khalti</option>
+                        <option value="Card">Card (POS)</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mpTxnRef">Transaction Reference <small style="color:rgba(255,255,255,0.4)">(optional)</small></label>
+                    <input type="text" id="mpTxnRef" placeholder="Receipt no., bank ref, etc.">
+                </div>
+                <p style="color:rgba(255,255,255,0.45);font-size:13px;margin:0 0 18px;">
+                    <i class='bx bx-info-circle'></i>
+                    Recording a manual payment will confirm the booking and notify the customer automatically.
+                </p>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="bx bx-check-circle"></i> Confirm &amp; Record Payment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard_Admin.js') }}"></script>
+</body>
+</html>
