@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Thrill Sphere</title>
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Stylesheets -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+    <script>
+        // Inject server variables for client-side use
+        window.THRILL_ADMIN_ROLE = "{{ user.role }}";
+        window.THRILL_ADMIN_ID = {{ user.id }};
+        window.THRILL_ACTIVITIES = {{ activities | tojson | safe }};
+    window.CSRF_TOKEN = "{{ csrf_token() }}";
+    </script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="bx bxs-hot brand-icon"></i>
+                <div class="brand-text">
+                    <h2>Thrill Sphere</h2>
+                    <span>Admin Controls</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="nav-link active" onclick="switchAdminTab('overview', this)">
+                    <i class="bx bxs-dashboard"></i> Overview
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('activities', this)">
+                    <i class="bx bx-list-ul"></i> Activities
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('bookings', this)">
+                    <i class="bx bxs-calendar-check"></i> Bookings
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('payments', this)">
+                    <i class="bx bx-dollar-circle"></i> Payments
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('users', this)">
+                    <i class="bx bxs-user-detail"></i> Users
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('calendar', this)">
+                    <i class="bx bx-calendar"></i> Event Planner
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('notifications', this)">
+                    <i class="bx bxs-bell"></i> Notifications
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('audit-logs', this)">
+                    <i class="bx bx-history"></i> Audit Logs
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="admin-profile">
+                    <div class="profile-avatar">
+                        <i class="bx bxs-user"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h4>{{ user.name }}</h4>
+                        <span class="role-badge">{{ user.role }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth_admin.logout_admin') }}" class="logout-btn">
+                    <i class="bx bx-log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+       
+
+            
+            <!-- TAB 4: PAYMENTS -->
+            <section class="admin-section" id="sec-payments">
+                <div class="payment-metrics metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-data">
+                            <h3 id="stat-revenue-today">NPR 0</h3>
+                            <span>Revenue Today</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-data">
+                            <h3 id="stat-revenue-month">NPR 0</h3>
+                            <span>Revenue This Month</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-data">
+                            <h3 id="stat-pending-payments">0</h3>
+                            <span>Unverified Transactions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <div class="search-box">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="paymentSearchInput" placeholder="Search transactions..." oninput="filterPaymentsTable()">
+                    </div>
+                    <div class="reports-group">
+                        {% if user.role != 'staff' %}
+                        <button class="btn btn-primary" onclick="openManualPaymentModal()"><i class="bx bx-plus-circle"></i> Record Payment</button>
+                        {% endif %}
+                        <button class="btn btn-secondary" onclick="exportPayments('csv')"><i class="bx bx-export"></i> Export CSV</button>
+                        <button class="btn btn-secondary" onclick="exportPayments('excel')"><i class="bx bx-file"></i> Export Excel</button>
+                        <button class="btn btn-secondary" onclick="exportPayments('pdf')"><i class="bx bx-file-pdf"></i> Export PDF</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table" id="paymentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Activity</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Txn Reference</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        
