@@ -1,23 +1,17 @@
-{% extends "base.html" %}
+{% extends "Base.html" %}
 {% block title %}Dashboard — Thrill Sphere{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/payment_modal.css') }}">
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
 <!-- ══ HORIZONTAL TOP NAVBAR ══ -->
 <header class="navbar-horizontal">
   <div class="nav-container">
-    <a href="/" class="nav-brand" style="text-decoration: none;">THRILL<em>SPHERE</em></a>
+    <div class="nav-brand">THRILL<em>SPHERE</em></div>
     <nav class="nav-links">
-      <a href="/" class="nav-item" style="text-decoration: none;">Home</a>
       <a class="nav-item active" onclick="switchSection('overview', this)">Overview</a>
       <a class="nav-item" onclick="switchSection('bookings', this)">My Bookings</a>
       <a class="nav-item" onclick="switchSection('book-new', this)">Book Activity</a>
-      <a class="nav-item" onclick="switchSection('events', this)">Calender</a>
+      <a class="nav-item" onclick="switchSection('my-calendar', this)">My Calendar</a>
       <a class="nav-item" onclick="switchSection('notifications', this)">
         Notifications
         {% if notifications and notifications | selectattr('status', 'equalto', 'unread') | list | length > 0 %}
@@ -294,10 +288,10 @@
     </section>
 
 
-    <!-- ══ EVENTS CALENDAR SECTION ══ -->
-    <section class="dash-section" id="events">
+    <!-- ══ MY CALENDAR SECTION ══ -->
+    <section class="dash-section" id="my-calendar">
       <div class="section-title-row">
-        <h2 class="section-heading">Adventure Calendar</h2>
+        <h2 class="section-heading">My Calendar</h2>
         <div class="calendar-nav">
           <button class="cal-nav-btn" id="calPrev" aria-label="Previous month">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -347,14 +341,10 @@
       <h2 class="section-heading">My Profile</h2>
       <div class="profile-card">
         <div class="profile-header">
-          {% if user.avatar %}
-            <img src="{{ user.avatar }}" alt="avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); flex-shrink: 0; box-shadow: 0 0 18px rgba(116,148,236,0.25);">
-          {% else %}
-            <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
-          {% endif %}
+          <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
           <div class="profile-details">
-            <h2>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
-            <p>{{ user.role or 'Adventure Seeker' }} · Member since {{ user.joined }}</p>
+            <h2>{{ user.username }}</h2>
+            <p>Adventure Enthusiast · Member since {{ user.joined }}</p>
             <div class="badge-grid">
               <span class="badge">🏔️ Trekker</span>
               <span class="badge">🪂 Sky Diver</span>
@@ -364,15 +354,12 @@
           </div>
         </div>
         <div class="profile-grid">
-          <div class="profile-field"><label>Full Name</label><span>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span></div>
+          <div class="profile-field"><label>Full Name</label><span>{{ user.username }}</span></div>
           <div class="profile-field"><label>Email</label><span>{{ user.email }}</span></div>
-          <div class="profile-field"><label>Phone</label><span>{{ user.phone or 'Not set' }}</span></div>
-          <div class="profile-field"><label>Location</label><span>{{ user.city or 'Kathmandu, Nepal' }}</span></div>
+          <div class="profile-field"><label>Phone</label><span>+977-98XXXXXXXX</span></div>
+          <div class="profile-field"><label>Location</label><span>Kathmandu, Nepal</span></div>
           <div class="profile-field"><label>Member Since</label><span>{{ user.joined }}</span></div>
           <div class="profile-field"><label>Account Status</label><span style="color:var(--green);font-weight:600;">✓ Active</span></div>
-        </div>
-        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
-          <a href="/manage" class="btn-primary" style="width: auto; text-decoration: none;">Edit Profile</a>
         </div>
       </div>
 
@@ -472,8 +459,8 @@
       });
   }
 </script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='js/payment-assets.js') }}"></script>
-<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
-<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='payment-assets.js') }}"></script>
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+<script src="{{ url_for('static', filename='payment.js') }}"></script>
 {% endblock %}
