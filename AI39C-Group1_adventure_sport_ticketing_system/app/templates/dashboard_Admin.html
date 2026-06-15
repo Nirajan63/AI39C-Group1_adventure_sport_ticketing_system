@@ -78,6 +78,50 @@
 
        
 
+    
+            <!-- TAB 1: OVERVIEW -->
+            <section class="admin-section active" id="sec-overview">
+                <!-- Statistic Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon bg-indigo-light text-indigo">
+                            <i class="bx bx-dollar"></i>
+                        </div>
+                        <div class="metric-data">
+                            <h3>NPR {{ "{:,.0f}".format(stats.total_revenue) }}</h3>
+                            <span>Total Revenue</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-emerald-light text-emerald">
+                            <i class="bx bx-calendar-check"></i>
+                        </div>
+                        <div class="metric-data">
+                            <h3>{{ stats.total_bookings }}</h3>
+                            <span>Total Bookings</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-amber-light text-amber">
+                            <i class="bx bx-compass"></i>
+                        </div>
+                        <div class="metric-data">
+                            <h3>{{ stats.total_activities }}</h3>
+                            <span>Activities</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-rose-light text-rose">
+                            <i class="bx bxs-user"></i>
+                        </div>
+                        <div class="metric-data">
+                            <h3>{{ stats.total_users }}</h3>
+                            <span>Users Registered</span>
+                        </div>
+                    </div>
+                </div>
+
+               
             
             <!-- TAB 4: PAYMENTS -->
             <section class="admin-section" id="sec-payments">
@@ -140,5 +184,3 @@
                     </div>
                 </div>
             </section>
-
-        
