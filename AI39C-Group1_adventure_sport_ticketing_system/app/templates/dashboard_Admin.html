@@ -184,3 +184,81 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ── MODAL: BOOKING DETAIL / UPDATE ── -->
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Manage Booking Details</h3>
+                <button class="modal-close" onclick="closeBookingModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="bookingForm" onsubmit="submitBookingForm(event)">
+                <input type="hidden" id="bkFormId">
+                <input type="hidden" id="bkFormUserId">
+
+                <div class="detail-strip">
+                    <div>
+                        <span class="label">Customer Name</span>
+                        <h4 id="bkDetailName">—</h4>
+                    </div>
+                    <div>
+                        <span class="label">Customer Email</span>
+                        <h4 id="bkDetailEmail">—</h4>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Selected Activity</label>
+                    <input type="text" id="bkDetailActivity" readonly>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bkFormDate">Scheduled Date</label>
+                        <input type="date" id="bkFormDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bkFormPeople">Slots / Participants</label>
+                        <input type="number" id="bkFormPeople" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bkFormPrice">Unit Cost (NPR) <small id="bkPriceLockNote" class="text-secondary" style="display:none">🔒 Locked — payment confirmed</small></label>
+                        <input type="number" id="bkFormPrice" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Price (NPR)</label>
+                        <input type="text" id="bkDetailTotal" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bkFormStatus">Booking State</label>
+                        <select id="bkFormStatus">
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bkFormPaymentStatus">Payment State</label>
+                        <select id="bkFormPaymentStatus">
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending">Pending</option>
+                            <option value="refunded">Refunded (Cancels booking)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bkFormNotes">Internal Staff Notes</label>
+                    <textarea id="bkFormNotes" rows="3" placeholder="Log payment receipt, refund notes, or special requirements..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Save Booking Modifications</button>
+            </form>
+        </div>
+    </div>
