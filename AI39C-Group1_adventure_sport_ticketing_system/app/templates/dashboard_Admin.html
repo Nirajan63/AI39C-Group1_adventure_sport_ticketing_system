@@ -184,7 +184,7 @@
                     <div class="chart-box card">
                         <div class="card-header">
                             <h3>Revenue Trends</h3>
-                            <span class="text-secondary">Weekly and monthly transaction patterns</span>
+                            <span class="text-secondary">Weekly and monthly transaction pattern</span>
                         </div>
                         <div class="card-body">
                             <canvas id="revenueChart"></canvas>
@@ -193,7 +193,7 @@
                     <div class="chart-box card">
                         <div class="card-header">
                             <h3>Popular Activities</h3>
-                            <span class="text-secondary">Booking distributions by activity type</span>
+                            <span class="text-secondary">Booking distributions by activity types</span>
                         </div>
                         <div class="card-body">
                             <canvas id="popularityChart"></canvas>
@@ -337,7 +337,7 @@
                     </div>
                     <div class="reports-group">
                         {% if user.role != 'staff' %}
-                        <button class="btn btn-primary" onclick="openManualPaymentModal()"><i class="bx bx-plus-circle"></i> Record Payment</button>
+                        <button class="btn btn-primary" onclick="openManualPaymentModal()"><i class="bx bx-plus-circle"></i> Record Payments</button>
                         {% endif %}
                         <button class="btn btn-secondary" onclick="exportPayments('csv')"><i class="bx bx-export"></i> Export CSV</button>
                         <button class="btn btn-secondary" onclick="exportPayments('excel')"><i class="bx bx-file"></i> Export Excel</button>
@@ -353,7 +353,7 @@
                                     <th>Booking ID</th>
                                     <th>Customer</th>
                                     <th>Activity</th>
-                                    <th>Date</th>
+                                    <th>Date &amp; Time</th>
                                     <th>Amount</th>
                                     <th>Method</th>
                                     <th>Txn Reference</th>
@@ -628,7 +628,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="evtImgInput">Image Filename</label>
+                        <label for="evtImgInput">Image Filenames</label>
                         <input type="text" id="evtImgInput" placeholder="Trekking_Pic.jpeg" value="Mountain-Main.png">
                     </div>
                     <div class="form-group">
