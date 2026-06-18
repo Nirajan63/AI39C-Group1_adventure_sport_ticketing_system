@@ -38,6 +38,8 @@ class AuthRoutes:
         self.bp.route("/wishlist/toggle", methods=["POST"])(self.controller.toggle_wishlist)
         self.bp.route("/api/search", methods=["GET"])(self.controller.api_search)
         self.bp.route("/read-notification", methods=["POST"])(self.controller.mark_notification_read)
+        self.bp.route("/api/notifications", methods=["GET"])(self.controller.api_get_notifications)
+        self.bp.route("/api/notifications/read-all", methods=["POST"])(self.controller.mark_all_notifications_read)
         
         self.bp.route("/api/auth/google-login/send-otp", methods=["POST"])(
             AuthController.google_send_otp
