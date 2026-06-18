@@ -88,7 +88,7 @@ def wishlist():
       </head>
       <body>
         <h1>My Wishlist</h1>
-        <p>Explore your saved adventures and plan your next trip with Thrill Sphere.</p>
+        <p>Your wishlist is empty. Explore challenges and add new adventures to your list.</p>
       </body>
     </html>
     """, 200
