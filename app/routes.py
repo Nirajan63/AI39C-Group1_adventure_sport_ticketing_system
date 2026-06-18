@@ -12,6 +12,16 @@ def home():
         <title>Thrill Sphere</title>
       </head>
       <body>
+        <nav class="site-nav">
+          <button class="nav-toggle">Menu</button>
+          <div class="nav-content" data-nav-content>
+            <a href="/" class="nav-link" data-nav-link>Home</a>
+            <a href="/wishlist" class="nav-link" data-nav-link>Wishlist</a>
+            <a href="/login" class="nav-link" data-nav-link>Login</a>
+            <a href="/register" class="nav-link" data-nav-link>Register</a>
+          </div>
+        </nav>
+
         <section class="hero">
           <h1>Thrill Sphere</h1>
           <p>Adventure awaits. Explore the world with us.</p>
