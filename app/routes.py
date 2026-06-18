@@ -71,6 +71,41 @@ def login():
 
           <button type="submit">Submit</button>
         </form>
+
+        <p>Don't have an account? <a href="/register">Register here</a>.</p>
+      </body>
+    </html>
+    """, 200
+
+@bp.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username and password:
+            return f"Registered {username}", 200
+        return "Invalid registration", 400
+
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>Register Page</title>
+      </head>
+      <body>
+        <h1>Register Page</h1>
+        <form action="/register" method="post">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" required>
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required>
+
+          <button type="submit">Submit</button>
+        </form>
+
+        <p>Don't have an account? <a href="/register">Register here</a>.</p>
       </body>
     </html>
     """, 200
