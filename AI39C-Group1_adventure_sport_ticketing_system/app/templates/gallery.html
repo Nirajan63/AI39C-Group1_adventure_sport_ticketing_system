@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+{% block title %}Gallery — Thrill Sphere{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ══ GALLERY PAGE ══ */
+.gallery-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+}
+
+.gallery-hero {
+    text-align: center;
+    margin-bottom: 48px;
+}
+.gallery-hero .section-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb, 116,148,236), 0.1);
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+}
+.gallery-hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 900;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, var(--text-color), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.gallery-hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* ══ ADMIN UPLOAD CARD ══ */
+.admin-upload-card {
+    background: var(--surface);
+    border: 2px dashed var(--accent);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 48px;
+    animation: fadeUp 0.4s ease both;
+}
+.admin-upload-card h3 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.admin-upload-card h3 span {
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+}
+.upload-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.upload-form-grid .full-width { grid-column: 1 / -1; }
+.upload-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+.upload-field input,
+.upload-field textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.upload-field input:focus,
+.upload-field textarea:focus { border-color: var(--accent); }
+.upload-field textarea { resize: vertical; min-height: 80px; }
+
+/* Drop zone */
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(116,148,236,0.05);
+}
+.drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+.drop-zone-icon { font-size: 2rem; margin-bottom: 8px; }
+.drop-zone p { color: var(--muted); font-size: 14px; margin: 0; }
+.drop-zone strong { color: var(--accent); }
+
+#uploadPreview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 12px;
+    display: none;
+}
+
+.btn-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-upload:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.btn-upload.loading { opacity: 0.7; pointer-events: none; }
+
+/* ══ MASONRY GRID ══ */
+.gallery-grid {
+    columns: 3;
+    column-gap: 20px;
+}
+@media (max-width: 900px) { .gallery-grid { columns: 2; } }
+@media (max-width: 560px) { .gallery-grid { columns: 1; } }
+
+.gallery-item {
+    break-inside: avoid;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeUp 0.5s ease both;
+}
+.gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+.gallery-item img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+.gallery-item:hover img { transform: scale(1.04); }
+
+.gallery-item-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+    padding: 20px 16px 16px;
+    transform: translateY(4px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+.gallery-item:hover .gallery-item-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+.gallery-item-overlay h4 {
+    color: white;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+.gallery-item-overlay p {
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    margin: 0;
+}
+.gallery-item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+}
+.gallery-item-by { font-weight: 600; }
+
+.btn-delete-post {
+    background: rgba(255,79,79,0.1);
+    border: 1px solid rgba(255,79,79,0.25);
+    color: #ff4f4f;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-delete-post:hover { background: #ff4f4f; color: white; }
+
+/* ══ EMPTY STATE ══ */
+.gallery-empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--muted);
+}
+.gallery-empty .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+.gallery-empty h3 { font-weight: 800; font-size: 1.5rem; margin-bottom: 8px; color: var(--text-color); }
+
+/* ══ LIGHTBOX ══ */
+.lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+.lightbox-overlay.active { display: flex; }
+.lightbox-img {
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+}
+.lightbox-close {
+    position: absolute;
+    top: 20px; right: 24px;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+.lightbox-caption {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: white;
+}
+.lightbox-caption h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+.lightbox-caption p { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gallery-wrapper">
+
+    <!-- Hero -->
+    <div class="gallery-hero">
+        <p class="section-tag">📸 Adventure Shots</p>
+        <h1>Our Gallery</h1>
+        <p>Real moments captured by our team — from soaring peaks to roaring rapids.</p>
+    </div>
+
+    <!-- Admin Upload Panel -->
+    {% if user and user.role in ('super_admin', 'admin') %}
+    <div class="admin-upload-card">
+        <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload New Post
+            <span>ADMIN</span>
+        </h3>
+        <form id="galleryUploadForm" enctype="multipart/form-data">
+            <div class="upload-form-grid">
+                <div class="upload-field">
+                    <label>Post Title</label>
+                    <input type="text" id="postTitle" placeholder="e.g. Sunset Paragliding over Pokhara" required>
+                </div>
+                <div class="upload-field full-width">
+                    <label>Image</label>
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" id="postImage" accept="image/*" required>
+                        <div class="drop-zone-icon">🖼️</div>
+                        <p>Drag & drop or <strong>click to browse</strong></p>
+                        <img id="uploadPreview" src="" alt="preview">
+                    </div>
+                </div>
+                <div class="upload-field full-width">
+                    <label>Description (optional)</label>
+                    <textarea id="postDesc" placeholder="Share the story behind this shot..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn-upload" id="uploadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Publish to Gallery
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Gallery Grid -->
+    {% if posts %}
+    <div class="gallery-grid" id="galleryGrid">
+        {% for post in posts %}
+        <div class="gallery-item" id="post-{{ post.id }}">
+            <img src="{{ url_for('static', filename='images/' + post.image_url) }}"
+                 alt="{{ post.title }}"
+                 onclick="openLightbox('{{ url_for('static', filename='images/' + post.image_url) }}', '{{ post.title | e }}', '{{ (post.description or '') | e }}')"
+                 onerror="this.src='{{ url_for('static', filename='images/Mountain-Main.png') }}'">
+            <div class="gallery-item-overlay">
+                <h4>{{ post.title or 'Untitled' }}</h4>
+                {% if post.description %}
+                <p>{{ post.description[:80] }}{% if post.description|length > 80 %}…{% endif %}</p>
+                {% endif %}
+            </div>
+            <div class="gallery-item-meta">
+                <span class="gallery-item-by">📷 {{ post.username or 'Admin' }}</span>
+                {% if user and user.role in ('super_admin', 'admin') %}
+                <button class="btn-delete-post" onclick="deletePost({{ post.id }})">Delete</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="gallery-empty">
+        <div class="empty-icon">🏔️</div>
+        <h3>No Posts Yet</h3>
+        <p>{% if user and user.role in ('super_admin', 'admin') %}Use the panel above to upload your first adventure photo!{% else %}Check back soon — our team is capturing amazing moments!{% endif %}</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="document.getElementById('lightboxOverlay').classList.remove('active')">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="">
+    <div class="lightbox-caption">
+        <h4 id="lightboxTitle"></h4>
+        <p id="lightboxDesc"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Image Preview ──
+const postImageInput = document.getElementById('postImage');
+const uploadPreview = document.getElementById('uploadPreview');
+const dropZone = document.getElementById('dropZone');
+
+if (postImageInput) {
+    postImageInput.addEventListener('change', () => {
+        const file = postImageInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                uploadPreview.src = e.target.result;
+                uploadPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (dropZone) {
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            postImageInput.files = e.dataTransfer.files;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                uploadPreview.src = ev.target.result;
+                uploadPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// ── Upload Form Submit ──
+const galleryUploadForm = document.getElementById('galleryUploadForm');
+if (galleryUploadForm) {
+    galleryUploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('uploadBtn');
+        btn.classList.add('loading');
+        btn.textContent = 'Publishing...';
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('postTitle').value);
+        formData.append('description', document.getElementById('postDesc').value);
+        formData.append('image', document.getElementById('postImage').files[0]);
+
+        try {
+            const res = await fetch('/gallery/add', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Post published! Refreshing gallery...');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (err) {
+            alert('Upload failed. Please try again.');
+        } finally {
+            btn.classList.remove('loading');
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Publish to Gallery`;
+        }
+    });
+}
+
+// ── Delete Post ──
+async function deletePost(postId) {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+        const res = await fetch(`/gallery/delete/${postId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            const el = document.getElementById(`post-${postId}`);
+            el.style.opacity = '0';
+            el.style.transform = 'scale(0.9)';
+            el.style.transition = 'all 0.3s ease';
+            setTimeout(() => el.remove(), 320);
+        } else {
+            alert(data.message);
+        }
+    } catch (err) {
+        alert('Failed to delete post.');
+    }
+}
+
+// ── Lightbox ──
+function openLightbox(src, title, desc) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxTitle').textContent = title;
+    document.getElementById('lightboxDesc').textContent = desc;
+    document.getElementById('lightboxOverlay').classList.add('active');
+}
+function closeLightbox(e) {
+    if (e.target === document.getElementById('lightboxOverlay')) {
+        document.getElementById('lightboxOverlay').classList.remove('active');
+    }
+}
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('lightboxOverlay').classList.remove('active');
+});
+</script>
+{% endblock %}
