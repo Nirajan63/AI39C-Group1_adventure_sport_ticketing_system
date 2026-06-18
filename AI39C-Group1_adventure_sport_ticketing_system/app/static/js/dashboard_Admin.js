@@ -10,6 +10,7 @@
         bookings: [],
         payments: [],
         users: [],
+        events: [],
         auditLogs: [],
         selectedCalDate: null,
         calMonth: new Date().getMonth(),
@@ -109,8 +110,9 @@
             fetch('/admin/api/bookings').then(res => res.json()),
             fetch('/admin/api/users').then(res => res.json()),
             fetch('/admin/api/payments').then(res => res.json()),
-            fetch('/admin/api/audit-logs').then(res => res.json())
-        ]).then(([activities, bookings, users, payments, auditLogs]) => {
+            fetch('/admin/api/audit-logs').then(res => res.json()),
+            fetch('/admin/api/events').then(res => res.json())
+        ]).then(([activities, bookings, users, payments, auditLogs, events]) => {
             // Update activities cache
             state.activities = {};
             activities.forEach(a => { state.activities[a.id] = a; });
@@ -119,6 +121,7 @@
             state.users = users;
             state.payments = payments;
             state.auditLogs = auditLogs;
+            state.events = events;
 
             // Render current view
             renderCurrentView(firstLoad);
@@ -141,6 +144,8 @@
         renderAuditLogsTable();
         renderNotificationForm();
         renderCalendarGrid();
+        renderEventsMgmtTable();
+        populateEventDispatcherDropdowns();
     }
 
     // ── SPA Tab Router ─────────────────────────────────────────────────────
@@ -171,6 +176,7 @@
             'payments': { title: 'Payment Audits', sub: 'Verify QR codes, process refunds, and generate reports' },
             'users': { title: 'User Accounts', sub: 'Manage permissions, review spending, and suspend users' },
             'calendar': { title: 'Activity Planner', sub: 'Color-coded slot availability and booking transfers' },
+            'events-mgmt': { title: 'Events Management', sub: 'Create, edit, and cancel scheduled events & tournaments' },
             'notifications': { title: 'Notification Dispatcher', sub: 'Broadcast messages to customer dashboard feeds' },
             'audit-logs': { title: 'Audit Trail Logs', sub: 'Chronological list of admin and security actions' }
         };
@@ -980,18 +986,48 @@
         // Form layout rendered statically in html, state verified here
     }
 
+    window.toggleNotificationTargetGroup = function() {
+        const target = document.getElementById('notifTargetSelect').value;
+        const userGroup = document.getElementById('notifUserSelectGroup');
+        const eventGroup = document.getElementById('notifEventSelectGroup');
+        
+        if (target === 'user') {
+            userGroup.style.display = 'block';
+            document.getElementById('notifUserSelect').required = true;
+            eventGroup.style.display = 'none';
+            document.getElementById('notifEventSelect').required = false;
+        } else if (target === 'event') {
+            userGroup.style.display = 'none';
+            document.getElementById('notifUserSelect').required = false;
+            eventGroup.style.display = 'block';
+            document.getElementById('notifEventSelect').required = true;
+        } else {
+            userGroup.style.display = 'none';
+            document.getElementById('notifUserSelect').required = false;
+            eventGroup.style.display = 'none';
+            document.getElementById('notifEventSelect').required = false;
+        }
+    };
+
     window.dispatchNotification = function (e) {
         e.preventDefault();
-        const userId = document.getElementById('notifUserSelect').value;
+        const targetType = document.getElementById('notifTargetSelect').value;
+        let targetId = '';
+        
+        if (targetType === 'user') {
+            targetId = document.getElementById('notifUserSelect').value;
+        } else if (targetType === 'event') {
+            targetId = document.getElementById('notifEventSelect').value;
+        }
+        
         const title = document.getElementById('notifTitle').value.trim();
         const msg = document.getElementById('notifMessage').value.trim();
 
-        if (!userId || !title || !msg) {
+        if ((targetType !== 'all' && !targetId) || !title || !msg) {
             showAlert('Please populate all notification fields', 'danger');
             return;
         }
 
-        // ── FIX #07: Client-side length limits (mirrors server validation) ─
         if (title.length > 120) {
             showAlert('Alert title must be 120 characters or fewer', 'danger');
             return;
@@ -1004,14 +1040,198 @@
         fetch('/admin/api/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
-            body: JSON.stringify({ user_id: userId, title: title, message: msg })
+            body: JSON.stringify({ target_type: targetType, target_id: targetId, title: title, message: msg })
         }).then(res => res.json()).then(data => {
             if (data.success) {
-                showAlert('Notification broadcast successfully to customer dashboard');
+                showAlert(data.message || 'Notification sent successfully');
                 document.getElementById('notificationForm').reset();
+                window.toggleNotificationTargetGroup();
             } else {
                 showAlert(data.message || 'Dispatch failed', 'danger');
             }
+        }).catch(err => {
+            console.error('Error dispatching notification:', err);
+            showAlert('Dispatch request failed', 'danger');
+        });
+    };
+
+    function populateEventDispatcherDropdowns() {
+        const select = document.getElementById('notifEventSelect');
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- Choose Event/Activity --</option>';
+        
+        // Populate standard activities
+        const actGroup = document.createElement('optgroup');
+        actGroup.label = 'Standard Activities';
+        Object.values(state.activities).forEach(a => {
+            if (a.status !== 'archived') {
+                const opt = document.createElement('option');
+                opt.value = a.name;
+                opt.textContent = `${a.name} (Activity)`;
+                actGroup.appendChild(opt);
+            }
+        });
+        select.appendChild(actGroup);
+        
+        // Populate scheduled events
+        const evtGroup = document.createElement('optgroup');
+        evtGroup.label = 'Scheduled Events';
+        state.events.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = `event_${e.id}`;
+            opt.textContent = `${e.title} (Event)`;
+            evtGroup.appendChild(opt);
+        });
+        select.appendChild(evtGroup);
+        
+        select.value = currentVal;
+    }
+
+    // ── TAB 6b: EVENTS MANAGEMENT ──────────────────────────────────────────
+    function renderEventsMgmtTable() {
+        const tbody = document.querySelector('#eventsMgmtTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        state.events.forEach(e => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${e.id}</td>
+                <td>
+                    <strong>${escapeHTML(e.title)}</strong><br>
+                    <small class="text-secondary"><i class="bx bx-map"></i> ${escapeHTML(e.location)} &middot; <i class="bx bx-time"></i> ${escapeHTML(e.duration)}</small>
+                </td>
+                <td><span class="role-badge">${escapeHTML(e.category)}</span></td>
+                <td><small>${formatDate(e.date_time)}</small></td>
+                <td>NPR ${e.price.toLocaleString()}</td>
+                <td>${e.tickets_left}</td>
+                <td>
+                    <span class="badge badge-${e.is_published ? 'confirmed' : 'cancelled'}">
+                        ${e.is_published ? 'Published' : 'Draft'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="openEventModal('edit', ${e.id})">
+                        <i class="bx bx-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="cancelEvent(${e.id})">
+                        <i class="bx bx-x-circle"></i> Cancel
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.filterEventsMgmtTable = function () {
+        const q = document.getElementById('eventMgmtSearchInput').value.toLowerCase();
+        document.querySelectorAll('#eventsMgmtTable tbody tr').forEach((tr, i) => {
+            const e = state.events[i];
+            if (!e) return;
+            const searchStr = `${e.title} ${e.location} ${e.category} ${e.id}`.toLowerCase();
+            tr.style.display = searchStr.includes(q) ? '' : 'none';
+        });
+    };
+
+    window.openEventModal = function (mode = 'create', id = '') {
+        const modal = document.getElementById('eventModal');
+        const form = document.getElementById('eventForm');
+        if (!modal || !form) return;
+
+        form.reset();
+        document.getElementById('evtFormMode').value = mode;
+
+        if (mode === 'create') {
+            document.getElementById('eventModalTitle').textContent = 'Create Scheduled Event';
+            document.getElementById('evtFormId').value = '';
+        } else {
+            document.getElementById('eventModalTitle').textContent = 'Edit Event Details';
+            document.getElementById('evtFormId').value = id;
+            
+            const evt = state.events.find(e => e.id === id);
+            if (evt) {
+                document.getElementById('evtTitleInput').value = evt.title;
+                document.getElementById('evtCategoryInput').value = evt.category;
+                document.getElementById('evtPriceInput').value = evt.price;
+                document.getElementById('evtCapacityInput').value = evt.tickets_left;
+                document.getElementById('evtLocationInput').value = evt.location;
+                document.getElementById('evtDurationInput').value = evt.duration;
+                document.getElementById('evtDateTimeInput').value = evt.date_time.slice(0, 16);
+                document.getElementById('evtBadgeInput').value = evt.badge || '';
+                document.getElementById('evtImgInput').value = evt.image_url || 'Mountain-Main.png';
+                document.getElementById('evtPublishedInput').value = evt.is_published;
+                document.getElementById('evtDescInput').value = evt.description || '';
+            }
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    window.closeEventModal = function () {
+        const modal = document.getElementById('eventModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.submitEventForm = function (e) {
+        e.preventDefault();
+        const mode = document.getElementById('evtFormMode').value;
+        const id = document.getElementById('evtFormId').value;
+
+        const payload = {
+            title: document.getElementById('evtTitleInput').value.trim(),
+            category: document.getElementById('evtCategoryInput').value.trim(),
+            price: parseInt(document.getElementById('evtPriceInput').value, 10),
+            tickets_left: parseInt(document.getElementById('evtCapacityInput').value, 10),
+            location: document.getElementById('evtLocationInput').value.trim(),
+            duration: document.getElementById('evtDurationInput').value.trim(),
+            date_time: document.getElementById('evtDateTimeInput').value,
+            badge: document.getElementById('evtBadgeInput').value,
+            image_url: document.getElementById('evtImgInput').value.trim() || 'Mountain-Main.png',
+            is_published: parseInt(document.getElementById('evtPublishedInput').value, 10),
+            description: document.getElementById('evtDescInput').value.trim()
+        };
+
+        const url = mode === 'create' ? '/admin/api/events' : `/admin/api/events/${id}`;
+        const method = mode === 'create' ? 'POST' : 'PUT';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
+            body: JSON.stringify(payload)
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                showAlert(mode === 'create' ? 'Event created successfully' : 'Event updated successfully');
+                window.closeEventModal();
+                loadDashboardData();
+            } else {
+                showAlert(data.message || 'Action failed', 'danger');
+            }
+        }).catch(err => {
+            console.error('Error submitting event:', err);
+            showAlert('Server request failed', 'danger');
+        });
+    };
+
+    window.cancelEvent = function (id) {
+        const evt = state.events.find(e => e.id === id);
+        if (!evt) return;
+        
+        if (!confirm(`CRITICAL ACTION: Are you sure you want to CANCEL the event "${evt.title}"?\n\nThis will permanently delete the event, cancel all user bookings scheduled for it, and automatically send in-app and email alerts to all affected customers.`)) return;
+
+        fetch(`/admin/api/events/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': window.CSRF_TOKEN || '' }
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                showAlert(data.message || 'Event cancelled and deleted successfully');
+                loadDashboardData();
+            } else {
+                showAlert(data.message || 'Cancellation failed', 'danger');
+            }
+        }).catch(err => {
+            console.error('Error cancelling event:', err);
+            showAlert('Server request failed', 'danger');
         });
     };
 
