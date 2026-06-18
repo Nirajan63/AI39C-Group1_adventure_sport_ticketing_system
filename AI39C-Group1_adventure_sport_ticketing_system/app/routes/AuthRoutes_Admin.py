@@ -1,5 +1,5 @@
 from flask import Blueprint
-from app.controlers.Auth_Admin import AuthController_Admin
+from App.Controllers.Auth_Admin import AuthController_Admin
 
 
 class AuthRoutes_Admin:
@@ -36,10 +36,6 @@ class AuthRoutes_Admin:
 
         # Notification routes
         self.bp.route("/api/notifications", methods=["POST"])(self.controller.api_notifications)
-        self.bp.route("/api/send-event-email", methods=["POST"])(self.controller.api_send_event_email)
-        self.bp.route("/api/events-list", methods=["GET"])(self.controller.api_events_list)
-        self.bp.route("/api/events", methods=["GET", "POST"])(self.controller.api_events)
-        self.bp.route("/api/events/<int:event_id>", methods=["PUT", "DELETE"])(self.controller.api_event_detail)
 
         # Audit logs route
         self.bp.route("/api/audit-logs", methods=["GET"])(self.controller.api_audit_logs)

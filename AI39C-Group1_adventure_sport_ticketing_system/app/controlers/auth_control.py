@@ -188,7 +188,16 @@ class AuthController(BaseController):
             user_data = cursor.fetchone()
             conn.close()
 
-            if user_data and user_data["password"] == password:
+            from werkzeug.security import check_password_hash
+            is_valid_password = False
+            if user_data:
+                db_password = user_data["password"]
+                if db_password == password:
+                    is_valid_password = True
+                elif db_password.startswith(("scrypt:", "pbkdf2:")) and check_password_hash(db_password, password):
+                    is_valid_password = True
+
+            if user_data and is_valid_password:
                 if user_data.get("status") == "suspended":
                     error_msg = "Access denied: Your account has been suspended."
                     if request.is_json:
@@ -695,6 +704,14 @@ class AuthController(BaseController):
                         "INSERT INTO bookings (user_id, activity, date, people, price, total, status, payment_status, payment_method, txn_code) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         (user_id, activity_name, date, people, price, total, booking_status, "confirmed", payment_method, txn_code)
+                    )
+                    cursor.execute(
+                        "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
+                        (
+                            user_id,
+                            "Booking Confirmed",
+                            f"Your booking for {activity_name} on {date} has been confirmed successfully!"
+                        )
                     )
                     conn.commit()
                     flash(f"🎉 {activity_name} booked successfully!")
@@ -1219,4 +1236,54 @@ class AuthController(BaseController):
         except Exception as e:
             conn.close()
             print("Error marking notification as read:", e)
+            return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── GET ALL NOTIFICATIONS API ──────────────────────────────────────────
+    def api_get_notifications(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+        
+        user_id = self.get_current_user_id()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 15", (user_id,)
+            )
+            rows = cursor.fetchall()
+            conn.close()
+            
+            notifications = []
+            for r in rows:
+                notif = dict(r)
+                if hasattr(notif["created_at"], "strftime"):
+                    notif["created_at"] = notif["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    notif["created_at"] = str(notif["created_at"])
+                notifications.append(notif)
+                
+            return jsonify(notifications)
+        except Exception as e:
+            conn.close()
+            print("Error fetching notifications API:", e)
+            return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── MARK ALL NOTIFICATIONS AS READ API ─────────────────────────────────
+    def mark_all_notifications_read(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Not logged in"}), 401
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE notifications SET status = 'read' WHERE user_id = ?",
+                (session["user"]["id"],)
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True})
+        except Exception as e:
+            conn.close()
+            print("Error marking all notifications as read:", e)
             return jsonify({"success": False, "error": "Database error"}), 500

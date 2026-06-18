@@ -612,6 +612,20 @@ def create_booking(user_id, activity_id, booking_date, people):
         )
         conn.commit()
         booking_id = cursor.lastrowid
+        
+        try:
+            cursor.execute(
+                "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
+                (
+                    user_id,
+                    "Booking Confirmed",
+                    f"Your booking for event '{event['title']}' on {booking_date} has been confirmed successfully!"
+                )
+            )
+            conn.commit()
+        except Exception as notif_err:
+            print("Error creating event booking notification:", notif_err)
+            
         conn.close()
         return booking_id
     return None
