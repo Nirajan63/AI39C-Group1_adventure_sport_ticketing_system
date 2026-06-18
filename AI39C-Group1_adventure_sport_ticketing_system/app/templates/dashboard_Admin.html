@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -533,40 +533,6 @@
                         <button type="submit" class="btn btn-primary btn-block">Broadcast Message</button>
                     </form>
                 </div>
-
-                <!-- NEW: Event Mass Email Dispatcher -->
-                <div class="card max-w-lg" style="margin-top: 20px;">
-                    <div class="card-header">
-                        <h3>Event Mass Email Dispatcher</h3>
-                        <p class="text-secondary">Send simultaneous emails to all users registered for a specific event</p>
-                    </div>
-                    <form class="card-body" id="eventEmailForm" onsubmit="dispatchEventEmail(event)">
-                        <div class="form-group">
-                            <label for="eventEmailSelect">Select Event / Activity</label>
-                            <select id="eventEmailSelect" required>
-                                <option value="">-- Choose Activity --</option>
-                                <option value="Paragliding">Paragliding</option>
-                                <option value="Bungee Jumping">Bungee Jumping</option>
-                                <option value="River Rafting">River Rafting</option>
-                                <option value="Himalayan Trekking">Himalayan Trekking</option>
-                                <option value="Canyoning">Canyoning</option>
-                                <option value="Zip-lining">Zip-lining</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="eventEmailSubject">Email Subject</label>
-                            <input type="text" id="eventEmailSubject" placeholder="e.g. Important Update for your Booking" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="eventEmailMessage">Email Message</label>
-                            <textarea id="eventEmailMessage" rows="5" placeholder="Type instructions or details to email..." required></textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-block">Send Mass Email</button>
-                    </form>
-                </div>
             </section>
 
             <!-- TAB 8: AUDIT LOGS -->
@@ -978,55 +944,6 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard_Admin.js') }}"></script>
-    <script>
-        async function dispatchEventEmail(e) {
-            e.preventDefault();
-            const activityName = document.getElementById('eventEmailSelect').value;
-            const subject = document.getElementById('eventEmailSubject').value;
-            const message = document.getElementById('eventEmailMessage').value;
-
-            if(!activityName || !subject || !message) {
-                alert('Please fill out all fields.');
-                return;
-            }
-
-            if(!confirm(`Are you sure you want to send this email to ALL users booked for ${activityName}?`)) return;
-
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Sending...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/send-event-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': window.CSRF_TOKEN || ''
-                    },
-                    body: JSON.stringify({
-                        activity_name: activityName,
-                        subject: subject,
-                        message: message
-                    })
-                });
-
-                const data = await res.json();
-                if(data.success) {
-                    alert('Success: ' + data.message);
-                    e.target.reset();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch(err) {
-                console.error(err);
-                alert('An error occurred while sending emails.');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-    </script>
+    <script src="{{ url_for('static', filename='dashboard_Admin.js') }}"></script>
 </body>
 </html>
