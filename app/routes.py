@@ -84,11 +84,11 @@ def wishlist():
     <html lang="en">
       <head>
         <meta charset="utf-8">
-        <title>Wishlist</title>
+        <title>My Wishlist - Thrill Sphere</title>
       </head>
       <body>
-        <h1>Your Wishlist</h1>
-        <p>This is your saved wishlist of adventures.</p>
+        <h1>My Wishlist</h1>
+        <p>Explore your saved adventures and plan your next trip with Thrill Sphere.</p>
       </body>
     </html>
     """, 200
