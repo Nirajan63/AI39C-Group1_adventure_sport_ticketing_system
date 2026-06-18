@@ -1,0 +1,22 @@
+from app import create_app
+import pytest
+
+
+# =========================
+# FIXTURE
+# =========================
+@pytest.fixture
+def client():
+    app = create_app()
+    app.config["TESTING"] = True
+
+    with app.test_client() as client:
+        yield client
+
+# =========================
+# TEST 1: REGISTER PAGE LOADS
+# =========================
+def test_register_page_status(client):
+    response = client.get("/register")
+
+    assert response.status_code == 200
