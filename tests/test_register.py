@@ -20,3 +20,14 @@ def test_register_page_status(client):
     response = client.get("/register")
 
     assert response.status_code == 200
+# =========================
+# TEST 2: REGISTER FORM EXISTS
+# =========================
+def test_register_form_exists(client):
+    response = client.get("/register")
+    html = response.data.lower()
+
+    assert b"registration" in html
+    assert b"username" in html
+    assert b"email" in html
+    assert b"password" in html

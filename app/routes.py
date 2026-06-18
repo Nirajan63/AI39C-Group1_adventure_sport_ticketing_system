@@ -91,13 +91,16 @@ def register():
     <html lang="en">
       <head>
         <meta charset="utf-8">
-        <title>Register Page</title>
+        <title>Registration Page</title>
       </head>
       <body>
-        <h1>Register Page</h1>
+        <h1>Registration</h1>
         <form action="/register" method="post">
           <label for="username">Username</label>
           <input id="username" name="username" type="text" required>
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required>
 
           <label for="password">Password</label>
           <input id="password" name="password" type="password" required>
@@ -105,7 +108,7 @@ def register():
           <button type="submit">Submit</button>
         </form>
 
-        <p>Don't have an account? <a href="/register">Register here</a>.</p>
+        <p>Already have an account? <a href="/login">Log in here</a>.</p>
       </body>
     </html>
     """, 200
