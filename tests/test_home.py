@@ -83,3 +83,5 @@ def test_login_link_exists(client):
     response = client.get("/")
 
     assert b"/login" in response.data
+
+    
