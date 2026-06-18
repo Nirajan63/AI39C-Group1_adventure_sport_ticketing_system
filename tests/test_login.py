@@ -12,6 +12,15 @@ def client():
 
     with app.test_client() as client:
         yield client
+# =========================
+# TEST 1: LOGIN PAGE LOADS
+# =========================
+def test_login_page_status(client):
+    response = client.get("/login")
+
+    assert response.status_code == 200
+
+
 
 
     
