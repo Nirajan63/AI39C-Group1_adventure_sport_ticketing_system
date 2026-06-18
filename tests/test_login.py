@@ -38,6 +38,16 @@ def test_login_post_route(client):
 
     # Accept either success or redirect (depends on your app)
     assert response.status_code in [200, 302]
+# =========================
+# TEST 5: REGISTER LINK EXISTS
+# =========================
+def test_register_link_exists(client):
+    response = client.get("/login")
+
+    assert b"/register" in response.data
+
+
+
 
 
 
