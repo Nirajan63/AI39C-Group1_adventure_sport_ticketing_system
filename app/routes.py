@@ -95,15 +95,21 @@ def register():
       </head>
       <body>
         <h1>Registration</h1>
-        <form action="/register" method="post">
-          <label for="username">Username</label>
-          <input id="username" name="username" type="text" required>
+        <form action="/register" method="post" class="signup-form">
+          <div class="input-box">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" required>
+          </div>
 
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" required>
+          <div class="input-box">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required>
+          </div>
 
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" required>
+          <div class="input-box">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" required>
+          </div>
 
           <button type="submit">Submit</button>
         </form>
