@@ -46,5 +46,25 @@ def home():
 
 @bp.route("/login")
 def login():
-    return "Login Page", 200
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>Login Page</title>
+      </head>
+      <body>
+        <h1>Login Page</h1>
+        <form action="/login" method="post">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" required>
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required>
+
+          <button type="submit">Submit</button>
+        </form>
+      </body>
+    </html>
+    """, 200
 

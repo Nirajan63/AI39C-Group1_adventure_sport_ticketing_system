@@ -19,6 +19,14 @@ def test_login_page_status(client):
     response = client.get("/login")
 
     assert response.status_code == 200
+# =========================
+# TEST 3: LOGIN FORM METHOD IS POST
+# =========================
+def test_login_form_method(client):
+    response = client.get("/login")
+
+    assert b"method=\"post\"" in response.data.lower()
+
 
 
 
