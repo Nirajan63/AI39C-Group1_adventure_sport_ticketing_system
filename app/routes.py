@@ -20,6 +20,17 @@ def home():
             <a href="/login" class="nav-link" data-nav-link>Login</a>
             <a href="/register" class="nav-link" data-nav-link>Register</a>
           </div>
+          <div class="notification-menu" data-notification-menu>
+            <span class="notification-badge">3</span>
+            <div class="notification-dropdown">
+              <p>Notifications</p>
+              <ul>
+                <li>Booking confirmed</li>
+                <li>New adventure added</li>
+                <li>Reminder: Complete your profile</li>
+              </ul>
+            </div>
+          </div>
         </nav>
 
         <section class="hero">
