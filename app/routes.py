@@ -77,6 +77,22 @@ def login():
     </html>
     """, 200
 
+@bp.route("/wishlist")
+def wishlist():
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>Wishlist</title>
+      </head>
+      <body>
+        <h1>Your Wishlist</h1>
+        <p>This is your saved wishlist of adventures.</p>
+      </body>
+    </html>
+    """, 200
+
 @bp.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
