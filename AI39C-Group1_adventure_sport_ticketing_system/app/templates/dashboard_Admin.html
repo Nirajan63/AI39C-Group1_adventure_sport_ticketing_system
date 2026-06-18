@@ -52,6 +52,9 @@
                 <a class="nav-link" onclick="switchAdminTab('calendar', this)">
                     <i class="bx bx-calendar"></i> Event Planner
                 </a>
+                <a class="nav-link" onclick="switchAdminTab('events-mgmt', this)">
+                    <i class="bx bx-calendar-event"></i> Events Management
+                </a>
                 <a class="nav-link" onclick="switchAdminTab('notifications', this)">
                     <i class="bx bxs-bell"></i> Notifications
                 </a>
@@ -438,6 +441,43 @@
                 </div>
             </section>
 
+            <!-- TAB 6b: EVENTS MANAGEMENT -->
+            <section class="admin-section" id="sec-events-mgmt">
+                <div class="actions-bar">
+                    <div class="search-box flex-grow">
+                        <i class="bx bx-search"></i>
+                        <input type="text" id="eventMgmtSearchInput" placeholder="Search events by title or location..." oninput="filterEventsMgmtTable()">
+                    </div>
+                    {% if user.role != 'staff' %}
+                    <button class="btn btn-primary" onclick="openEventModal('create')">
+                        <i class="bx bx-plus"></i> Add Event
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table" id="eventsMgmtTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Event Details</th>
+                                    <th>Category</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Price (NPR)</th>
+                                    <th>Tickets Left</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 7: NOTIFICATIONS DISPATCHER -->
             <section class="admin-section" id="sec-notifications">
                 <div class="card max-w-lg">
@@ -447,9 +487,26 @@
                     </div>
                     <form class="card-body" id="notificationForm" onsubmit="dispatchNotification(event)">
                         <div class="form-group">
+                            <label for="notifTargetSelect">Recipient Audience</label>
+                            <select id="notifTargetSelect" onchange="toggleNotificationTargetGroup()" required>
+                                <option value="user">Specific Customer</option>
+                                <option value="all">All Registered Customers</option>
+                                <option value="event">Users Booked/Saved an Event</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="notifUserSelectGroup">
                             <label for="notifUserSelect">Select Customer Account</label>
                             <select id="notifUserSelect" required>
                                 <option value="">-- Choose User --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="notifEventSelectGroup" style="display: none;">
+                            <label for="notifEventSelect">Select Event / Activity</label>
+                            <select id="notifEventSelect">
+                                <option value="">-- Choose Event/Activity --</option>
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
@@ -541,6 +598,90 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- ── MODAL: EVENT CREATE/EDIT ── -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="eventModalTitle">Create Scheduled Event</h3>
+                <button class="modal-close" onclick="closeEventModal()"><i class="bx bx-x"></i></button>
+            </div>
+            <form class="modal-body" id="eventForm" onsubmit="submitEventForm(event)">
+                <input type="hidden" id="evtFormMode" value="create"> <!-- create | edit -->
+                <input type="hidden" id="evtFormId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evtTitleInput">Event Title</label>
+                        <input type="text" id="evtTitleInput" placeholder="e.g. Annapurna Trekking Expedition" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="evtCategoryInput">Category</label>
+                        <input type="text" id="evtCategoryInput" placeholder="e.g. Adventure, Water Sports" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evtPriceInput">Price (NPR)</label>
+                        <input type="number" id="evtPriceInput" placeholder="3500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="evtCapacityInput">Tickets Left / Capacity</label>
+                        <input type="number" id="evtCapacityInput" placeholder="50" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evtLocationInput">Location</label>
+                        <input type="text" id="evtLocationInput" placeholder="e.g. Annapurna, Trishuli" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="evtDurationInput">Duration</label>
+                        <input type="text" id="evtDurationInput" placeholder="e.g. 2 days, 3 hours" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evtDateTimeInput">Scheduled Date &amp; Time</label>
+                        <input type="datetime-local" id="evtDateTimeInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="evtBadgeInput">Badge Overlay</label>
+                        <select id="evtBadgeInput">
+                            <option value="">No Badge</option>
+                            <option value="Featured">Featured</option>
+                            <option value="Trending">Trending</option>
+                            <option value="Popular">Popular</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evtImgInput">Image Filename</label>
+                        <input type="text" id="evtImgInput" placeholder="Trekking_Pic.jpeg" value="Mountain-Main.png">
+                    </div>
+                    <div class="form-group">
+                        <label for="evtPublishedInput">Visibility Status</label>
+                        <select id="evtPublishedInput">
+                            <option value="1">Published (Visible on catalog)</option>
+                            <option value="0">Draft (Hidden)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="evtDescInput">Description Details</label>
+                    <textarea id="evtDescInput" rows="3" placeholder="Provide event schedule details, guidelines, and safety info..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Save Event Details</button>
+            </form>
+        </div>
     </div>
 
     <!-- ── MODAL: ACTIVITY CREATE/EDIT ── -->
