@@ -89,6 +89,14 @@ def wishlist():
       <body>
         <h1>My Wishlist</h1>
         <p>Your wishlist is empty. Explore challenges and add new adventures to your list.</p>
+
+        <section class="wishlist-section">
+          <div class="activity-card">
+            <div class="wishlist-card-item">
+              <p>No saved items yet.</p>
+            </div>
+          </div>
+        </section>
       </body>
     </html>
     """, 200
