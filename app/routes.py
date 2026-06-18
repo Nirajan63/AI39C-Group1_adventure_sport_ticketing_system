@@ -98,6 +98,18 @@ def wishlist():
             </div>
           </div>
         </section>
+
+        <script>
+          function removeWishlistCard(cardId) {
+            // Example fetch call to remove an item
+            fetch(`/api/wishlist/${cardId}`, { method: 'DELETE' })
+              .then(response => response.json())
+              .then(data => {
+                const el = document.getElementById(cardId);
+                if (el) el.remove();
+              });
+          }
+        </script>
       </body>
     </html>
     """, 200
