@@ -94,7 +94,7 @@ def wishlist():
           <div class="activity-card">
             <div class="wishlist-card-item">
               <p>No saved items yet.</p>
-              <a href="/book" class="book-now-link">Book Now</a>
+              <a href="/dashboard" class="book-now-link">Book Now</a>
             </div>
           </div>
         </section>
