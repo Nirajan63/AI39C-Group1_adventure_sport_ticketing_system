@@ -1,4 +1,4 @@
-﻿from flask import Blueprint
+﻿from flask import Blueprint, request
 
 bp = Blueprint("app", __name__)
 
@@ -44,8 +44,15 @@ def home():
     </html>
     """, 200
 
-@bp.route("/login")
+@bp.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username and password:
+            return f"Logged in as {username}", 200
+        return "Invalid login", 400
+
     return """
     <!doctype html>
     <html lang="en">

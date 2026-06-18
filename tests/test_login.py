@@ -27,6 +27,18 @@ def test_login_form_method(client):
 
     assert b"method=\"post\"" in response.data.lower()
 
+# =========================
+# TEST 4: LOGIN ROUTE ACCEPTS POST (basic check)
+# =========================
+def test_login_post_route(client):
+    response = client.post("/login", data={
+        "username": "testuser",
+        "password": "testpass"
+    })
+
+    # Accept either success or redirect (depends on your app)
+    assert response.status_code in [200, 302]
+
 
 
 
