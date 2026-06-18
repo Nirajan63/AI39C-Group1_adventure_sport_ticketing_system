@@ -18,6 +18,11 @@
     {% block extra_css %}{% endblock %}
     {% block styles %}{% endblock %}
 
+    <!-- CSRF and App State Global Setup -->
+    <script>
+        window.CSRF_TOKEN = "{{ csrf_token() }}";
+    </script>
+
     <!-- Anti-Flash Theme Handler -->
     <script>
         (function() {
@@ -266,9 +271,21 @@
 
                     {% if session.get('user') %}
                         <!-- Notifications -->
-                        <button class="icon-button" aria-label="Notifications" onclick="alert('Notifications will appear here.')">
-                            <i class='bx bxs-bell' style="font-size:1.2rem; color:var(--text-color);"></i>
-                        </button>
+                        <div class="notification-wrap">
+                            <button class="icon-button notification-button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+                                <i class='bx bxs-bell' style="font-size:1.2rem; color:var(--text-color);"></i>
+                                <span class="notification-dot" style="display: none;"></span>
+                            </button>
+                            <div class="notification-menu" data-notification-menu style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <h4 class="menu-title" style="margin:0; font-size:0.95rem; font-weight:700;">Notifications</h4>
+                                    <button onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: var(--accent); font-weight: 600; padding:0;">Mark all read</button>
+                                </div>
+                                <div id="notification-dropdown-list">
+                                    <p class="menu-empty">No new notifications</p>
+                                </div>
+                            </div>
+                        </div>
                         
                         <span class="user-chip">
                             {% if session['user'].get('avatar') %}
@@ -331,6 +348,7 @@
     <!-- Global Scripts -->
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <script>
         // Global Search Autosuggestion (scoped to avoid clashing with events.js)
         (function () {
