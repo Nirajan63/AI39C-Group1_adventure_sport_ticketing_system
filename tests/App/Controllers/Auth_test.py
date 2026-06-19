@@ -80,5 +80,17 @@ class AuthControllerTest(unittest.TestCase):
         # TODO: assert cancel_booking() prevents cancelling another user's booking
         pass
 
+    def test_mark_notification_read_updates_status(self):
+        # TODO: assert mark_notification_read() marks the notification as read
+        pass
+
+    def test_mark_notification_read_handles_invalid_id(self):
+        # TODO: assert behavior when notification id does not exist
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()
+
 
 
