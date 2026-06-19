@@ -46,6 +46,22 @@ def test_hero_section_exists(client):
     response = client.get("/")
 
     assert b"hero" in response.data.lower()
+# =========================
+# TEST 4: ADVENTURE SECTION EXISTS
+# =========================
+def test_adventure_section_exists(client):
+    response = client.get("/")
 
+    assert b"adventures" in response.data.lower()
+# =========================
+# TEST 5: STATIC IMAGES ARE REFERENCED
+# =========================
+def test_static_images_present(client):
+    response = client.get("/")
 
+    html = response.data
+
+    assert b"paragliding.jpg" in html
+    assert b"rafting.jpg" in html
+    assert b"trekking.jpg" in html
 
