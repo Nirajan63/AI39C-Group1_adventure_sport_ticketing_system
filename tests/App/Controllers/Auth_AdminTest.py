@@ -50,3 +50,18 @@ class SendNotificationTest(unittest.TestCase):
         # TODO: assert behavior when user_id does not exist
         pass
     
+
+class AdminRequiredDecoratorTest(unittest.TestCase):
+    """Tests for the admin_required() decorator."""
+
+    def test_allows_access_for_admin_role(self):
+        # TODO: assert decorated view executes when current user has admin role
+        pass
+
+    def test_blocks_access_for_non_admin_role(self):
+        # TODO: assert decorated view blocks/redirects when user is not an admin
+        pass
+
+    def test_blocks_access_for_anonymous_user(self):
+        # TODO: assert decorated view blocks/redirects unauthenticated users
+        pass
