@@ -28,3 +28,16 @@ def test_login_post_route(client):
         "username": "testuser",
         "password": "testpass"
     })
+# =========================
+# TEST 3: test invalid login submission
+# =========================
+    response = client.post(
+        "/login",
+        data={
+            "username": "wronguser",
+            "password": "wrongpass"
+        },
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
