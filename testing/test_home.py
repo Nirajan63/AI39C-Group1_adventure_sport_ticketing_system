@@ -64,4 +64,11 @@ def test_static_images_present(client):
     assert b"paragliding.jpg" in html
     assert b"rafting.jpg" in html
     assert b"trekking.jpg" in html
+# =========================
+# TEST 6: CONTACT SECTION EXISTS
+# =========================
+def test_contact_section(client):
+    response = client.get("/")
+
+    assert b"Visit Our Office" in response.data
 
