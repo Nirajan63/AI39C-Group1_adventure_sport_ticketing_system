@@ -144,3 +144,122 @@ def test_reset_missing_fields(client, db_user):
 
     assert response.status_code == 400
     assert data["status"] == "error"
+
+
+# ==================================================
+# TEST 7: RESET FAILS WHEN NO OTP WAS EVER REQUESTED
+# ==================================================
+def test_reset_without_requesting_otp(client, db_user):
+    response = client.post(
+        "/forgot",
+        json={
+            "action": "reset",
+            "email": db_user["email"],
+            "code": "000000",
+            "password": "WhateverPass123",
+        },
+    )
+    data = response.get_json()
+
+    assert response.status_code == 400
+    assert "no code" in data["message"].lower()
+
+
+# ==================================================
+# TEST 8: RESET FAILS WITH AN INCORRECT OTP CODE
+# ==================================================
+def test_reset_with_wrong_otp(client, db_user):
+    send_resp = client.post(
+        "/forgot", json={"action": "send_otp", "email": db_user["email"]}
+    )
+    assert send_resp.status_code == 200
+
+    real_otp = read_mock_otp()
+    wrong_otp = "111111" if real_otp != "111111" else "222222"
+
+    reset_resp = client.post(
+        "/forgot",
+        json={
+            "action": "reset",
+            "email": db_user["email"],
+            "code": wrong_otp,
+            "password": "NewPassword123",
+        },
+    )
+    data = reset_resp.get_json()
+
+    assert reset_resp.status_code == 400
+    assert data["status"] == "error"
+
+    # Password in the DB must be untouched
+    assert get_db_password(db_user["email"]) == db_user["password"]
+
+
+# ==========================================================
+# TEST 9: FULL HAPPY-PATH FLOW — REQUEST OTP -> RESET -> DB CHECK
+# ==========================================================
+def test_full_reset_password_flow(client, db_user):
+    # Step 1: request OTP
+    send_resp = client.post(
+        "/forgot", json={"action": "send_otp", "email": db_user["email"]}
+    )
+    assert send_resp.status_code == 200
+    assert send_resp.get_json()["status"] == "success"
+
+    # Step 2: grab the OTP the backend wrote to app/mock_otp.txt
+    otp_code = read_mock_otp()
+    assert len(otp_code) == 6 and otp_code.isdigit()
+
+    # Step 3: submit the OTP + new password
+    new_password = "BrandNewPass456"
+    reset_resp = client.post(
+        "/forgot",
+        json={
+            "action": "reset",
+            "email": db_user["email"],
+            "code": otp_code,
+            "password": new_password,
+        },
+    )
+    reset_data = reset_resp.get_json()
+    assert reset_resp.status_code == 200
+    assert reset_data["status"] == "success"
+
+    # Step 4: verify directly in the DB (no /login route involved)
+    assert get_db_password(db_user["email"]) == new_password
+
+
+# ==========================================================
+# TEST 10: OTP CANNOT BE REUSED AFTER A SUCCESSFUL RESET
+# ==========================================================
+def test_otp_cannot_be_reused(client, db_user):
+    client.post("/forgot", json={"action": "send_otp", "email": db_user["email"]})
+    otp_code = read_mock_otp()
+
+    first_reset = client.post(
+        "/forgot",
+        json={
+            "action": "reset",
+            "email": db_user["email"],
+            "code": otp_code,
+            "password": "FirstNewPass789",
+        },
+    )
+    assert first_reset.status_code == 200
+
+    # Re-using the same OTP a second time must fail (it was popped from the store)
+    second_reset = client.post(
+        "/forgot",
+        json={
+            "action": "reset",
+            "email": db_user["email"],
+            "code": otp_code,
+            "password": "SecondNewPass789",
+        },
+    )
+    data = second_reset.get_json()
+    assert second_reset.status_code == 400
+    assert data["status"] == "error"
+
+    # Confirm the first reset is the one that stuck
+    assert get_db_password(db_user["email"]) == "FirstNewPass789"
