@@ -39,6 +39,13 @@ def test_hero_section_exists(client):
 
     assert b"hero" in response.data.lower()
 
+# =========================
+# TEST 3: HERO SECTION EXISTS
+# =========================
+def test_hero_section_exists(client):
+    response = client.get("/")
+
+    assert b"hero" in response.data.lower()
 
 
 
