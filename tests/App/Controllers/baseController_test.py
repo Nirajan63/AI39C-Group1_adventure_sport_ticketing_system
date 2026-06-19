@@ -41,3 +41,21 @@ class BaseControllerTest(unittest.TestCase):
     def test_get_current_user_id_returns_none_when_absent(self):
         # TODO: assert get_current_user_id() returns None when not logged in
         pass
+
+    def test_get_current_role_returns_session_role(self):
+        # TODO: assert get_current_role() returns the role stored in session
+        pass
+
+    def test_flash_and_redirect_sets_flash_message(self):
+        # TODO: assert flash_and_redirect() flashes the message with the
+        # given category
+        pass
+
+    def test_flash_and_redirect_redirects_to_endpoint(self):
+        # TODO: assert flash_and_redirect() issues a redirect to the given
+        # endpoint
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()
