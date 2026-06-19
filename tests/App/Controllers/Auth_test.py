@@ -27,7 +27,7 @@ class GetDynamicActivitiesTest(unittest.TestCase):
         # TODO: assert behavior when there are no activities to return
         pass
 
-    class AuthControllerTest(unittest.TestCase):
+class AuthControllerTest(unittest.TestCase):
     """Tests for the user-facing AuthController."""
 
     def setUp(self):
@@ -43,3 +43,21 @@ class GetDynamicActivitiesTest(unittest.TestCase):
         # TODO: assert login() rejects invalid credentials with appropriate
         # flash message / response
         pass
+
+    def test_register_creates_new_user(self):
+        # TODO: assert register() creates a new user record on valid input
+        pass
+
+    def test_register_rejects_duplicate_email(self):
+        # TODO: assert register() rejects registration when email already exists
+        pass
+
+    def test_logout_clears_session(self):
+        # TODO: assert logout() clears the user session and redirects
+        pass
+
+    def test_dashboard_requires_login(self):
+        # TODO: assert dashboard() redirects/blocks access for anonymous users
+        pass
+
+
