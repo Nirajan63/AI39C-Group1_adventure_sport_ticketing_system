@@ -20,3 +20,11 @@ def test_login_page_status(client):
 
     assert response.status_code == 200
 # =========================
+
+# TEST 2: LOGIN ROUTE ACCEPTS POST (basic check)
+# =========================
+def test_login_post_route(client):
+    response = client.post("/login", data={
+        "username": "testuser",
+        "password": "testpass"
+    })
