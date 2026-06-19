@@ -33,3 +33,11 @@ class BaseControllerTest(unittest.TestCase):
     def test_is_logged_in_false_when_session_empty(self):
         # TODO: assert is_logged_in() returns False when session is empty
         pass
+
+    def test_get_current_user_id_returns_session_value(self):
+        # TODO: assert get_current_user_id() returns the id stored in session
+        pass
+
+    def test_get_current_user_id_returns_none_when_absent(self):
+        # TODO: assert get_current_user_id() returns None when not logged in
+        pass
