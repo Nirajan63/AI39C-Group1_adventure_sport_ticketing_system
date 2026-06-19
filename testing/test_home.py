@@ -19,5 +19,17 @@ def test_home_page_status(client):
     response = client.get("/")
 
     assert response.status_code == 200
+# =========================
+# TEST 2: HOME PAGE CONTENT
+# =========================
+def test_home_page_content(client):
+    response = client.get("/")
+
+    html = response.data
+
+    assert b"Thrill Sphere" in html
+    assert b"Adventure" in html
+    assert b"Explore" in html
+
 
 
