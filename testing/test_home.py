@@ -31,5 +31,14 @@ def test_home_page_content(client):
     assert b"Adventure" in html
     assert b"Explore" in html
 
+# =========================
+# TEST 3: HERO SECTION EXISTS
+# =========================
+def test_hero_section_exists(client):
+    response = client.get("/")
+
+    assert b"hero" in response.data.lower()
+
+
 
 
