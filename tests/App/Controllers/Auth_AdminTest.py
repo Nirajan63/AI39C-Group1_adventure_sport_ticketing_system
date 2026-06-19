@@ -97,3 +97,19 @@ class AuthControllerAdminTest(unittest.TestCase):
     def test_dashboard_admin_requires_admin_role(self):
         # TODO: assert dashboard_admin() blocks non-admin access
         pass
+
+    def test_dashboard_admin_renders_for_admin(self):
+        # TODO: assert dashboard_admin() renders expected data for admin
+        pass
+
+    def test_api_activities_returns_list(self):
+        # TODO: assert api_activities() returns expected JSON list of activities
+        pass
+
+    def test_api_activity_detail_returns_single_activity(self):
+        # TODO: assert api_activity_detail(activity_id) returns correct activity
+        pass
+
+    def test_api_activity_detail_handles_not_found(self):
+        # TODO: assert api_activity_detail() handles a nonexistent activity_id
+        pass
