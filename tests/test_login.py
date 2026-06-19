@@ -41,3 +41,19 @@ def test_login_post_route(client):
     )
 
     assert response.status_code == 200
+
+# =========================
+# TEST 4: USERNAME INPUT EXISTS
+# =========================
+def test_username_input_exists(client):
+    response = client.get("/login")
+    assert b'name="username"' in response.data
+
+# =========================
+# TEST 4: PASSWORD INPUT EXISTS
+# =========================
+def test_password_input_exists(client):
+    response = client.get("/login")
+    assert b'name="password"' in response.data
+
+
