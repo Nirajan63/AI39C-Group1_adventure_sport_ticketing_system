@@ -133,3 +133,23 @@ class AuthControllerAdminTest(unittest.TestCase):
     def test_api_payments_returns_list(self):
         # TODO: assert api_payments() returns expected JSON list of payments
         pass
+
+    def test_api_verify_payment_marks_verified(self):
+        # TODO: assert api_verify_payment() marks a payment as verified
+        pass
+
+    def test_api_refund_payment_processes_refund(self):
+        # TODO: assert api_refund_payment() processes a refund correctly
+        pass
+
+    def test_api_manual_payment_creates_entry(self):
+        # TODO: assert api_manual_payment() creates a manual payment record
+        pass
+
+    def test_api_users_returns_list(self):
+        # TODO: assert api_users() returns expected JSON list of users
+        pass
+
+    def test_api_user_detail_returns_single_user(self):
+        # TODO: assert api_user_detail(user_id) returns correct user details
+        pass
