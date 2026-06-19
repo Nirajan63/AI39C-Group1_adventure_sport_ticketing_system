@@ -153,3 +153,19 @@ class AuthControllerAdminTest(unittest.TestCase):
     def test_api_user_detail_returns_single_user(self):
         # TODO: assert api_user_detail(user_id) returns correct user details
         pass
+
+    def test_api_user_detail_handles_not_found(self):
+        # TODO: assert api_user_detail() handles a nonexistent user_id
+        pass
+
+    def test_api_notifications_returns_list(self):
+        # TODO: assert api_notifications() returns expected JSON list
+        pass
+
+    def test_api_audit_logs_returns_list(self):
+        # TODO: assert api_audit_logs() returns expected JSON list of audit logs
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()
