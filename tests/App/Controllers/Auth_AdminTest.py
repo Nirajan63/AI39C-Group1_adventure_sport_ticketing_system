@@ -81,3 +81,19 @@ class AuthControllerAdminTest(unittest.TestCase):
     def test_login_admin_failure_with_invalid_credentials(self):
         # TODO: assert login_admin() rejects invalid credentials
         pass
+
+    def test_logout_admin_clears_session(self):
+        # TODO: assert logout_admin() clears admin session and redirects
+        pass
+
+    def test_change_password_admin_success(self):
+        # TODO: assert change_password_admin() updates password on valid input
+        pass
+
+    def test_change_password_admin_rejects_wrong_current_password(self):
+        # TODO: assert change_password_admin() rejects incorrect current password
+        pass
+
+    def test_dashboard_admin_requires_admin_role(self):
+        # TODO: assert dashboard_admin() blocks non-admin access
+        pass
