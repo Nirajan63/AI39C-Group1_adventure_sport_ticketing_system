@@ -31,3 +31,9 @@ def test_login_link_exists(client):
     response = client.get("/register")
 
     assert b"login" in response.data.lower()
+# TEST 4: REGISTER BUTTON EXISTS
+def test_register_button_exists(client):
+    response = client.get("/register")
+
+    assert b"register" in response.data.lower()
+
