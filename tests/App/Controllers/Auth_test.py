@@ -60,4 +60,25 @@ class AuthControllerTest(unittest.TestCase):
         # TODO: assert dashboard() redirects/blocks access for anonymous users
         pass
 
+    def test_dashboard_renders_for_logged_in_user(self):
+        # TODO: assert dashboard() renders expected data for a logged-in user
+        pass
+
+    def test_book_activity_creates_booking(self):
+        # TODO: assert book_activity() creates a booking for valid input
+        pass
+
+    def test_book_activity_rejects_invalid_input(self):
+        # TODO: assert book_activity() handles invalid/missing data correctly
+        pass
+
+    def test_cancel_booking_removes_booking(self):
+        # TODO: assert cancel_booking() cancels an existing booking
+        pass
+
+    def test_cancel_booking_rejects_unauthorized_user(self):
+        # TODO: assert cancel_booking() prevents cancelling another user's booking
+        pass
+
+
 
