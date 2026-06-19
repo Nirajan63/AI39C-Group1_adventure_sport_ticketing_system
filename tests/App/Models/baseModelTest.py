@@ -25,3 +25,16 @@ class SafeColumnTest(unittest.TestCase):
         # TODO: assert _safe_column() rejects/sanitizes input that could
         # enable SQL injection (e.g. special characters, whitespace)
         pass
+
+class BaseModelTest(unittest.TestCase):
+    """Tests for the abstract BaseModel class via a concrete subclass."""
+
+    def setUp(self):
+        # TODO: define/instantiate a minimal concrete subclass of BaseModel
+        # (since BaseModel is abstract) backed by a test database
+        pass
+
+    def test_table_property_is_abstract(self):
+        # TODO: assert BaseModel cannot be instantiated directly without
+        # implementing the `table` property
+        pass    
