@@ -65,3 +65,19 @@ class AdminRequiredDecoratorTest(unittest.TestCase):
     def test_blocks_access_for_anonymous_user(self):
         # TODO: assert decorated view blocks/redirects unauthenticated users
         pass
+
+class AuthControllerAdminTest(unittest.TestCase):
+    """Tests for the AuthController_Admin class."""
+
+    def setUp(self):
+        # TODO: instantiate AuthController_Admin() within an app/request
+        # context, set up admin session fixtures
+        pass
+
+    def test_login_admin_success_with_valid_credentials(self):
+        # TODO: assert login_admin() authenticates valid admin credentials
+        pass
+
+    def test_login_admin_failure_with_invalid_credentials(self):
+        # TODO: assert login_admin() rejects invalid credentials
+        pass
