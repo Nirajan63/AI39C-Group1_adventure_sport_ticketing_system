@@ -26,3 +26,20 @@ class GetDynamicActivitiesTest(unittest.TestCase):
     def test_handles_empty_or_no_activities_gracefully(self):
         # TODO: assert behavior when there are no activities to return
         pass
+
+    class AuthControllerTest(unittest.TestCase):
+    """Tests for the user-facing AuthController."""
+
+    def setUp(self):
+        # TODO: instantiate AuthController() within an app/request context,
+        # set up a test client and any necessary session/user fixtures
+        pass
+
+    def test_login_success_with_valid_credentials(self):
+        # TODO: assert login() authenticates and redirects on valid credentials
+        pass
+
+    def test_login_failure_with_invalid_credentials(self):
+        # TODO: assert login() rejects invalid credentials with appropriate
+        # flash message / response
+        pass
