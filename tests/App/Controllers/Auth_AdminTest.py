@@ -23,3 +23,17 @@ Covers:
     - AuthController_Admin.api_notifications()
     - AuthController_Admin.api_audit_logs()
 """
+import unittest
+
+
+class LogAuditTest(unittest.TestCase):
+    """Tests for the module-level log_audit() helper."""
+
+    def test_log_audit_writes_entry(self):
+        # TODO: assert log_audit(admin_id, action, target, details) persists
+        # an audit log record
+        pass
+
+    def test_log_audit_handles_optional_details(self):
+        # TODO: assert log_audit() works when details is omitted (default "")
+        pass
