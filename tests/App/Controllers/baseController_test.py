@@ -22,3 +22,14 @@ class BaseControllerTest(unittest.TestCase):
         # from request.form
         pass
     
+    def test_get_form_data_handles_missing_fields(self):
+        # TODO: assert behavior when a requested field is absent from the form
+        pass
+
+    def test_is_logged_in_true_when_session_has_user(self):
+        # TODO: assert is_logged_in() returns True when session contains user info
+        pass
+
+    def test_is_logged_in_false_when_session_empty(self):
+        # TODO: assert is_logged_in() returns False when session is empty
+        pass
