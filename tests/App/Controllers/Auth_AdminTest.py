@@ -37,3 +37,16 @@ class LogAuditTest(unittest.TestCase):
     def test_log_audit_handles_optional_details(self):
         # TODO: assert log_audit() works when details is omitted (default "")
         pass
+
+class SendNotificationTest(unittest.TestCase):
+    """Tests for the module-level send_notification() helper."""
+
+    def test_send_notification_creates_notification(self):
+        # TODO: assert send_notification(user_id, title, message) creates a
+        # notification record for the user
+        pass
+
+    def test_send_notification_handles_invalid_user(self):
+        # TODO: assert behavior when user_id does not exist
+        pass
+    
