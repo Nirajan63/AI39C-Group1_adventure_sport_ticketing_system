@@ -31,4 +31,13 @@ def test_register_form_fields(client):
     assert b"registration" in html
     assert b"username" in html
     assert b"email" in html
-    assert b"password" in html    
+    assert b"password" in html 
+
+# =========================
+# TEST 3: LOGIN LINK EXISTS
+# =========================
+def test_login_link_exists(client):
+    response = client.get("/register")
+
+    assert b"/login" in response.data
+ 
