@@ -113,3 +113,23 @@ class AuthControllerAdminTest(unittest.TestCase):
     def test_api_activity_detail_handles_not_found(self):
         # TODO: assert api_activity_detail() handles a nonexistent activity_id
         pass
+
+    def test_api_duplicate_activity_creates_copy(self):
+        # TODO: assert api_duplicate_activity() duplicates an existing activity
+        pass
+
+    def test_api_bookings_returns_list(self):
+        # TODO: assert api_bookings() returns expected JSON list of bookings
+        pass
+
+    def test_api_booking_detail_returns_single_booking(self):
+        # TODO: assert api_booking_detail(booking_id) returns correct booking
+        pass
+
+    def test_api_booking_detail_handles_not_found(self):
+        # TODO: assert api_booking_detail() handles a nonexistent booking_id
+        pass
+
+    def test_api_payments_returns_list(self):
+        # TODO: assert api_payments() returns expected JSON list of payments
+        pass
