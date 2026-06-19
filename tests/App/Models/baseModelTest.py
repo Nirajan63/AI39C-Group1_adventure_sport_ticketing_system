@@ -58,3 +58,22 @@ class BaseModelTest(unittest.TestCase):
     def test_find_all_returns_all_records(self):
         # TODO: assert find_all() returns every record in the table
         pass
+    
+    def test_find_all_respects_order_by(self):
+        # TODO: assert find_all(order_by=...) orders results correctly
+        pass
+
+    def test_count_all_returns_correct_count(self):
+        # TODO: assert count_all() returns the correct number of records
+        pass
+
+    def test_delete_by_id_removes_record(self):
+        # TODO: assert delete_by_id(record_id) removes the targeted record
+        pass
+
+    def test_delete_by_id_handles_nonexistent_id(self):
+        # TODO: assert delete_by_id() behaves gracefully for a missing id
+        pass
+
+if __name__ == "__main__":
+    unittest.main()
