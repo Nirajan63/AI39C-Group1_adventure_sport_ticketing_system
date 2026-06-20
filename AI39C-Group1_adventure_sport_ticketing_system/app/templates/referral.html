@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}Refer & Earn — Thrill Sphere{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/referral.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="referral-page">
+
+  <!-- ══ HERO ══ -->
+  <section class="referral-hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="referral-hero-badge">
+      <i class='bx bx-gift'></i> Referral Program
+    </div>
+
+    <h1>Share the <span>Thrill</span>,<br>Earn Rewards</h1>
+    <p>Invite friends to Nepal's most exciting adventure platform. For every friend who books, you both get rewarded.</p>
+
+    {% if user %}
+      <!-- Referral Code Display -->
+      <div class="referral-code-card">
+        <div>
+          <div class="referral-code-label">Your Code</div>
+          <div class="referral-code-value" id="heroCode">{{ referral_code }}</div>
+        </div>
+        <button class="copy-btn" id="heroCopyBtn" onclick="copyCode('{{ referral_code }}', 'heroCopyBtn')">
+          <i class='bx bx-copy'></i> Copy Code
+        </button>
+      </div>
+    {% else %}
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+        <a href="/login" class="btn-primary-ref"><i class='bx bx-log-in'></i> Login to Get Your Code</a>
+        <a href="/register" class="btn-outline-ref"><i class='bx bx-user-plus'></i> Create Account</a>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if user %}
+  <!-- ══ MAIN CONTENT ══ -->
+  <div class="referral-content">
+    <div class="referral-grid">
+
+      <!-- ══ LEFT COLUMN ══ -->
+      <div class="referral-left">
+
+        <!-- Share Section -->
+        <div class="share-section">
+          <div class="section-label"><i class='bx bx-share-alt'></i> Share Your Link</div>
+          <div class="share-card">
+            <h3>Your Referral Link</h3>
+            <p>Share this link with friends — when they sign up and book their first adventure, you both earn rewards!</p>
+
+            <div class="referral-link-row">
+              <input
+                type="text"
+                class="referral-link-input"
+                id="referralLinkInput"
+                value="{{ referral_link }}"
+                readonly
+              />
+              <button class="copy-btn" id="linkCopyBtn" onclick="copyLink('linkCopyBtn')">
+                <i class='bx bx-copy'></i> Copy
+              </button>
+            </div>
+
+            <div class="social-share-row">
+              <a class="social-btn whatsapp" href="https://wa.me/?text={{ whatsapp_text | urlencode }}" target="_blank" rel="noopener">
+                <i class='bx bxl-whatsapp'></i> WhatsApp
+              </a>
+              <a class="social-btn twitter" href="https://twitter.com/intent/tweet?text={{ twitter_text | urlencode }}&url={{ referral_link | urlencode }}" target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Twitter / X
+              </a>
+              <a class="social-btn facebook" href="https://www.facebook.com/sharer/sharer.php?u={{ referral_link | urlencode }}" target="_blank" rel="noopener">
+                <i class='bx bxl-facebook'></i> Facebook
+              </a>
+              <a class="social-btn email" href="mailto:?subject=Join Thrill Sphere!&body={{ email_body | urlencode }}" target="_blank">
+                <i class='bx bx-envelope'></i> Email
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="how-it-works">
+          <div class="section-label"><i class='bx bx-info-circle'></i> How It Works</div>
+          <div class="steps-row">
+            <div class="step-card">
+              <span class="step-icon">🔗</span>
+              <div class="step-number">1</div>
+              <h4>Share Your Link</h4>
+              <p>Copy your unique referral link or code and share it with friends, family, or on social media.</p>
+            </div>
+            <div class="step-card">
+              <span class="step-icon">🧑‍🤝‍🧑</span>
+              <div class="step-number">2</div>
+              <h4>Friend Signs Up</h4>
+              <p>Your friend clicks your link, creates an account, and gets NPR 500 welcome discount on their first booking.</p>
+            </div>
+            <div class="step-card">
+              <span class="step-icon">🎁</span>
+              <div class="step-number">3</div>
+              <h4>You Both Earn</h4>
+              <p>When your friend completes their first booking, you earn NPR 750 credit added straight to your wallet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reward Tiers -->
+        <div class="rewards-section">
+          <div class="section-label"><i class='bx bx-trophy'></i> Reward Tiers</div>
+          <div class="rewards-card">
+            <h3>More Referrals = Bigger Rewards</h3>
+            <div class="reward-tiers">
+              <div class="tier-row bronze">
+                <span class="tier-emoji">🥉</span>
+                <div class="tier-info">
+                  <p class="tier-name">Bronze — Starter</p>
+                  <p class="tier-desc">1–2 successful referrals</p>
+                </div>
+                <span class="tier-reward">NPR 750 / referral</span>
+              </div>
+              <div class="tier-row silver">
+                <span class="tier-emoji">🥈</span>
+                <div class="tier-info">
+                  <p class="tier-name">Silver — Explorer</p>
+                  <p class="tier-desc">3–5 successful referrals</p>
+                </div>
+                <span class="tier-reward">NPR 1,000 / referral</span>
+              </div>
+              <div class="tier-row gold">
+                <span class="tier-emoji">🥇</span>
+                <div class="tier-info">
+                  <p class="tier-name">Gold — Adventurer</p>
+                  <p class="tier-desc">6–10 successful referrals</p>
+                </div>
+                <span class="tier-reward">NPR 1,500 / referral</span>
+              </div>
+              <div class="tier-row platinum">
+                <span class="tier-emoji">💎</span>
+                <div class="tier-info">
+                  <p class="tier-name">Platinum — Legend</p>
+                  <p class="tier-desc">11+ successful referrals</p>
+                </div>
+                <span class="tier-reward">NPR 2,000 / referral</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end left -->
+
+      <!-- ══ RIGHT SIDEBAR ══ -->
+      <div class="referral-sidebar">
+
+        <!-- Progress Ring -->
+        <div class="stat-panel">
+          <p class="stat-panel-title">Your Referral Progress</p>
+
+          <div class="progress-ring-wrap">
+            <div class="ring-container">
+              <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7494ec"/>
+                    <stop offset="100%" stop-color="#c47af5"/>
+                  </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="60" cy="60" r="50"/>
+                <circle
+                  class="progress-ring-fill"
+                  cx="60" cy="60" r="50"
+                  id="progressRingFill"
+                  data-referrals="{{ stats.successful }}"
+                  data-next-tier="{{ stats.next_tier_at }}"
+                />
+              </svg>
+              <div class="ring-label">
+                <span class="ring-value">{{ stats.successful }}</span>
+                <span class="ring-sub">Referrals</span>
+              </div>
+            </div>
+
+            <div style="text-align:center;">
+              <p style="font-size:0.82rem; color:rgba(224,224,240,0.7); margin:0 0 4px;">
+                <strong style="color:#fff;">{{ stats.next_tier_at - stats.successful }}</strong> more to reach
+                <span style="color:#7494ec; font-weight:700;">{{ stats.current_tier_label }}</span>
+              </p>
+              <p style="font-size:0.72rem; color:rgba(224,224,240,0.45); margin:0;">
+                Current tier: <span style="color:#ffd700;">{{ stats.current_tier_emoji }} {{ stats.current_tier_label }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="mini-stat">
+              <span class="mini-stat-value">{{ stats.total_invited }}</span>
+              <span class="mini-stat-label">Invited</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-value">{{ stats.successful }}</span>
+              <span class="mini-stat-label">Completed</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-value" style="color:#22c55e;">NPR {{ "{:,}".format(stats.total_earned) }}</span>
+              <span class="mini-stat-label">Earned</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-value" style="color:#eab308;">{{ stats.pending }}</span>
+              <span class="mini-stat-label">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Referred Friends -->
+        <div class="stat-panel">
+          <p class="stat-panel-title">Friends You Referred</p>
+          {% if referred_users %}
+            <div class="referred-list">
+              {% for r in referred_users %}
+                <div class="referred-item">
+                  <div class="referred-avatar">{{ r.username[0].upper() }}</div>
+                  <div class="referred-info">
+                    <p class="referred-name">{{ r.username }}</p>
+                    <p class="referred-date">Joined {{ r.joined_date }}</p>
+                  </div>
+                  <span class="referred-status status-{{ r.status }}">
+                    {% if r.status == 'booked' %}✓ Booked
+                    {% elif r.status == 'joined' %}Joined
+                    {% else %}Pending{% endif %}
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-referred">
+              <i class='bx bx-user-plus'></i>
+              <p>No referrals yet. Share your code and invite friends to start earning!</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Earnings Breakdown -->
+        <div class="stat-panel">
+          <p class="stat-panel-title">Earnings Breakdown</p>
+          <div>
+            <div class="earnings-item">
+              <span class="earnings-label">Total Earned</span>
+              <span class="earnings-amount positive">NPR {{ "{:,}".format(stats.total_earned) }}</span>
+            </div>
+            <div class="earnings-item">
+              <span class="earnings-label">Pending Rewards</span>
+              <span class="earnings-amount" style="color:#eab308;">NPR {{ "{:,}".format(stats.pending_earnings) }}</span>
+            </div>
+            <div class="earnings-item">
+              <span class="earnings-label">Per Referral (current)</span>
+              <span class="earnings-amount highlight">NPR {{ "{:,}".format(stats.per_referral_reward) }}</span>
+            </div>
+            <div class="earnings-item">
+              <span class="earnings-label">Your Tier</span>
+              <span class="earnings-amount">{{ stats.current_tier_emoji }} {{ stats.current_tier_label }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end sidebar -->
+
+    </div><!-- end grid -->
+  </div><!-- end content -->
+
+  {% else %}
+  <!-- ══ GUEST CTA ══ -->
+  <div class="referral-content">
+    <div class="referral-guest-cta">
+      <span class="cta-icon">🎁</span>
+      <h2>Start Earning Today</h2>
+      <p>Login or create an account to get your unique referral code and start earning rewards for every friend you bring to Thrill Sphere.</p>
+      <div class="cta-buttons">
+        <a href="/login" class="btn-primary-ref"><i class='bx bx-log-in'></i> Login</a>
+        <a href="/register" class="btn-outline-ref"><i class='bx bx-user-plus'></i> Register</a>
+      </div>
+
+      <!-- How it works (guest view) -->
+      <div style="margin-top:60px; width:100%; max-width:800px;">
+        <div class="section-label" style="text-align:center; display:block; margin-bottom:24px;"><i class='bx bx-info-circle'></i> How It Works</div>
+        <div class="steps-row">
+          <div class="step-card">
+            <span class="step-icon">🔗</span>
+            <div class="step-number">1</div>
+            <h4>Get Your Link</h4>
+            <p>Sign up and receive your unique referral code and shareable link instantly.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-icon">🧑‍🤝‍🧑</span>
+            <div class="step-number">2</div>
+            <h4>Invite Friends</h4>
+            <p>Share via WhatsApp, social media or email. Friends get NPR 500 off their first booking.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-icon">🎁</span>
+            <div class="step-number">3</div>
+            <h4>Earn Rewards</h4>
+            <p>When they book, you earn up to NPR 2,000 per referral depending on your tier.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- end referral-page -->
+
+<!-- Copy Toast -->
+<div class="copy-toast" id="copyToast">✓ Copied to clipboard!</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Copy Code ──────────────────────────────────────────────────
+  function copyCode(code, btnId) {
+    navigator.clipboard.writeText(code).then(() => {
+      showToast('✓ Code copied!');
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = "<i class='bx bx-check'></i> Copied!";
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = "<i class='bx bx-copy'></i> Copy Code";
+        }, 2500);
+      }
+    }).catch(() => {
+      fallbackCopy(code);
+      showToast('✓ Code copied!');
+    });
+  }
+
+  // ── Copy Link ──────────────────────────────────────────────────
+  function copyLink(btnId) {
+    const input = document.getElementById('referralLinkInput');
+    const value = input ? input.value : '';
+    navigator.clipboard.writeText(value).then(() => {
+      showToast('✓ Link copied!');
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = "<i class='bx bx-check'></i> Copied!";
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = "<i class='bx bx-copy'></i> Copy";
+        }, 2500);
+      }
+    }).catch(() => {
+      fallbackCopy(value);
+      showToast('✓ Link copied!');
+    });
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('copyToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  // ── Progress Ring Animation ─────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const fill = document.getElementById('progressRingFill');
+    if (!fill) return;
+
+    const referrals = parseInt(fill.dataset.referrals || '0', 10);
+    const nextTier  = parseInt(fill.dataset.nextTier  || '10', 10);
+    const pct = Math.min(referrals / nextTier, 1);
+    const circumference = 2 * Math.PI * 50; // r=50
+
+    setTimeout(() => {
+      fill.style.strokeDashoffset = circumference * (1 - pct);
+    }, 300);
+  });
+</script>
+{% endblock %}
