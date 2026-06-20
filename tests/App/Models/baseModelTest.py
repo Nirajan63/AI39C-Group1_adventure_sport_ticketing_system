@@ -26,6 +26,7 @@ class SafeColumnTest(unittest.TestCase):
         # enable SQL injection (e.g. special characters, whitespace)
         pass
 
+
 class BaseModelTest(unittest.TestCase):
     """Tests for the abstract BaseModel class via a concrete subclass."""
 
@@ -37,7 +38,7 @@ class BaseModelTest(unittest.TestCase):
     def test_table_property_is_abstract(self):
         # TODO: assert BaseModel cannot be instantiated directly without
         # implementing the `table` property
-        pass    
+        pass
 
     def test_find_by_id_returns_matching_record(self):
         # TODO: assert find_by_id(record_id) returns the expected record
@@ -58,7 +59,7 @@ class BaseModelTest(unittest.TestCase):
     def test_find_all_returns_all_records(self):
         # TODO: assert find_all() returns every record in the table
         pass
-    
+
     def test_find_all_respects_order_by(self):
         # TODO: assert find_all(order_by=...) orders results correctly
         pass
@@ -75,5 +76,7 @@ class BaseModelTest(unittest.TestCase):
         # TODO: assert delete_by_id() behaves gracefully for a missing id
         pass
 
+
 if __name__ == "__main__":
     unittest.main()
+    pass
