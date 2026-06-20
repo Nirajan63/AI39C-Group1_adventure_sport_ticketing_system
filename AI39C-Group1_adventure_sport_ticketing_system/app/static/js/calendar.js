@@ -1,4 +1,4 @@
-// calendar.js — Thrill Sphere Events Calendar
+// calendar.js — Thrill Sphere — My Calendar
 // Single source of truth:
 //   window.THRILL_BOOKINGS     — user's own bookings (from Flask/Jinja2)
 //   window.THRILL_AVAILABILITY — live fill-rate per activity per date (all users)

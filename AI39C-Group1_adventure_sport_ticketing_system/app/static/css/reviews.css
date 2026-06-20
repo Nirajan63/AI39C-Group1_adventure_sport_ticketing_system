@@ -1,0 +1,139 @@
+.review-section {
+    background: #f5f2ee;
+    padding: 60px 80px;
+    min-height: 100vh;
+}
+
+.review-container {
+    display: flex;
+    gap: 60px;
+}
+
+/* LEFT SIDE */
+
+.review-list {
+    flex: 2;
+}
+
+.review-title {
+    font-size: 60px;
+    margin-bottom: 50px;
+    font-weight: 300;
+    font-family: serif;
+}
+
+.review-card {
+    border-bottom: 1px solid #ddd;
+    padding: 40px 0;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.review-user {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.review-avatar {
+    width: 50px;
+    height: 50px;
+    background: blue;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+}
+
+.review-user h3 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.review-user p {
+    color: gray;
+    margin-top: 5px;
+}
+
+.review-stars {
+    color: #b8860b;
+    font-size: 20px;
+}
+
+.review-text {
+    margin-top: 30px;
+    font-size: 20px;
+    line-height: 1.8;
+    color: #555;
+    font-style: italic;
+}
+
+.review-activity {
+    display: inline-block;
+    margin-top: 25px;
+    letter-spacing: 3px;
+    font-weight: 600;
+    color: #777;
+}
+
+/* RIGHT SIDE */
+
+.review-form-container {
+    flex: 1;
+    background: white;
+    padding: 40px;
+    border: 1px solid #ddd;
+    height: fit-content;
+}
+
+.review-form-container h2 {
+    font-size: 42px;
+    margin-bottom: 40px;
+    font-family: serif;
+    font-weight: 300;
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.review-form label {
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.review-form input,
+.review-form textarea,
+.review-form select {
+    padding: 15px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    outline: none;
+}
+
+.review-form button {
+    margin-top: 30px;
+    padding: 18px;
+    background: blue;
+    color: white;
+    border: none;
+    font-size: 15px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.review-form button:hover {
+    background: #333;
+}
