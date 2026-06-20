@@ -42,4 +42,11 @@ def test_register_button_exists(client):
 def test_google_signup_button_exists(client):
     response = client.get("/register")
     assert b"Sign up with Google" in response.data
+# =========================
+# TEST 6: REGISTER JS INCLUDED
+# =========================
+def test_register_js_included(client):
+    response = client.get("/register")
+    assert b"register.js" in response.data
+
 
