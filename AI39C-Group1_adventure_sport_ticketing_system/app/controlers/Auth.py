@@ -1,8 +1,8 @@
 from flask import render_template, request, session, redirect, url_for, flash
 from datetime import datetime
-from App.Controllers.baseController import BaseController
-from App.Models.user import User
-from App.Models.data import Database
+from app.controlers.baseController import BaseController
+from app.models.user import User
+from app.models.data import Database
 
 
 # ── Activities Metadata Definition ────────────────────────────────────────

@@ -6,6 +6,10 @@
     const notificationToggle = document.querySelector("[data-notification-toggle]");
     const notificationMenu = document.querySelector("[data-notification-menu]");
     const navLinks = document.querySelectorAll("[data-nav-link]");
+    const userMenuToggle = document.getElementById('userMenuToggle');
+    const userMenu = document.getElementById('userMenu');
+    const moreOptionsToggle = document.getElementById('moreOptionsToggle');
+    const moreOptionsMenu = document.getElementById('moreOptionsMenu');
 
     const root = document.documentElement;
     const savedTheme = localStorage.getItem("theme");
@@ -17,6 +21,19 @@
         const isOpen = navContent.classList.toggle("is-open");
         navToggle.setAttribute("aria-expanded", String(isOpen));
         navToggle.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+    });
+    // User menu toggle
+    userMenuToggle?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = userMenu.classList.toggle('is-open');
+        userMenuToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // More Options toggle
+    moreOptionsToggle?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = moreOptionsMenu.classList.toggle('is-open');
+        moreOptionsToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
     themeToggle?.addEventListener("click", function () {
@@ -31,13 +48,26 @@
     });
 
     document.addEventListener("click", function (event) {
-        if (!notificationMenu || !notificationToggle) {
-            return;
+        // Close notifications menu if open
+        if (notificationMenu && notificationToggle) {
+            if (!notificationMenu.contains(event.target) && !notificationToggle.contains(event.target)) {
+                notificationMenu.classList.remove("is-open");
+                notificationToggle.setAttribute("aria-expanded", "false");
+            }
         }
-
-        if (!notificationMenu.contains(event.target) && !notificationToggle.contains(event.target)) {
-            notificationMenu.classList.remove("is-open");
-            notificationToggle.setAttribute("aria-expanded", "false");
+        // Close user menu if open
+        if (userMenu && userMenuToggle) {
+            if (!userMenu.contains(event.target) && !userMenuToggle.contains(event.target)) {
+                userMenu.classList.remove("is-open");
+                userMenuToggle.setAttribute("aria-expanded", "false");
+            }
+        }
+        // Close more menu if open
+        if (moreOptionsMenu && moreOptionsToggle) {
+            if (!moreOptionsMenu.contains(event.target) && !moreOptionsToggle.contains(event.target)) {
+                moreOptionsMenu.classList.remove("is-open");
+                moreOptionsToggle.setAttribute("aria-expanded", "false");
+            }
         }
     });
 

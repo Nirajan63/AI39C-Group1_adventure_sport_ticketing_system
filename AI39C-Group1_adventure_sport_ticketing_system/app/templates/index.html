@@ -1,49 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block title %}Quick Links — Thrill Sphere{% endblock %}
 
-    <title>Quick Links</title>
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quicklink.css') }}">
+{% endblock %}
 
-    <link rel="stylesheet" href="quicklink.css">
-</head>
+{% block content %}
+<!-- Bottom Share Section -->
+<div class="share-wrapper">
 
-<body>
+    <!-- Share Button -->
+    <button class="share-btn" onclick="toggleMenu()">
+        <i class="fa-solid fa-share-nodes"></i>
+    </button>
 
-    <!-- Bottom Share Section -->
-    <div class="share-wrapper">
+    <!-- Social Icons -->
+    <div class="social-icons" id="socialIcons">
 
-        <!-- Share Button -->
-        <button class="share-btn" onclick="toggleMenu()">
-            <i class="fa-solid fa-share-nodes"></i>
-        </button>
+        <!-- Instagram -->
+        <a href="https://www.instagram.com/thrillsphere22/" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-instagram"></i>
+        </a>
 
-        <!-- Social Icons -->
-        <div class="social-icons" id="socialIcons">
+        <!-- WhatsApp -->
+        <a href="https://wa.me/9779868935600?text=Hello%20Thrill%20Sphere!" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-whatsapp"></i>
+        </a>
 
-            <a href="https://instagram.com" target="_blank">
-                <i class="fab fa-instagram"></i>
-            </a>
-
-            <a href="https://wa.me/9779800000000" target="_blank">
-                <i class="fab fa-whatsapp"></i>
-            </a>
-
-            <a href="https://facebook.com" target="_blank">
-                <i class="fab fa-facebook-f"></i>
-            </a>
-
-        </div>
+        <!-- Facebook -->
+        <a href="https://www.facebook.com/profile.php?id=61591072228614" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-facebook-f"></i>
+        </a>
 
     </div>
 
-<script src="script.js"></script>
+</div>
+{% endblock %}
 
-</body>
-</html>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

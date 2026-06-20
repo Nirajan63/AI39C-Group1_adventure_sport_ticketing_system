@@ -39,25 +39,79 @@
     align-items: center;
     justify-content: space-between;
     flex: 1;
-    gap: 24px;
     min-width: 0;
+    gap: 24px;
 }
 
 .nav-links,
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 20px;
+    flex-shrink: 0;
 }
 
-.nav-links a {
+.nav-actions {
+    margin-left: auto;
+}
+
+.nav-links a,
+.nav-button {
     position: relative;
-    padding: 11px 0 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 12px;
     font-size: 1rem;
     line-height: 1;
     color: var(--text);
     white-space: nowrap;
     text-transform: capitalize;
+    flex-shrink: 1;
+    border-radius: var(--radius);
+    transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+/* underline effect */
+.nav-links a::after,
+.nav-button::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: transparent;
+    content: "";
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+/* hover and active states */
+.nav-links a:hover,
+.nav-links a.is-active,
+.nav-button:hover,
+.nav-button.is-active {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+/* underline on hover/active */
+.nav-links a:hover::after,
+.nav-links a.is-active::after,
+.nav-button:hover::after,
+.nav-button.is-active::after {
+    background: var(--accent);
+}
+
+/* icon bounce on hover */
+.nav-button:hover i,
+.nav-button.is-active i {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
 }
 
 .nav-links a::after {
@@ -93,6 +147,109 @@
     color: var(--text);
     background: var(--chip-bg);
 }
+
+
+.more-menu-wrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+/* Overflow button (three-dot) */
+.more-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    cursor: pointer;
+    background: var(--chip-bg);
+    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Glassy overflow menu */
+.more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    min-width: 180px;
+    box-shadow: var(--box-shadow);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.more-menu.is-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+html.dark-mode .more-menu {
+    background: rgba(19, 17, 39, 0.85);
+}
+
+/* Ensure overflow menu links have proper spacing and visual styling */
+.more-menu a,
+.more-menu .nav-button,
+.more-menu .nav-item {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 16px !important;
+    color: var(--text) !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    border-radius: var(--radius) !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+}
+
+.more-menu a:hover,
+.more-menu .nav-button:hover,
+.more-menu .nav-item:hover {
+    background: var(--chip-hover) !important;
+    color: var(--accent) !important;
+}
+
+/* Ensure no underline or hover lines inside the vertical dropdown */
+.more-menu a::after,
+.more-menu .nav-button::after,
+.more-menu .nav-item::after {
+    display: none !important;
+}
+
+/* Style the icon for visual alignment and consistency */
+.more-menu a i,
+.more-menu .nav-button i,
+.more-menu .nav-item i {
+    font-size: 1.2rem !important;
+    width: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text) !important;
+    transition: color 0.2s ease !important;
+}
+
+.more-menu a:hover i,
+.more-menu .nav-button:hover i,
+.more-menu .nav-item:hover i {
+    color: var(--accent) !important;
+}
+
 
 .icon-button {
     width: 36px;
@@ -223,8 +380,32 @@
         display: block;
     }
 
+    .more-menu-wrapper {
+        display: block;
+        width: 100%;
+        order: -1;
+    }
+
+    .more-button {
+        display: none;
+    }
+
+    .more-menu {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        opacity: 1;
+        transform: none;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        width: 100%;
+    }
+
     .nav-links,
     .nav-actions {
+        flex: 0 0 auto; /* keep actions compact on right */
         align-items: stretch;
         flex-direction: column;
         gap: 8px;
@@ -244,7 +425,8 @@
 
     .icon-button,
     .user-chip,
-    .logout-button {
+    .logout-button,
+    #langToggleBtn {
         justify-content: flex-start;
         width: 100%;
         height: 40px;
@@ -291,6 +473,7 @@
     letter-spacing: 0.03em;
     transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
     font-family: inherit;
+    width: auto;
 }
 #langToggleBtn:hover {
     background: var(--accent);
@@ -327,3 +510,154 @@
 [class*="profile-pic"] {
     margin-top: 12px;
 }
+
+/* ================= WISHLIST BADGE ================= */
+.nav-wishlist-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wishlist-badge {
+    background: var(--red);
+    color: #ffffff !important;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 50px;
+    line-height: 1;
+    display: inline-block;
+    box-shadow: 0 0 10px rgba(255, 79, 79, 0.4);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 79, 79, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 79, 79, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 79, 79, 0);
+    }
+}
+
+/* ================= GLOBAL FLASH TOASTS ================= */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast-msg-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+    font-size: 0.9rem;
+    font-weight: 600;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+html.dark-mode .toast-msg-item {
+    background: rgba(19, 17, 39, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.toast-msg-item.success {
+    border-left: 4px solid #4caf7d;
+}
+
+.toast-msg-item.success .toast-icon {
+    color: #4caf7d;
+}
+
+.toast-msg-item.error {
+    border-left: 4px solid #e05a5a;
+}
+
+.toast-msg-item.error .toast-icon {
+    color: #e05a5a;
+}
+
+.toast-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toast-text {
+    flex-grow: 1;
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 0 0 10px;
+    line-height: 1;
+}
+
+.toast-close-btn:hover {
+    color: var(--text);
+}
+
+@keyframes toast-slide-in {
+    from {
+        transform: translateX(40px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* ================= PULSE WARNING DOT ================= */
+.pulse-warning-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(224, 90, 90, 0.7);
+    animation: pulse-warning-red 1.6s infinite;
+}
+
+@keyframes pulse-warning-red {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(224, 90, 90, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(224, 90, 90, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(224, 90, 90, 0);
+    }
+}
+

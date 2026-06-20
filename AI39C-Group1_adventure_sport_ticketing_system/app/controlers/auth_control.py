@@ -92,6 +92,104 @@ class AuthController(BaseController):
             
         return render_template("home.html", user=user, wishlist_count=wishlist_count, saved_wishlist=saved_wishlist)
 
+    # ── PUBLIC ACTIVITY PAGE ────────────────────────────────────────────────
+    def activity_page(self, activity_id):
+        # Allow both logged in and non-logged in users
+        user = session.get("user")
+        wishlist_count = 0
+        saved_wishlist = []
+        if user:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user["id"],))
+            row = cursor.fetchone()
+            if row:
+                wishlist_count = row["count"]
+            cursor.execute("SELECT activity_id FROM wishlist WHERE user_id = ?", (user["id"],))
+            saved_wishlist = [w["activity_id"] for w in cursor.fetchall()]
+            conn.close()
+
+        act = ACTIVITIES.get(activity_id)
+        # Check DB if not in static dict
+        if not act:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM activities WHERE id = ?", (activity_id,))
+            db_act = cursor.fetchone()
+            conn.close()
+            if db_act:
+                act = dict(db_act)
+            else:
+                flash("Activity not found.", "danger")
+                return redirect(url_for("auth.home"))
+
+        return render_template("activity.html", user=user, activity=act, wishlist_count=wishlist_count, saved_wishlist=saved_wishlist)
+
+    # ── SEARCH SUGGESTIONS API ──────────────────────────────────────────────
+    def api_search(self):
+        query = request.args.get("q", "").strip().lower()
+        if not query:
+            return jsonify([])
+
+        results = []
+        # Search in static ACTIVITIES
+        for key, act in ACTIVITIES.items():
+            if query in act["name"].lower() or query in act.get("location", "").lower():
+                results.append({
+                    "id": act["id"],
+                    "name": act["name"],
+                    "category": act.get("category", "Adventure"),
+                    "img": act["img"],
+                    "location": act.get("location", "")
+                })
+        
+        # Search in DB activities
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, category, img, location FROM activities WHERE LOWER(name) LIKE ? OR LOWER(location) LIKE ?", (f"%{query}%", f"%{query}%"))
+        db_results = cursor.fetchall()
+        conn.close()
+
+        for row in db_results:
+            # Avoid duplicates
+            if not any(r["id"] == row["id"] for r in results):
+                results.append({
+                    "id": row["id"],
+                    "name": row["name"],
+                    "category": row["category"],
+                    "img": row["img"],
+                    "location": row.get("location", "")
+                })
+
+        # Rank results based on relevance to query
+        def get_match_rank(item):
+            name_lower = item["name"].lower()
+            location_lower = item.get("location", "").lower()
+            
+            # 1. Exact match with name
+            if name_lower == query:
+                return 0
+            # 2. Name starts with query
+            if name_lower.startswith(query):
+                return 1
+            # 3. A word in name starts with query
+            if any(word.startswith(query) for word in name_lower.split()):
+                return 2
+            # 4. Name contains query
+            if query in name_lower:
+                return 3
+            # 5. Location starts with query
+            if location_lower.startswith(query):
+                return 4
+            # 6. Location contains query
+            if query in location_lower:
+                return 5
+            return 6
+
+        results.sort(key=get_match_rank)
+                
+        return jsonify(results)
+
     # ── LOGIN ──────────────────────────────────────────────────────────────
     def login(self):
         if self.is_logged_in():
@@ -122,6 +220,13 @@ class AuthController(BaseController):
             conn.close()
 
             if user_data and user_data["password"] == password:
+                if user_data.get("status") == "suspended":
+                    error_msg = "Access denied: Your account has been suspended."
+                    if request.is_json:
+                        return jsonify({"message": error_msg, "status": "error"}), 403
+                    flash(error_msg, "danger")
+                    return render_template("login.html")
+
                 # Store full user information in session
                 session["user"] = {
                     "id": user_data["id"],
@@ -376,6 +481,12 @@ class AuthController(BaseController):
         cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         db_user = cursor.fetchone()
         if db_user:
+            if db_user.get("status") == "suspended":
+                conn.close()
+                session.clear()
+                flash("Your account has been suspended. Please contact support.", "danger")
+                return redirect(url_for("auth.login"))
+
             session["user"] = {
                 "id": db_user["id"],
                 "username": db_user["username"],
@@ -393,6 +504,16 @@ class AuthController(BaseController):
                 "joined": "May 2026"
             }
             user = session["user"]
+
+        # 1. Auto-complete any confirmed bookings whose date has already passed.
+        from datetime import datetime
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        cursor.execute(
+            "UPDATE bookings SET status = 'completed' "
+            "WHERE user_id = ? AND status = 'confirmed' AND date < ?",
+            (user_id, today_str)
+        )
+        conn.commit()
 
         # Fetch bookings
         cursor.execute("SELECT * FROM bookings WHERE user_id = ? ORDER BY id DESC", (user_id,))
@@ -440,6 +561,12 @@ class AuthController(BaseController):
                 "fill_pct": fill_pct
             }
         
+        # Fetch notifications
+        cursor.execute(
+            "SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 15", (user_id,)
+        )
+        notifications = cursor.fetchall()
+
         conn.close()
 
         # Enrich bookings with display metadata
@@ -448,21 +575,37 @@ class AuthController(BaseController):
             b_dict = dict(b)
             act_name = b_dict.get("activity", "").strip().lower()
 
-            act_key = None
-            for key, val in ACTIVITIES.items():
-                if val["name"].lower() == act_name or key == act_name:
-                    act_key = key
-                    break
+            internal_notes = b_dict.get("internal_notes") or ""
+            is_event = internal_notes.startswith("event_")
+            event_details = None
+            if is_event:
+                try:
+                    event_id = int(internal_notes.split("_")[1])
+                    from app.models.database import get_event_by_id
+                    event_details = get_event_by_id(event_id)
+                except Exception:
+                    pass
 
-            if act_key:
-                act = ACTIVITIES[act_key]
-                b_dict["img"] = act["img"]
-                b_dict["location"] = act["location"]
-                b_dict["duration"] = act["duration"]
+            if event_details:
+                b_dict["img"] = event_details["image_url"] or "Mountain-Main.png"
+                b_dict["location"] = event_details["location"]
+                b_dict["duration"] = event_details["duration"] or "3 hours"
             else:
-                b_dict["img"] = "Mountain-Main.png"
-                b_dict["location"] = "Nepal"
-                b_dict["duration"] = "1 day"
+                act_key = None
+                for key, val in ACTIVITIES.items():
+                    if val["name"].lower() == act_name or key == act_name:
+                        act_key = key
+                        break
+
+                if act_key:
+                    act = ACTIVITIES[act_key]
+                    b_dict["img"] = act["img"]
+                    b_dict["location"] = act["location"]
+                    b_dict["duration"] = act["duration"]
+                else:
+                    b_dict["img"] = "Mountain-Main.png"
+                    b_dict["location"] = "Nepal"
+                    b_dict["duration"] = "1 day"
 
             bookings_list.append(b_dict)
 
@@ -474,6 +617,14 @@ class AuthController(BaseController):
             "spent": sum(float(b.get("total", 0)) for b in bookings_list),
         }
 
+        
+        # Determine earned badges
+        badge_list = []
+        # Trekker badge: award after completing 10 trekking bookings
+        trek_completed = sum(1 for b in bookings_list if b.get('activity', '').lower() == 'trekking' and b.get('status') == 'completed')
+        if trek_completed >= 10:
+            badge_list.append({'icon': '🏔️', 'key': 'dash.badge-trekker', 'label': 'Trekker'})
+
         return render_template(
             "Dashboard.html",
             user=user,
@@ -481,7 +632,9 @@ class AuthController(BaseController):
             bookings=bookings_list,
             activities=ACTIVITIES,
             wishlist_count=wishlist_count,
-            availability=availability
+            availability=availability,
+            notifications=notifications,
+            badges=badge_list
         )
 
     # ── CANCEL BOOKING ─────────────────────────────────────────────────────
@@ -512,6 +665,26 @@ class AuthController(BaseController):
             # Update status to cancelled
             cursor.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", (booking_id,))
             conn.commit()
+
+            # Notify user of cancellation
+            try:
+                from app.controlers.Auth_Admin import send_notification, log_audit
+                send_notification(
+                    user_id,
+                    f"Booking #{booking_id} Cancelled",
+                    f"Your booking for '{booking['activity']}' on {booking['date']} has been successfully cancelled."
+                )
+
+                # Audit log — record user self-cancellation
+                log_audit(
+                    user_id,
+                    "User Self-Cancel Booking",
+                    f"Booking #{booking_id}",
+                    f"User cancelled own booking for '{booking['activity']}' on {booking['date']}"
+                )
+            except Exception as notif_err:
+                print("Notification/Audit failure during booking cancel:", notif_err)
+
             conn.close()
             return jsonify({"success": True}), 200
         except Exception as e:
@@ -550,13 +723,18 @@ class AuthController(BaseController):
 
             user_id = self.get_current_user_id()
 
+            payment_method = request.form.get("payment_method", "qr").strip()
+            txn_code = request.form.get("txn_code", "").strip()
+            booking_status = "confirmed"
+
             if date:
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 try:
                     cursor.execute(
-                        "INSERT INTO bookings (user_id, activity, date, people, price, total, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (user_id, activity_name, date, people, price, total, "confirmed")
+                        "INSERT INTO bookings (user_id, activity, date, people, price, total, status, payment_status, payment_method, txn_code) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (user_id, activity_name, date, people, price, total, booking_status, "confirmed", payment_method, txn_code)
                     )
                     conn.commit()
                     flash(f"🎉 {activity_name} booked successfully!")
@@ -693,6 +871,23 @@ class AuthController(BaseController):
                     "img": act["img"],
                     "tickets_left": random.randint(2, 12)  # High-fidelity mock dynamic indicator
                 })
+            elif act_id and act_id.startswith("event_"):
+                try:
+                    event_id = int(act_id.split("_")[1])
+                    from app.models.database import get_event_by_id
+                    event = get_event_by_id(event_id)
+                    if event:
+                        wishlist_items.append({
+                            "id": act_id,
+                            "name": event["title"],
+                            "price": event["price"],
+                            "location": event["location"],
+                            "duration": event["duration"] or "3 hours",
+                            "img": event["image_url"] or "Mountain-Main.png",
+                            "tickets_left": event["tickets_left"]
+                        })
+                except Exception as ex:
+                    print("Error loading wishlisted event:", ex)
 
         return render_template("wishlist.html", user=user, wishlist=wishlist_items, wishlist_count=wishlist_count)
 
@@ -703,7 +898,8 @@ class AuthController(BaseController):
 
         data = request.json or {}
         activity_id = data.get("activity_id", "").strip().lower()
-        if not activity_id or activity_id not in ACTIVITIES:
+        is_event = activity_id and activity_id.startswith("event_")
+        if not activity_id or (activity_id not in ACTIVITIES and not is_event):
             return jsonify({"message": "Invalid activity ID", "status": "error"}), 400
 
         user_id = self.get_current_user_id()
@@ -833,3 +1029,357 @@ class AuthController(BaseController):
 
         # Renders the reset.html forgot/reset view on GET
         return render_template("reset.html")
+
+    # ── GALLERY PAGE ──────────────────────────────────────────────────────
+    def gallery(self):
+        user = session.get("user")
+        wishlist_count = 0
+        if user:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user["id"],))
+            row = cursor.fetchone()
+            wishlist_count = row["count"] if row else 0
+            conn.close()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.admin_id = u.id ORDER BY p.created_at DESC"
+        )
+        posts = cursor.fetchall()
+        conn.close()
+
+        posts_list = [dict(p) for p in posts]
+        return render_template("gallery.html", user=user, posts=posts_list, wishlist_count=wishlist_count)
+
+    # ── GALLERY ADD POST (Admin only) ─────────────────────────────────────
+    def gallery_add(self):
+        user = session.get("user")
+        if not user:
+            return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+        # Check admin role
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM users WHERE id = ?", (user["id"],))
+        db_user = cursor.fetchone()
+        if not db_user or db_user["status"] != "active" or user.get("role") not in ("super_admin", "admin"):
+            conn.close()
+            return jsonify({"success": False, "message": "Admin access required"}), 403
+
+        title = request.form.get("title", "").strip()
+        description = request.form.get("description", "").strip()
+        image_file = request.files.get("image")
+
+        if not image_file or not image_file.filename:
+            conn.close()
+            return jsonify({"success": False, "message": "Image is required"}), 400
+
+        # Save image to static/images/gallery/
+        import uuid
+        gallery_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "images", "gallery")
+        os.makedirs(gallery_dir, exist_ok=True)
+        ext = os.path.splitext(image_file.filename)[1].lower()
+        filename = f"{uuid.uuid4().hex}{ext}"
+        save_path = os.path.join(gallery_dir, filename)
+        image_file.save(save_path)
+        image_url = f"gallery/{filename}"
+
+        cursor.execute(
+            "INSERT INTO posts (admin_id, title, image_url, description) VALUES (?, ?, ?, ?)",
+            (user["id"], title, image_url, description)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Post created successfully!"})
+
+    # ── GALLERY DELETE POST (Admin only) ──────────────────────────────────
+    def gallery_delete(self, post_id):
+        user = session.get("user")
+        if not user or user.get("role") not in ("super_admin", "admin"):
+            return jsonify({"success": False, "message": "Admin access required"}), 403
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM posts WHERE id = ?", (post_id,))
+        post = cursor.fetchone()
+        if not post:
+            conn.close()
+            return jsonify({"success": False, "message": "Post not found"}), 404
+
+        # Delete image file
+        try:
+            img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "images", post["image_url"])
+            if os.path.exists(img_path):
+                os.remove(img_path)
+        except Exception:
+            pass
+
+        cursor.execute("DELETE FROM posts WHERE id = ?", (post_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
+
+    # ── REVIEWS PAGE ──────────────────────────────────────────────────────
+    def reviews(self):
+        user = session.get("user")
+        wishlist_count = 0
+        if user:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?", (user["id"],))
+            row = cursor.fetchone()
+            wishlist_count = row["count"] if row else 0
+            conn.close()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT r.*, u.username FROM reviews r LEFT JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC"
+        )
+        reviews_data = cursor.fetchall()
+        conn.close()
+
+        reviews_list = []
+        for r in reviews_data:
+            d = dict(r)
+            if d.get("created_at") and hasattr(d["created_at"], "strftime"):
+                d["created_at"] = d["created_at"].strftime("%Y-%m-%d")
+            reviews_list.append(d)
+        return render_template("review.html", user=user, reviews=reviews_list, wishlist_count=wishlist_count)
+
+    # ── ADD REVIEW ────────────────────────────────────────────────────────
+    def add_review(self):
+        if not self.is_logged_in():
+            flash("Please log in to leave a review.", "danger")
+            return redirect(url_for("auth.login"))
+
+        user = session["user"]
+        activity = request.form.get("activity", "").strip()
+        rating = request.form.get("rating", 5)
+        review_text = request.form.get("review", "").strip()
+
+        if not activity or not review_text:
+            flash("Activity and review text are required.", "danger")
+            return redirect(url_for("auth.reviews"))
+
+        try:
+            rating = int(rating)
+            rating = max(1, min(5, rating))
+        except (ValueError, TypeError):
+            rating = 5
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO reviews (user_id, activity, rating, review) VALUES (?, ?, ?, ?)",
+            (user["id"], activity, rating, review_text)
+        )
+        conn.commit()
+        conn.close()
+        flash("Your review has been submitted!", "success")
+        return redirect(url_for("auth.reviews"))
+
+    # ── EDIT REVIEW ───────────────────────────────────────────────────────
+    def edit_review(self, review_id):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+        user = session["user"]
+        data = request.json or {}
+        review_text = data.get("review", "").strip()
+        rating = data.get("rating", None)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,))
+        existing = cursor.fetchone()
+
+        if not existing:
+            conn.close()
+            return jsonify({"success": False, "message": "Review not found"}), 404
+
+        # Allow edit only if user owns the review OR is admin
+        is_admin = user.get("role") in ("super_admin", "admin")
+        if existing["user_id"] != user["id"] and not is_admin:
+            conn.close()
+            return jsonify({"success": False, "message": "Permission denied"}), 403
+
+        new_rating = existing["rating"]
+        if rating is not None:
+            try:
+                new_rating = max(1, min(5, int(rating)))
+            except (ValueError, TypeError):
+                pass
+
+        new_text = review_text if review_text else existing["review"]
+        cursor.execute(
+            "UPDATE reviews SET review = ?, rating = ? WHERE id = ?",
+            (new_text, new_rating, review_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Review updated!"})
+
+    # ── DELETE REVIEW ─────────────────────────────────────────────────────
+    def delete_review(self, review_id):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+        user = session["user"]
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,))
+        existing = cursor.fetchone()
+
+        if not existing:
+            conn.close()
+            return jsonify({"success": False, "message": "Review not found"}), 404
+
+        is_admin = user.get("role") in ("super_admin", "admin")
+        if existing["user_id"] != user["id"] and not is_admin:
+            conn.close()
+            return jsonify({"success": False, "message": "Permission denied"}), 403
+
+        cursor.execute("DELETE FROM reviews WHERE id = ?", (review_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
+
+    # ── MARK NOTIFICATION READ ─────────────────────────────────────────────
+    def mark_notification_read(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Not logged in"}), 401
+
+        notif_id = request.form.get("id") or (request.json.get("id") if request.json else None)
+        if not notif_id:
+            return jsonify({"success": False, "error": "Missing notification ID"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE notifications SET status = 'read' WHERE id = ? AND user_id = ?",
+                (notif_id, session["user"]["id"])
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True})
+        except Exception as e:
+            conn.close()
+            print("Error marking notification as read:", e)
+            return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── GET ALL NOTIFICATIONS API ──────────────────────────────────────────
+    def api_get_notifications(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+        
+        user_id = self.get_current_user_id()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 15", (user_id,)
+            )
+            rows = cursor.fetchall()
+            conn.close()
+            
+            notifications = []
+            for r in rows:
+                notif = dict(r)
+                if hasattr(notif["created_at"], "strftime"):
+                    notif["created_at"] = notif["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    notif["created_at"] = str(notif["created_at"])
+                notifications.append(notif)
+                
+            return jsonify(notifications)
+        except Exception as e:
+            conn.close()
+            print("Error fetching notifications API:", e)
+            return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── MARK ALL NOTIFICATIONS AS READ API ─────────────────────────────────
+    def mark_all_notifications_read(self):
+        if not self.is_logged_in():
+            return jsonify({"success": False, "error": "Not logged in"}), 401
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE notifications SET status = 'read' WHERE user_id = ?",
+                (session["user"]["id"],)
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True})
+        except Exception as e:
+            conn.close()
+            print("Error marking all notifications as read:", e)
+            return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── REFERRAL PAGE ──────────────────────────────────────────────────────
+    def referral_page(self):
+        from app.models.database import generate_referral_code, get_referral_stats
+
+        user = session.get("user")
+
+        if not user:
+            # Show guest version of the page
+            return render_template("referral.html",
+                user=None,
+                referral_code=None,
+                referral_link=None,
+                whatsapp_text="",
+                twitter_text="",
+                email_body="",
+                stats={},
+                referred_users=[]
+            )
+
+        user_id  = user["id"]
+        username = user["username"]
+
+        # Generate / fetch referral code
+        referral_code = generate_referral_code(user_id, username)
+
+        # Build the shareable link — use the request host
+        base_url = request.host_url.rstrip("/")
+        referral_link = f"{base_url}/register?ref={referral_code}"
+
+        # Social share texts
+        whatsapp_text = (
+            f"Hey! Join me on Thrill Sphere – Nepal's best adventure sports booking platform. "
+            f"Use my referral code *{referral_code}* and get NPR 500 off your first booking! "
+            f"Sign up here: {referral_link}"
+        )
+        twitter_text = (
+            f"🏔️ Just booked an adventure on @ThrillSphere! Use my code {referral_code} "
+            f"for NPR 500 off your first booking 🎉"
+        )
+        email_body = (
+            f"Hi,\n\nI've been using Thrill Sphere for amazing adventure sports in Nepal "
+            f"and thought you'd love it too!\n\n"
+            f"Use my referral code: {referral_code}\n"
+            f"Sign up here: {referral_link}\n\n"
+            f"You'll get NPR 500 off your first booking, and I'll earn rewards too!\n\n"
+            f"See you on the trails,\n{username}"
+        )
+
+        # Stats and referred users
+        stats, referred_users = get_referral_stats(user_id)
+
+        return render_template(
+            "referral.html",
+            user=user,
+            referral_code=referral_code,
+            referral_link=referral_link,
+            whatsapp_text=whatsapp_text,
+            twitter_text=twitter_text,
+            email_body=email_body,
+            stats=stats,
+            referred_users=referred_users
+        )

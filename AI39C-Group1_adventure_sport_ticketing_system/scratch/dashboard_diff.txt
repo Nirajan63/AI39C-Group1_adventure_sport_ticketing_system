@@ -1,0 +1,193 @@
+--- A/Dashboard.html
+
++++ B/Dashboard.html
+
+@@ -1,25 +1,25 @@
+
+-{% extends "Base.html" %}
++{% extends "base.html" %}
+ {% block title %}Dashboard — Thrill Sphere{% endblock %}
+-{% block head %}{% endblock %}
++{% block extra_css %}
++<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
++<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
++<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
++<link rel="stylesheet" href="{{ url_for('static', filename='css/payment_modal.css') }}">
++{% endblock %}
+ 
+ {% block content %}
+ <!-- ══ HORIZONTAL TOP NAVBAR ══ -->
+ <header class="navbar-horizontal">
+   <div class="nav-container">
+-    <div class="nav-brand">THRILL<em>SPHERE</em></div>
++    <a href="/" class="nav-brand" style="text-decoration: none;">THRILL<em>SPHERE</em></a>
+     <nav class="nav-links">
++      <a href="/" class="nav-item" style="text-decoration: none;">Home</a>
+       <a class="nav-item active" onclick="switchSection('overview', this)">Overview</a>
+       <a class="nav-item" onclick="switchSection('bookings', this)">My Bookings</a>
+       <a class="nav-item" onclick="switchSection('book-new', this)">Book Activity</a>
+-      <a class="nav-item" onclick="switchSection('my-calendar', this)">My Calendar</a>
+-      <a class="nav-item" onclick="switchSection('notifications', this)">
+-        Notifications
+-        {% if notifications and notifications | selectattr('status', 'equalto', 'unread') | list | length > 0 %}
+-          <span class="notif-badge" style="background: var(--orange); color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 4px; font-weight: 700;">{{ notifications | selectattr('status', 'equalto', 'unread') | list | length }}</span>
+-        {% endif %}
+-      </a>
++      <a class="nav-item" onclick="switchSection('events', this)">Calender</a>
+       <a class="nav-item" onclick="switchSection('profile', this)">My Profile</a>
+       <a href="{{ url_for('auth.logout') }}" class="nav-item logout-link">Logout</a>
+     </nav>
+   </div>
+ </header>
+@@ -286,14 +286,14 @@
+
+         </form>
+       </div>
+     </section>
+ 
+ 
+-    <!-- ══ MY CALENDAR SECTION ══ -->
+-    <section class="dash-section" id="my-calendar">
++    <!-- ══ EVENTS CALENDAR SECTION ══ -->
++    <section class="dash-section" id="events">
+       <div class="section-title-row">
+-        <h2 class="section-heading">My Calendar</h2>
++        <h2 class="section-heading">Adventure Calendar</h2>
+         <div class="calendar-nav">
+           <button class="cal-nav-btn" id="calPrev" aria-label="Previous month">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+           </button>
+           <span class="cal-month-label" id="calMonthLabel">June 2026</span>
+@@ -339,29 +339,36 @@
+
+     <!-- ══ MY PROFILE SECTION ══ -->
+     <section class="dash-section" id="profile">
+       <h2 class="section-heading">My Profile</h2>
+       <div class="profile-card">
+         <div class="profile-header">
+-          <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
++          {% if user.avatar %}
++            <img src="{{ user.avatar }}" alt="avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); flex-shrink: 0; box-shadow: 0 0 18px rgba(116,148,236,0.25);">
++          {% else %}
++            <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
++          {% endif %}
+           <div class="profile-details">
+-            <h2>{{ user.username }}</h2>
+-            <p>Adventure Enthusiast · Member since {{ user.joined }}</p>
++            <h2>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
++            <p>{{ user.role or 'Adventure Seeker' }} · Member since {{ user.joined }}</p>
+             <div class="badge-grid">
+               <span class="badge">🏔️ Trekker</span>
+               <span class="badge">🪂 Sky Diver</span>
+               <span class="badge">🌊 River Runner</span>
+               <span class="badge">⚡ Thrill Seeker</span>
+             </div>
+           </div>
+         </div>
+         <div class="profile-grid">
+-          <div class="profile-field"><label>Full Name</label><span>{{ user.username }}</span></div>
++          <div class="profile-field"><label>Full Name</label><span>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span></div>
+           <div class="profile-field"><label>Email</label><span>{{ user.email }}</span></div>
+-          <div class="profile-field"><label>Phone</label><span>+977-98XXXXXXXX</span></div>
+-          <div class="profile-field"><label>Location</label><span>Kathmandu, Nepal</span></div>
++          <div class="profile-field"><label>Phone</label><span>{{ user.phone or 'Not set' }}</span></div>
++          <div class="profile-field"><label>Location</label><span>{{ user.city or 'Kathmandu, Nepal' }}</span></div>
+           <div class="profile-field"><label>Member Since</label><span>{{ user.joined }}</span></div>
+           <div class="profile-field"><label>Account Status</label><span style="color:var(--green);font-weight:600;">✓ Active</span></div>
++        </div>
++        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
++          <a href="/manage" class="btn-primary" style="width: auto; text-decoration: none;">Edit Profile</a>
+         </div>
+       </div>
+ 
+       <div class="panel">
+         <div class="panel-header"><h3>Adventure Stats</h3></div>
+@@ -384,83 +391,20 @@
+
+           </div>
+         </div>
+       </div>
+     </section>
+ 
+-    <!-- ══ NOTIFICATIONS SECTION ══ -->
+-    <section class="dash-section" id="notifications">
+-      <div class="panel">
+-        <div class="panel-header">
+-          <h3>Your Notifications</h3>
+-        </div>
+-        <div class="notifications-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+-          {% if notifications %}
+-            {% for n in notifications %}
+-              <div class="notification-item {% if n.status == 'unread' %}unread{% endif %}" id="notif-{{ n.id }}" style="padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: {% if n.status == 'unread' %}rgba(99,102,241,0.05){% else %}rgba(255,255,255,0.01){% endif %}; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s;">
+-                <div style="flex-grow: 1; margin-right: 15px;">
+-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+-                    <span style="font-weight: 700; color: #fff; font-size: 15px;">{{ n.title }}</span>
+-                    {% if n.status == 'unread' %}
+-                      <span class="unread-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--orange); display: inline-block;"></span>
+-                    {% endif %}
+-                  </div>
+-                  <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">{{ n.message }}</p>
+-                  <small style="font-size: 11px; color: var(--text-muted);">{{ n.timestamp }}</small>
+-                </div>
+-                {% if n.status == 'unread' %}
+-                  <button class="btn-read" onclick="markAsRead({{ n.id }})" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: #fff; font-size: 12px; cursor: pointer; transition: all 0.2s;">Mark Read</button>
+-                {% endif %}
+-              </div>
+-            {% endfor %}
+-          {% else %}
+-            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+-              <p>You have no notifications at this time.</p>
+-            </div>
+-          {% endif %}
+-        </div>
+-      </div>
+-    </section>
+-
+   </main>
+ </div>
+ {% endblock %}
+ 
+ {% block scripts %}
+ {# ── Single source of truth: inject real bookings + live availability ── #}
+ <script>
+   window.THRILL_BOOKINGS     = {{ bookings     | tojson | safe }};
+   window.THRILL_AVAILABILITY = {{ availability | tojson | safe }};
+-
+-  function markAsRead(id) {
+-      fetch('/read-notification', {
+-          method: 'POST',
+-          headers: { 'Content-Type': 'application/json' },
+-          body: JSON.stringify({ id: id })
+-      }).then(res => res.json()).then(data => {
+-          if (data.success) {
+-              const item = document.getElementById('notif-' + id);
+-              if (item) {
+-                  item.style.background = 'rgba(255,255,255,0.01)';
+-                  const dot = item.querySelector('.unread-dot');
+-                  if (dot) dot.remove();
+-                  const btn = item.querySelector('.btn-read');
+-                  if (btn) btn.remove();
+-              }
+-              // Update badge count
+-              const badge = document.querySelector('.notif-badge');
+-              if (badge) {
+-                  const count = parseInt(badge.textContent, 10) - 1;
+-                  if (count > 0) {
+-                      badge.textContent = count;
+-                  } else {
+-                      badge.remove();
+-                  }
+-              }
+-          }
+-      });
+-  }
+ </script>
+-<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+-<script src="{{ url_for('static', filename='payment-assets.js') }}"></script>
+-<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+-<script src="{{ url_for('static', filename='payment.js') }}"></script>
++<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
++<script src="{{ url_for('static', filename='js/payment-assets.js') }}"></script>
++<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
++<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+ {% endblock %}

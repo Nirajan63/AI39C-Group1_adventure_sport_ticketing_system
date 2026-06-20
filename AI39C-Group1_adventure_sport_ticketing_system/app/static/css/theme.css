@@ -85,7 +85,7 @@ button {
 }
 
 .page-shell {
-    width: min(100%, 1068px);
+    width: min(100%, 1600px);
     margin: 0 auto;
     padding: 22px 32px 48px;
 }

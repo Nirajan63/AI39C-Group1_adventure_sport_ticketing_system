@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal — Thrill Sphere</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f4f7fe;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Poppins', system-ui, sans-serif;
+        }
+
+        /* Subtle decorative blobs */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            width: 500px; height: 500px;
+            top: -120px; left: -100px;
+            background: rgba(116,148,236,0.15);
+        }
+        body::after {
+            width: 400px; height: 400px;
+            bottom: -100px; right: -80px;
+            background: rgba(0,200,120,0.10);
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        /* Brand above card */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .brand-header .brand-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 32px;
+            letter-spacing: 3px;
+            color: #1e293b;
+        }
+        .brand-header .brand-name em {
+            font-style: normal;
+            color: #7494ec;
+        }
+        .brand-header p {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .admin-login-card {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 8px 40px rgba(116,148,236,0.12), 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .admin-login-card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            letter-spacing: 1px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .admin-login-card .subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 28px;
+        }
+
+        .input-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: #f8fafc;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10px;
+            color: #1e293b;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-box input:focus {
+            border-color: #7494ec;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(116,148,236,0.15);
+        }
+
+        .input-box input::placeholder { color: #9ca3af; }
+
+        .input-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 18px;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+
+        .input-box input:focus ~ i { color: #7494ec; }
+
+        .btn-admin {
+            width: 100%;
+            padding: 13px;
+            background: #7494ec;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(116,148,236,0.35);
+            margin-top: 4px;
+        }
+
+        .btn-admin:hover {
+            background: #5b7cdb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(116,148,236,0.45);
+        }
+
+        .btn-admin:active { transform: translateY(0); }
+
+        .alert {
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,79,79,0.08);
+            border: 1px solid rgba(255,79,79,0.25);
+            color: #ff4f4f;
+        }
+
+        .alert.alert-warning {
+            background: rgba(245,158,11,0.08);
+            border-color: rgba(245,158,11,0.25);
+            color: #f59e0b;
+        }
+
+        .alert.alert-success {
+            background: rgba(0,200,120,0.08);
+            border-color: rgba(0,200,120,0.25);
+            color: #00c878;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 22px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: #7494ec; }
+
+        .admin-shield {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 22px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .admin-shield i { font-size: 14px; color: #7494ec; }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- Brand -->
+        <div class="brand-header">
+            <div class="brand-name">THRILL<em>SPHERE</em></div>
+            <p>Admin Control Portal</p>
+        </div>
+
+        <div class="admin-login-card">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Sign in to your admin account to continue.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'message' else 'danger' }}">
+                            <i class='bx bx-error-circle'></i> {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth_admin.login_admin') }}">
+                <div class="input-box">
+                    <input type="text" name="username" placeholder="Admin email or username" required autofocus autocomplete="username">
+                    <i class='bx bxs-user-badge'></i>
+                </div>
+
+                <div class="input-box">
+                    <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+
+                <button type="submit" class="btn-admin">Sign In</button>
+            </form>
+
+            <div class="admin-shield">
+                <i class='bx bxs-shield-check'></i>
+                Secured admin access — authorised personnel only
+            </div>
+
+            <a href="{{ url_for('auth.login') }}" class="back-link">
+                <i class='bx bx-left-arrow-alt'></i> Back to User Portal
+            </a>
+        </div>
+    </div>
+</body>
+</html>
