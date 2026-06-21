@@ -12,16 +12,30 @@ document.addEventListener('DOMContentLoaded', function () {
 // ── Greeting ───────────────────────────────────────────────────────
 function setGreeting() {
     var h = new Date().getHours();
-    var g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    var key = h < 12 ? 'dash.good-morning' : h < 17 ? 'dash.good-afternoon' : 'dash.good-evening';
     var el = document.getElementById('greeting');
-    if (el) el.textContent = g;
+    if (el) {
+        el.setAttribute('data-i18n', key);
+        if (window.ThrillLang && window.ThrillLang.getLang) {
+            var lang = window.ThrillLang.getLang();
+            // Use translate if available
+            var trans = window.ThrillLang.translate ? window.ThrillLang.translate(key, lang) : null;
+            if (trans) {
+                el.textContent = trans;
+                return;
+            }
+        }
+        var g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+        el.textContent = g;
+    }
 }
 
 // ── Live date ──────────────────────────────────────────────────────
 function setLiveDate() {
     var el = document.getElementById('liveDate');
     if (!el) return;
-    el.textContent = new Date().toLocaleDateString('en-US', {
+    var lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+    el.textContent = new Date().toLocaleDateString(lang === 'ne' ? 'ne-NP' : 'en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 }
@@ -136,3 +150,9 @@ function bindBookForm() {
         }
     });
 }
+
+// ── Language Toggle Event Listener ────────────────────────────────
+window.addEventListener('languagechange', function () {
+    setGreeting();
+    setLiveDate();
+});

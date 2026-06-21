@@ -147,28 +147,28 @@
             <div class="meta-box">
                 <i class='bx bx-time-five'></i>
                 <div class="meta-text">
-                    <span class="meta-label">Duration</span>
+                    <span class="meta-label" data-i18n="activity.duration">Duration</span>
                     <span class="meta-value">{{ activity.duration }}</span>
                 </div>
             </div>
             <div class="meta-box">
                 <i class='bx bx-map'></i>
                 <div class="meta-text">
-                    <span class="meta-label">Location</span>
+                    <span class="meta-label" data-i18n="activity.location">Location</span>
                     <span class="meta-value">{{ activity.location }}</span>
                 </div>
             </div>
             <div class="meta-box">
                 <i class='bx bx-money'></i>
                 <div class="meta-text">
-                    <span class="meta-label">Price</span>
+                    <span class="meta-label" data-i18n="activity.price">Price</span>
                     <span class="meta-value">NPR {{ "{:,}".format(activity.price|float) }}</span>
                 </div>
             </div>
             <div class="meta-box">
                 <i class='bx bx-line-chart'></i>
                 <div class="meta-text">
-                    <span class="meta-label">Difficulty</span>
+                    <span class="meta-label" data-i18n="activity.difficulty">Difficulty</span>
                     <span class="meta-value">{{ activity.difficulty|default('Medium') }}</span>
                 </div>
             </div>
@@ -180,14 +180,14 @@
                     <input type="hidden" name="activity_id" value="{{ activity.id }}">
                     <input type="hidden" name="date" value="{{ '2026-06-10' }}"> <!-- Placeholder date, user configures this in dashboard usually but a direct book button needs it -->
                     <input type="hidden" name="people" value="1">
-                    <button type="submit" class="btn-book" style="border:none; cursor:pointer;">Book Now</button>
+                    <button type="submit" class="btn-book" style="border:none; cursor:pointer;" data-i18n="activity.book-now">Book Now</button>
                 </form>
                 
                 <button class="btn-wishlist {% if activity.id in saved_wishlist %}saved{% endif %}" onclick="toggleActivityWishlist(event, '{{ activity.id }}')" id="wish-btn">
                     <i class="bx {% if activity.id in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
                 </button>
             {% else %}
-                <a href="/login" class="btn-book">Login to Book</a>
+                <a href="/login" class="btn-book" data-i18n="activity.login-to-book">Login to Book</a>
             {% endif %}
         </div>
     </div>

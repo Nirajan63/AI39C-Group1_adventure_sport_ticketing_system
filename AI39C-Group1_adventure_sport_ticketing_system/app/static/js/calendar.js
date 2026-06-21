@@ -111,12 +111,36 @@
         render();
     }
 
+    // Helper to get translated month names
+    function getMonthName(m) {
+        var enMonths = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+        if (window.ThrillLang && window.ThrillLang.getLang) {
+            var lang = window.ThrillLang.getLang();
+            if (lang === 'ne') {
+                var neMonths = ['जनवरी','फेब्रुअरी','मार्च','अप्रिल','मे','जुन',
+                                'जुलाई','अगस्त','सेप्टेम्बर','अक्टोबर','नोभेम्बर','डिसेम्बर'];
+                return neMonths[m];
+            }
+        }
+        return enMonths[m];
+    }
+
+    // Helper to translate english digits to nepali digits
+    function translateDigits(str, lang) {
+        if (str === null || str === undefined) return '';
+        if (lang === 'ne') {
+            return str.toString().replace(/\d/g, function (d) {
+                return '०१२३४५६७८९'[d];
+            });
+        }
+        return str.toString();
+    }
+
     // ── Render calendar ───────────────────────────────────────────────
     function render() {
-        var monthNames = ['January','February','March','April','May','June',
-                          'July','August','September','October','November','December'];
-
-        calMonthLabel.textContent = monthNames[curMonth] + ' ' + curYear;
+        var lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+        calMonthLabel.textContent = getMonthName(curMonth) + ' ' + translateDigits(curYear, lang);
         calGrid.innerHTML = '';
 
         var firstDay    = new Date(curYear, curMonth, 1).getDay();
@@ -163,7 +187,7 @@
 
             var numEl = document.createElement('span');
             numEl.className = 'cal-day-num';
-            numEl.textContent = d;
+            numEl.textContent = translateDigits(d, lang);
             cell.appendChild(numEl);
 
             if (events.length > 0) {
@@ -211,15 +235,19 @@
 
     // ── Show bookings for the selected date ───────────────────────────
     function showEvents(day, events) {
-        var monthNames = ['January','February','March','April','May','June',
-                          'July','August','September','October','November','December'];
+        var lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
 
-        calEventsDate.textContent = monthNames[curMonth] + ' ' + day + ', ' + curYear;
+        if (lang === 'ne') {
+            calEventsDate.textContent = getMonthName(curMonth) + ' ' + translateDigits(day, 'ne') + ', ' + translateDigits(curYear, 'ne');
+        } else {
+            calEventsDate.textContent = getMonthName(curMonth) + ' ' + day + ', ' + curYear;
+        }
         calEventsList.innerHTML   = '';
 
         if (!events || events.length === 0) {
+            var msg = lang === 'ne' ? 'यस मितिमा कुनै बुकिङ छैन।' : 'No bookings on this date.';
             calEventsList.innerHTML =
-                '<div class="cal-no-selection"><p>No bookings on this date.</p></div>';
+                '<div class="cal-no-selection"><p>' + msg + '</p></div>';
             return;
         }
 
@@ -237,25 +265,32 @@
             // ── Booking status label ──────────────────────────────────
             var bookingLabel;
             if (isCompleted) {
-                bookingLabel = '✓ Completed';
+                bookingLabel = lang === 'ne' ? '✓ पूरा भएको' : '✓ Completed';
             } else if (isSoldOut) {
-                bookingLabel = '✗ Fully Booked';
+                bookingLabel = lang === 'ne' ? '✗ सबै बुकिङ भएको' : '✗ Fully Booked';
             } else if (isLimited) {
-                bookingLabel = '⚡ Limited';
+                bookingLabel = lang === 'ne' ? '⚡ सीमित सिट' : '⚡ Limited';
             } else {
-                bookingLabel = '📅 Confirmed — Upcoming';
+                bookingLabel = lang === 'ne' ? '📅 पुष्टि भएको — आगामी' : '📅 Confirmed — Upcoming';
             }
 
             // ── Price / group display ─────────────────────────────────
-            var priceDisplay = 'NPR ' + ev.price.toLocaleString();
+            var pDisplay = lang === 'ne' ? translateDigits(ev.price.toLocaleString(), 'ne') : ev.price.toLocaleString();
+            var priceDisplay = 'NPR ' + pDisplay;
             if (ev.people > 1) {
-                priceDisplay += ' · ' + ev.people + ' pax';
+                var paxLabel = lang === 'ne' ? ' जना' : ' pax';
+                priceDisplay += ' · ' + translateDigits(ev.people, lang) + paxLabel;
+            } else {
+                var paxLabel = lang === 'ne' ? '१ जना' : '1 pax';
+                priceDisplay += ' · ' + paxLabel;
             }
 
             // ── Availability badge (future dates only) ────────────────
             var availBadge = '';
             if (!isCompleted && ev.remaining !== null) {
+                var remStr = translateDigits(ev.remaining, lang);
                 if (isSoldOut) {
+                    var msg = lang === 'ne' ? 'सबै बुकिङ भएको — कुनै स्लट उपलब्ध छैन' : 'Fully Booked — No Slots Available';
                     availBadge =
                         '<div class="cal-avail-badge soldout">' +
                             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
@@ -263,26 +298,27 @@
                                 '<circle cx="12" cy="12" r="10"/>' +
                                 '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>' +
                             '</svg>' +
-                            'Fully Booked — No Slots Available' +
+                            msg +
                         '</div>';
                 } else if (isLimited) {
+                    var msg = lang === 'ne' ? 'सीमित — केवल ' + remStr + ' सिट बाँकी' : 'Limited — Only ' + remStr + ' spot' + (ev.remaining === 1 ? '' : 's') + ' left';
                     availBadge =
                         '<div class="cal-avail-badge limited">' +
                             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
                                  'width="12" height="12" style="flex-shrink:0">' +
                                 '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' +
                             '</svg>' +
-                            'Limited — Only ' + ev.remaining + ' spot' +
-                            (ev.remaining === 1 ? '' : 's') + ' left' +
+                            msg +
                         '</div>';
                 } else {
+                    var msg = lang === 'ne' ? remStr + ' सिट उपलब्ध' : remStr + ' spot' + (ev.remaining === 1 ? '' : 's') + ' available';
                     availBadge =
                         '<div class="cal-avail-badge available">' +
                             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
                                  'width="12" height="12" style="flex-shrink:0">' +
                                 '<polyline points="20 6 9 17 4 12"/>' +
                             '</svg>' +
-                            '' + ev.remaining + ' spot' + (ev.remaining === 1 ? '' : 's') + ' available' +
+                            msg +
                         '</div>';
                 }
             }
@@ -290,18 +326,19 @@
             // ── Action button ─────────────────────────────────────────
             var actionBtn = '';
             if (isCompleted) {
-                // past — no action needed
                 actionBtn = '';
             } else if (isSoldOut) {
+                var btnTxt = lang === 'ne' ? '✗ कुनै स्लट उपलब्ध छैन' : '✗ No Slots Available';
                 actionBtn =
                     '<button class="cal-ev-book-btn cal-ev-book-btn--soldout" disabled>' +
-                        '✗ No Slots Available' +
+                        btnTxt +
                     '</button>';
             } else {
+                var btnTxt = lang === 'ne' ? 'मेरा बुकिङहरू हेर्नुस् →' : 'View My Bookings →';
                 actionBtn =
                     '<button class="cal-ev-book-btn" ' +
                         'onclick="switchSection(\'bookings\', null)">' +
-                        'View My Bookings →' +
+                        btnTxt +
                     '</button>';
             }
 
@@ -313,8 +350,8 @@
                 '<div class="cal-ev-meta">' +
                     '<span class="cal-ev-pill">' +
                         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-                            '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>' +
-                            '<circle cx="12" cy="10" r="3"/>' +
+                             '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>' +
+                             '<circle cx="12" cy="10" r="3"/>' +
                         '</svg>' +
                         ev.location +
                     '</span>' +
@@ -326,7 +363,7 @@
                         ev.duration +
                     '</span>' +
                     (ev.fillPct > 0 ?
-                        '<span class="cal-ev-pill">⬆ ' + ev.fillPct + '% booked</span>'
+                        '<span class="cal-ev-pill">⬆ ' + (lang === 'ne' ? translateDigits(ev.fillPct, 'ne') + '% बुकिङ भएको' : ev.fillPct + '% booked') + '</span>'
                     : '') +
                 '</div>' +
                 '<div class="cal-ev-status">' + bookingLabel + '</div>' +
@@ -343,5 +380,17 @@
     } else {
         init();
     }
+
+    // ── Language Toggle Event Listener ────────────────────────────────
+    window.addEventListener('languagechange', function () {
+        if (typeof render === 'function') {
+            render();
+        }
+        if (selectedDay && typeof showEvents === 'function') {
+            var key = selectedDay.y + '-' + selectedDay.m + '-' + selectedDay.d;
+            var events = eventMap[key] || [];
+            showEvents(selectedDay.d, events);
+        }
+    });
 
 })();

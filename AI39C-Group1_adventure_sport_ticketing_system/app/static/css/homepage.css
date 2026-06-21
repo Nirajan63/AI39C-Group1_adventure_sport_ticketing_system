@@ -14,6 +14,7 @@
   --text-muted: #888;
   --white: #ffffff;
   --border: rgba(184, 150, 46, 0.2);
+  --surface2: rgba(255, 255, 255, 0.25);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -129,9 +130,32 @@ body {
 }
 
 .hero-actions {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+/* Responsive button adjustments */
+.hero-actions a {
+    padding: 12px 20px;
+    font-size: 0.75rem;
+    min-width: 120px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        padding: 0 4vw;
+        max-width: 100%;
+    }
+    .hero-title {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+    }
+    .hero-desc {
+        font-size: 0.75rem;
+    }
 }
 
 .btn-outline {
@@ -195,6 +219,26 @@ body {
 .hero-dot.active { background: var(--white); }
 
 /* Ticker bar */
+.chatbot-widget {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 320px;
+  max-height: 460px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  z-index: 2000;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.chatbot-widget:hover {
+  transform: translateY(-4px);
+}
+
 .ticker-bar {
   position: absolute;
   bottom: 0;
@@ -231,6 +275,7 @@ body {
 
 /* ── ADVENTURES ── */
 .adventures-section {
+  overflow-x: hidden;
   padding: 80px 6vw 0;
   background: var(--cream-light);
 }
@@ -489,6 +534,7 @@ body {
 
 /* ── GALLERY ── */
 .gallery-section {
+  overflow-x: hidden;
   padding: 80px 0 80px 6vw;
   background: var(--cream-light);
   overflow: hidden;
@@ -876,13 +922,17 @@ body {
   .stats-section { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: 1fr; }
   .hero-title { font-size: 3rem; }
-  .ticker-bar { gap: 20px; }
+  /* Responsive chatbot */
+  .chatbot-widget {
+    width: 90vw;
+    left: 20px;
+    bottom: 10px;
+    max-height: 70vh;
+  }
+  .chatbot-body {
+    max-height: calc(70vh - 50px);
+  }
 }
-
-
-
-
-
 
 
 /* ===== NAVBAR ===== */

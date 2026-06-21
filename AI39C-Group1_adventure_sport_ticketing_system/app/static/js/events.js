@@ -245,10 +245,13 @@ function showErrorState() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <h3>Oops! Something went wrong</h3>
-            <p>Failed to retrieve challenges. Please try reloading or check your internet connection.</p>
+            <h3 data-i18n="events.error-title">Oops! Something went wrong</h3>
+            <p data-i18n="events.error-desc">Failed to retrieve challenges. Please try reloading or check your internet connection.</p>
         </div>
     `;
+    if (window.ThrillLang) {
+        window.ThrillLang.applyLang(window.ThrillLang.getLang());
+    }
 }
 
 // Setup intersection observer
@@ -291,10 +294,13 @@ function renderEvents(events, append = false) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <h3>No Matching Events Found</h3>
-                <p>Try broadening your search term or adjusting filter values.</p>
+                <h3 data-i18n="events.no-results-title">No Matching Events Found</h3>
+                <p data-i18n="events.no-results-desc">Try broadening your search term or adjusting filter values.</p>
             </div>
         `;
+        if (window.ThrillLang) {
+            window.ThrillLang.applyLang(window.ThrillLang.getLang());
+        }
         return;
     }
 
@@ -304,14 +310,16 @@ function renderEvents(events, append = false) {
         let formattedDate = 'TBD';
         try {
             const d = new Date(evt.date_time);
-            formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+            const locale = lang === 'ne' ? 'ne-NP' : 'en-US';
+            formattedDate = d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
         } catch (e) {}
 
         const badgeHtml = evt.badge ? `<div class="badge-overlay ${evt.badge.toLowerCase()}">${evt.badge}</div>` : '';
         const lowTicketWarningHtml = evt.tickets_left <= 5 ? `
             <div class="low-tickets">
                 <span class="pulse-warning"></span>
-                Hurry! Only ${evt.tickets_left} tickets left!
+                <span data-i18n="wish.hurry">Hurry! Only</span> ${evt.tickets_left} <span data-i18n="wish.tickets-left">tickets left!</span>
             </div>
         ` : '';
 
@@ -358,10 +366,10 @@ function renderEvents(events, append = false) {
                     
                     <div class="card-footer">
                         <div class="price-section">
-                            <span class="price-label">Price per person</span>
+                            <span class="price-label" data-i18n="wish.price-per">Price per person</span>
                             <span class="price-value">NPR ${parseInt(evt.price).toLocaleString()}</span>
                         </div>
-                        <a href="/events/${evt.id}" class="btn-details">View Details</a>
+                        <a href="/events/${evt.id}" class="btn-details" data-i18n="events.view-details">View Details</a>
                     </div>
                 </div>
             </div>
@@ -372,6 +380,10 @@ function renderEvents(events, append = false) {
         eventsGrid.insertAdjacentHTML('beforeend', cardsHtml);
     } else {
         eventsGrid.innerHTML = cardsHtml;
+    }
+
+    if (window.ThrillLang) {
+        window.ThrillLang.applyLang(window.ThrillLang.getLang());
     }
 }
 
@@ -736,13 +748,24 @@ async function initTimelinePlanner() {
     }
 }
 
+function toNepaliDigits(num) {
+    const nepaliDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+    return String(num).split('').map(digit => {
+        return nepaliDigits[parseInt(digit)] || digit;
+    }).join('');
+}
+
 function buildWeekStripCalendar() {
     const weekStrip = document.getElementById('week-strip');
     if (!weekStrip) return;
 
     const days = [];
     const today = new Date();
-    const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+    
+    const weekdayNamesEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekdayNamesNe = ['आइत', 'सोम', 'मंगल', 'बुध', 'बिही', 'शुक्र', 'शनि'];
+    const weekdayNames = lang === 'ne' ? weekdayNamesNe : weekdayNamesEn;
     
     for (let i = 0; i < 7; i++) {
         const current = new Date(today);
@@ -754,8 +777,8 @@ function buildWeekStripCalendar() {
         
         days.push({
             dateObj: current,
-            dayName: i === 0 ? 'Today' : weekdayNames[current.getDay()],
-            dayNum: current.getDate(),
+            dayName: i === 0 ? (lang === 'ne' ? 'आज' : 'Today') : weekdayNames[current.getDay()],
+            dayNum: lang === 'ne' ? toNepaliDigits(current.getDate()) : current.getDate(),
             isoDate: `${year}-${month}-${day}`
         });
     }
@@ -764,7 +787,7 @@ function buildWeekStripCalendar() {
     days.forEach(day => {
         const hasEvent = allEventsList.some(evt => getEventDateStr(evt) === day.isoDate);
         const dotHtml = hasEvent ? '<span class="has-event-dot"></span>' : '';
-        const todayClass = day.dayName === 'Today' ? 'is-today' : '';
+        const todayClass = (day.dayName === 'Today' || day.dayName === 'आज') ? 'is-today' : '';
 
         pillsHtml += `
             <div class="day-pill ${todayClass}" data-date="${day.isoDate}" onclick="handleDayPillClick(event)">
@@ -804,8 +827,10 @@ function createTimelineCardHtml(evt) {
     let isToday = false;
     try {
         const d = new Date(evt.date_time);
-        formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-        formattedTime = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+        const locale = lang === 'ne' ? 'ne-NP' : 'en-US';
+        formattedDate = d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+        formattedTime = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
         
         const today = new Date();
         if (d.toDateString() === today.toDateString()) {
@@ -816,7 +841,7 @@ function createTimelineCardHtml(evt) {
     const badgeHtml = isToday ? `
         <div class="live-pulse-badge">
             <span class="live-dot"></span>
-            <span>Live Today</span>
+            <span data-i18n="events.live-today">Live Today</span>
         </div>
     ` : (evt.badge ? `<span class="category-tag">${evt.badge}</span>` : '');
 
@@ -858,12 +883,12 @@ function createTimelineCardHtml(evt) {
             </div>
             <div class="card-action" onclick="event.stopPropagation();">
                 <div class="price-tag">
-                    <span>Tickets from</span>
+                    <span data-i18n="events.tickets-from">Tickets from</span>
                     <span>NPR ${parseInt(evt.price).toLocaleString()}</span>
                 </div>
-                <a href="/events/${evt.id}" class="btn-book-timeline">Book Spot</a>
+                <a href="/events/${evt.id}" class="btn-book-timeline" data-i18n="events.book-spot">Book Spot</a>
                 <div class="timeline-seats-bar">
-                    <div class="seats-label">${evt.tickets_left} seats left</div>
+                    <div class="seats-label">${evt.tickets_left} <span data-i18n="event-detail.seats-left-label">seats left</span></div>
                     <div class="seats-progress-bg">
                         <div class="seats-progress-fill ${isWarning}" style="width: ${ticketsPct}%"></div>
                     </div>
@@ -883,10 +908,13 @@ function renderTimeline(filteredDate = null) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <h4>No Events Scheduled</h4>
-                <p>There are no upcoming adventure events in our database at this moment.</p>
+                <h4 data-i18n="events.timeline-empty-title">No Events Scheduled</h4>
+                <p data-i18n="events.timeline-empty-desc">There are no upcoming adventure events in our database at this moment.</p>
             </div>
         `;
+        if (window.ThrillLang) {
+            window.ThrillLang.applyLang(window.ThrillLang.getLang());
+        }
         return;
     }
 
@@ -899,7 +927,8 @@ function renderTimeline(filteredDate = null) {
         let dayDisplay = filteredDate;
         try {
             const d = new Date(filteredDate);
-            dayDisplay = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            const lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+            dayDisplay = d.toLocaleDateString(lang === 'ne' ? 'ne-NP' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' });
         } catch(e) {}
         
         container.innerHTML = `
@@ -909,11 +938,14 @@ function renderTimeline(filteredDate = null) {
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                <h4>No Adventures on ${dayDisplay}</h4>
-                <p>There are no organized trips scheduled for this date. Check out other dates or click below to view the full upcoming weekly schedule.</p>
-                <button class="btn-suggest-all" onclick="resetTimelinePills()">View All Days</button>
+                <h4 data-i18n="events.timeline-no-adventures-title">No Adventures Scheduled</h4>
+                <p data-i18n="events.timeline-no-adventures-desc">There are no organized trips scheduled for this date. Check out other dates or click below to view the full upcoming weekly schedule.</p>
+                <button class="btn-suggest-all" onclick="resetTimelinePills()" data-i18n="events.timeline-view-all">View All Days</button>
             </div>
         `;
+        if (window.ThrillLang) {
+            window.ThrillLang.applyLang(window.ThrillLang.getLang());
+        }
         return;
     }
 
@@ -931,6 +963,8 @@ function renderTimeline(filteredDate = null) {
     let timelineHtml = '';
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const lang = (window.ThrillLang && window.ThrillLang.getLang) ? window.ThrillLang.getLang() : 'en';
+    const locale = lang === 'ne' ? 'ne-NP' : 'en-US';
 
     Object.keys(groups).forEach(dateStr => {
         const groupEvents = groups[dateStr];
@@ -942,13 +976,13 @@ function renderTimeline(filteredDate = null) {
         try {
             const d = new Date(dateStr + 'T00:00:00');
             if (dateStr === todayStr) {
-                groupTitle = 'Today';
-                dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                groupTitle = lang === 'ne' ? 'आज' : 'Today';
+                dateLabel = d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
                 nodeClass += ' today-node';
                 groupClass += ' active-group';
             } else {
-                groupTitle = d.toLocaleDateString('en-US', { weekday: 'long' });
-                dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                groupTitle = d.toLocaleDateString(locale, { weekday: 'long' });
+                dateLabel = d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
             }
         } catch (e) {
             groupTitle = dateStr;
@@ -975,9 +1009,24 @@ function renderTimeline(filteredDate = null) {
     });
 
     container.innerHTML = timelineHtml;
+
+    if (window.ThrillLang) {
+        window.ThrillLang.applyLang(window.ThrillLang.getLang());
+    }
 }
 
 // Expose handlers for inline onclick attributes in server-rendered markup
 window.toggleEventWishlist = toggleEventWishlist;
 window.initTimelinePlanner = initTimelinePlanner;
 window.handleDayPillClick = handleDayPillClick;
+
+// Listen for language changes to update weekly strip and grid contents
+window.addEventListener('languagechange', () => {
+    if (hasTimelineLoaded) {
+        buildWeekStripCalendar();
+        renderTimeline();
+    }
+    // Re-fetch or refresh current active page events
+    currentPage = 1;
+    fetchEvents(1, false);
+});

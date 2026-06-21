@@ -61,6 +61,9 @@
         // Initial fetch
         loadDashboardData(true);
 
+        // Setup gallery drag drop
+        setupGalleryDragDrop();
+
         // Auto refresh stats every 30s
         setInterval(() => loadDashboardData(false), 30000);
     }
@@ -176,9 +179,10 @@
             'payments': { title: 'Payment Audits', sub: 'Verify QR codes, process refunds, and generate reports' },
             'users': { title: 'User Accounts', sub: 'Manage permissions, review spending, and suspend users' },
             'calendar': { title: 'Activity Planner', sub: 'Color-coded slot availability and booking transfers' },
-            'events-mgmt': { title: 'Events Management', sub: 'Create, edit, and cancel scheduled events & tournaments' },
+            'events-mgmt': { title: 'Events Management', sub: 'Create, publish and schedule special events' },
             'notifications': { title: 'Notification Dispatcher', sub: 'Broadcast messages to customer dashboard feeds' },
-            'audit-logs': { title: 'Audit Trail Logs', sub: 'Chronological list of admin and security actions' }
+            'audit-logs': { title: 'Audit Trail Logs', sub: 'Chronological list of admin and security actions' },
+            'gallery': { title: 'Gallery Posts', sub: 'Upload and delete adventure sports photos in the user gallery' }
         };
 
         const pageInfo = titles[tabName] || { title: 'Admin Controls', sub: '' };
@@ -197,6 +201,8 @@
         // Trigger updates specific to tab
         if (tabName === 'overview') {
             loadDashboardData(true);
+        } else if (tabName === 'gallery') {
+            loadGalleryPosts();
         } else {
             loadDashboardData(false);
         }
@@ -1088,153 +1094,6 @@
         select.value = currentVal;
     }
 
-    // ── TAB 6b: EVENTS MANAGEMENT ──────────────────────────────────────────
-    function renderEventsMgmtTable() {
-        const tbody = document.querySelector('#eventsMgmtTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        state.events.forEach(e => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>#${e.id}</td>
-                <td>
-                    <strong>${escapeHTML(e.title)}</strong><br>
-                    <small class="text-secondary"><i class="bx bx-map"></i> ${escapeHTML(e.location)} &middot; <i class="bx bx-time"></i> ${escapeHTML(e.duration)}</small>
-                </td>
-                <td><span class="role-badge">${escapeHTML(e.category)}</span></td>
-                <td><small>${formatDate(e.date_time)}</small></td>
-                <td>NPR ${e.price.toLocaleString()}</td>
-                <td>${e.tickets_left}</td>
-                <td>
-                    <span class="badge badge-${e.is_published ? 'confirmed' : 'cancelled'}">
-                        ${e.is_published ? 'Published' : 'Draft'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-secondary btn-sm" onclick="openEventModal('edit', ${e.id})">
-                        <i class="bx bx-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="cancelEvent(${e.id})">
-                        <i class="bx bx-x-circle"></i> Cancel
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    window.filterEventsMgmtTable = function () {
-        const q = document.getElementById('eventMgmtSearchInput').value.toLowerCase();
-        document.querySelectorAll('#eventsMgmtTable tbody tr').forEach((tr, i) => {
-            const e = state.events[i];
-            if (!e) return;
-            const searchStr = `${e.title} ${e.location} ${e.category} ${e.id}`.toLowerCase();
-            tr.style.display = searchStr.includes(q) ? '' : 'none';
-        });
-    };
-
-    window.openEventModal = function (mode = 'create', id = '') {
-        const modal = document.getElementById('eventModal');
-        const form = document.getElementById('eventForm');
-        if (!modal || !form) return;
-
-        form.reset();
-        document.getElementById('evtFormMode').value = mode;
-
-        if (mode === 'create') {
-            document.getElementById('eventModalTitle').textContent = 'Create Scheduled Event';
-            document.getElementById('evtFormId').value = '';
-        } else {
-            document.getElementById('eventModalTitle').textContent = 'Edit Event Details';
-            document.getElementById('evtFormId').value = id;
-            
-            const evt = state.events.find(e => e.id === id);
-            if (evt) {
-                document.getElementById('evtTitleInput').value = evt.title;
-                document.getElementById('evtCategoryInput').value = evt.category;
-                document.getElementById('evtPriceInput').value = evt.price;
-                document.getElementById('evtCapacityInput').value = evt.tickets_left;
-                document.getElementById('evtLocationInput').value = evt.location;
-                document.getElementById('evtDurationInput').value = evt.duration;
-                document.getElementById('evtDateTimeInput').value = evt.date_time.slice(0, 16);
-                document.getElementById('evtBadgeInput').value = evt.badge || '';
-                document.getElementById('evtImgInput').value = evt.image_url || 'Mountain-Main.png';
-                document.getElementById('evtPublishedInput').value = evt.is_published;
-                document.getElementById('evtDescInput').value = evt.description || '';
-            }
-        }
-
-        modal.style.display = 'flex';
-    };
-
-    window.closeEventModal = function () {
-        const modal = document.getElementById('eventModal');
-        if (modal) modal.style.display = 'none';
-    };
-
-    window.submitEventForm = function (e) {
-        e.preventDefault();
-        const mode = document.getElementById('evtFormMode').value;
-        const id = document.getElementById('evtFormId').value;
-
-        const payload = {
-            title: document.getElementById('evtTitleInput').value.trim(),
-            category: document.getElementById('evtCategoryInput').value.trim(),
-            price: parseInt(document.getElementById('evtPriceInput').value, 10),
-            tickets_left: parseInt(document.getElementById('evtCapacityInput').value, 10),
-            location: document.getElementById('evtLocationInput').value.trim(),
-            duration: document.getElementById('evtDurationInput').value.trim(),
-            date_time: document.getElementById('evtDateTimeInput').value,
-            badge: document.getElementById('evtBadgeInput').value,
-            image_url: document.getElementById('evtImgInput').value.trim() || 'Mountain-Main.png',
-            is_published: parseInt(document.getElementById('evtPublishedInput').value, 10),
-            description: document.getElementById('evtDescInput').value.trim()
-        };
-
-        const url = mode === 'create' ? '/admin/api/events' : `/admin/api/events/${id}`;
-        const method = mode === 'create' ? 'POST' : 'PUT';
-
-        fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
-            body: JSON.stringify(payload)
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                showAlert(mode === 'create' ? 'Event created successfully' : 'Event updated successfully');
-                window.closeEventModal();
-                loadDashboardData();
-            } else {
-                showAlert(data.message || 'Action failed', 'danger');
-            }
-        }).catch(err => {
-            console.error('Error submitting event:', err);
-            showAlert('Server request failed', 'danger');
-        });
-    };
-
-    window.cancelEvent = function (id) {
-        const evt = state.events.find(e => e.id === id);
-        if (!evt) return;
-        
-        if (!confirm(`CRITICAL ACTION: Are you sure you want to CANCEL the event "${evt.title}"?\n\nThis will permanently delete the event, cancel all user bookings scheduled for it, and automatically send in-app and email alerts to all affected customers.`)) return;
-
-        fetch(`/admin/api/events/${id}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-Token': window.CSRF_TOKEN || '' }
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                showAlert(data.message || 'Event cancelled and deleted successfully');
-                loadDashboardData();
-            } else {
-                showAlert(data.message || 'Cancellation failed', 'danger');
-            }
-        }).catch(err => {
-            console.error('Error cancelling event:', err);
-            showAlert('Server request failed', 'danger');
-        });
-    };
-
     // ── TAB 8: AUDIT LOGS ─────────────────────────────────────────────────
     function renderAuditLogsTable() {
         const tbody = document.querySelector('#auditLogsTable tbody');
@@ -1614,6 +1473,7 @@
         'userModal':          () => closeUserModal(),
         'duplicateModal':     () => closeDuplicateModal(),
         'manualPaymentModal': () => closeManualPaymentModal(),
+        'eventModal':         () => closeEventModal(),
     };
     Object.entries(modalCloseMap).forEach(([id, fn]) => {
         const el = document.getElementById(id);
@@ -1632,6 +1492,7 @@
         if (document.getElementById('userModal')?.classList.contains('active'))          { closeUserModal();          return; }
         if (document.getElementById('duplicateModal')?.classList.contains('active'))     { closeDuplicateModal();     return; }
         if (document.getElementById('manualPaymentModal')?.classList.contains('active')) { closeManualPaymentModal(); return; }
+        if (document.getElementById('eventModal')?.classList.contains('active'))         { closeEventModal();         return; }
     });
 
     // ── Helper Utilities ──────────────────────────────────────────────────
@@ -1674,6 +1535,328 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#x27;');
     }
+
+    function setupGalleryDragDrop() {
+        const area = document.getElementById('galleryDragDropArea');
+        if (!area) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            area.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                area.style.borderColor = 'var(--primary-dark)';
+                area.style.background = 'rgba(116,148,236,0.05)';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            area.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                area.style.borderColor = 'var(--primary)';
+                area.style.background = 'var(--surface2)';
+            }, false);
+        });
+
+        area.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const input = document.getElementById('galleryImageInput');
+            if (files && files.length > 0 && input) {
+                input.files = files;
+                window.previewGalleryImage(input);
+            }
+        }, false);
+    }
+
+    function loadGalleryPosts() {
+        showLoadingBar(true);
+        fetch('/admin/api/gallery')
+            .then(res => res.json())
+            .then(posts => {
+                showLoadingBar(false);
+                renderGalleryGrid(posts);
+            })
+            .catch(err => {
+                showLoadingBar(false);
+                console.error('[Gallery Load Error]:', err);
+                showAlert('Failed to load gallery posts', 'danger');
+            });
+    }
+
+    function renderGalleryGrid(posts) {
+        const container = document.getElementById('adminGalleryGrid');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (posts.length === 0) {
+            container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">No gallery posts found. Upload one to get started!</div>`;
+            return;
+        }
+
+        posts.forEach(post => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.cssText = 'padding: 10px; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; border-radius: 10px; overflow: hidden;';
+            card.innerHTML = `
+                <div style="height: 120px; overflow: hidden; border-radius: 6px;">
+                    <img src="/static/images/${escapeHTML(post.image_url)}" alt="${escapeHTML(post.title)}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text);">${escapeHTML(post.title)}</h4>
+                <p style="font-size: 11px; color: var(--muted); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 32px; line-height: 16px;">${escapeHTML(post.description || '')}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 10px; color: var(--muted);">
+                    <span>By ${escapeHTML(post.admin_name || 'Admin')}</span>
+                    <button class="btn btn-danger btn-sm" onclick="deleteGalleryPost(${post.id})" style="padding: 4px 8px; font-size: 10px; border-radius: 4px;"><i class="bx bx-trash"></i> Delete</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    window.previewGalleryImage = function (input) {
+        const previewContainer = document.getElementById('galleryImagePreviewContainer');
+        const previewImage = document.getElementById('galleryImagePreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.clearGalleryImagePreview = function () {
+        const input = document.getElementById('galleryImageInput');
+        const previewContainer = document.getElementById('galleryImagePreviewContainer');
+        const previewImage = document.getElementById('galleryImagePreview');
+        if (input) input.value = '';
+        if (previewImage) previewImage.src = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+    };
+
+    window.submitAdminGalleryPost = function (e) {
+        e.preventDefault();
+        const title = document.getElementById('galleryPostTitle').value.trim();
+        const description = document.getElementById('galleryPostDesc').value.trim();
+        const imageFile = document.getElementById('galleryImageInput').files[0];
+
+        if (!title || !description || !imageFile) {
+            showAlert('Please fill in all fields and select an image.', 'danger');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('image', imageFile);
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Uploading...';
+        btn.disabled = true;
+
+        fetch('/admin/api/gallery', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': window.CSRF_TOKEN || ''
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            if (data.success) {
+                showAlert('Gallery post created successfully!');
+                e.target.reset();
+                window.clearGalleryImagePreview();
+                loadGalleryPosts();
+            } else {
+                showAlert(data.message || 'Failed to upload post', 'danger');
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            console.error(err);
+            showAlert('An error occurred during upload', 'danger');
+        });
+    };
+
+    window.deleteGalleryPost = function (id) {
+        if (!confirm('Are you sure you want to delete this gallery post? This action cannot be undone.')) return;
+
+        fetch(`/admin/api/gallery/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': window.CSRF_TOKEN || ''
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Gallery post deleted');
+                loadGalleryPosts();
+            } else {
+                showAlert(data.message || 'Failed to delete post', 'danger');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showAlert('An error occurred while deleting the post', 'danger');
+        });
+    };
+
+    // ── TAB 6b: EVENTS MANAGEMENT ──────────────────────────────────────────
+    function renderEventsMgmtTable() {
+        const tbody = document.querySelector('#eventsMgmtTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        state.events.forEach(e => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${e.id}</td>
+                <td>
+                    <strong>${escapeHTML(e.title)}</strong><br>
+                    <small class="text-secondary"><i class="bx bx-map"></i> ${escapeHTML(e.location)} &middot; <i class="bx bx-time"></i> ${escapeHTML(e.duration)}</small>
+                </td>
+                <td><span class="role-badge">${escapeHTML(e.category)}</span></td>
+                <td><small>${formatDate(e.date_time)}</small></td>
+                <td>NPR ${e.price.toLocaleString()}</td>
+                <td>${e.tickets_left}</td>
+                <td>
+                    <span class="badge badge-${e.is_published ? 'confirmed' : 'cancelled'}">
+                        ${e.is_published ? 'Published' : 'Draft'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="openEventModal('edit', ${e.id})">
+                        <i class="bx bx-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="cancelEvent(${e.id})">
+                        <i class="bx bx-x-circle"></i> Cancel
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.filterEventsMgmtTable = function () {
+        const q = document.getElementById('eventMgmtSearchInput').value.toLowerCase();
+        document.querySelectorAll('#eventsMgmtTable tbody tr').forEach((tr, i) => {
+            const e = state.events[i];
+            if (!e) return;
+            const searchStr = `${e.title} ${e.location} ${e.category} ${e.id}`.toLowerCase();
+            tr.style.display = searchStr.includes(q) ? '' : 'none';
+        });
+    };
+
+    window.openEventModal = function (mode = 'create', id = '') {
+        const modal = document.getElementById('eventModal');
+        const form = document.getElementById('eventForm');
+        if (!modal || !form) return;
+
+        form.reset();
+        document.getElementById('evtFormMode').value = mode;
+
+        if (mode === 'create') {
+            document.getElementById('eventModalTitle').textContent = 'Create Scheduled Event';
+            document.getElementById('evtFormId').value = '';
+        } else {
+            document.getElementById('eventModalTitle').textContent = 'Edit Event Details';
+            document.getElementById('evtFormId').value = id;
+            
+            const evt = state.events.find(e => e.id === id);
+            if (evt) {
+                document.getElementById('evtTitleInput').value = evt.title;
+                document.getElementById('evtCategoryInput').value = evt.category;
+                document.getElementById('evtPriceInput').value = evt.price;
+                document.getElementById('evtCapacityInput').value = evt.tickets_left;
+                document.getElementById('evtLocationInput').value = evt.location;
+                document.getElementById('evtDurationInput').value = evt.duration;
+                document.getElementById('evtDateTimeInput').value = evt.date_time.slice(0, 16);
+                document.getElementById('evtBadgeInput').value = evt.badge || '';
+                document.getElementById('evtImgInput').value = evt.image_url || 'Mountain-Main.png';
+                document.getElementById('evtPublishedInput').value = evt.is_published;
+                document.getElementById('evtDescInput').value = evt.description || '';
+            }
+        }
+
+        modal.classList.add('active'); // Use classes consistent with the modal system
+    };
+
+    window.closeEventModal = function () {
+        const modal = document.getElementById('eventModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.submitEventForm = function (e) {
+        e.preventDefault();
+        const mode = document.getElementById('evtFormMode').value;
+        const id = document.getElementById('evtFormId').value;
+
+        const payload = {
+            title: document.getElementById('evtTitleInput').value.trim(),
+            category: document.getElementById('evtCategoryInput').value.trim(),
+            price: parseInt(document.getElementById('evtPriceInput').value, 10),
+            tickets_left: parseInt(document.getElementById('evtCapacityInput').value, 10),
+            location: document.getElementById('evtLocationInput').value.trim(),
+            duration: document.getElementById('evtDurationInput').value.trim(),
+            date_time: document.getElementById('evtDateTimeInput').value,
+            badge: document.getElementById('evtBadgeInput').value,
+            image_url: document.getElementById('evtImgInput').value.trim() || 'Mountain-Main.png',
+            is_published: parseInt(document.getElementById('evtPublishedInput').value, 10),
+            description: document.getElementById('evtDescInput').value.trim()
+        };
+
+        const url = mode === 'create' ? '/admin/api/events' : `/admin/api/events/${id}`;
+        const method = mode === 'create' ? 'POST' : 'PUT';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
+            body: JSON.stringify(payload)
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                showAlert(mode === 'create' ? 'Event created successfully' : 'Event updated successfully');
+                window.closeEventModal();
+                loadDashboardData();
+            } else {
+                showAlert(data.message || 'Action failed', 'danger');
+            }
+        }).catch(err => {
+            console.error('Error submitting event:', err);
+            showAlert('Server request failed', 'danger');
+        });
+    };
+
+    window.cancelEvent = function (id) {
+        const evt = state.events.find(e => e.id === id);
+        if (!evt) return;
+        
+        if (!confirm(`CRITICAL ACTION: Are you sure you want to CANCEL the event "${evt.title}"?\n\nThis will permanently delete the event, cancel all user bookings scheduled for it, and automatically send in-app and email alerts to all affected customers.`)) return;
+
+        fetch(`/admin/api/events/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': window.CSRF_TOKEN || '' }
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                showAlert(data.message || 'Event cancelled and deleted successfully');
+                loadDashboardData();
+            } else {
+                showAlert(data.message || 'Cancellation failed', 'danger');
+            }
+        }).catch(err => {
+            console.error('Error cancelling event:', err);
+            showAlert('Server request failed', 'danger');
+        });
+    };
+
+    // Close event modal on backdrop-click
+    document.getElementById('eventModal')?.addEventListener('click', function (e) {
+        if (e.target === this) closeEventModal();
+    });
 
     // Initialize on load
     if (document.readyState === 'loading') {

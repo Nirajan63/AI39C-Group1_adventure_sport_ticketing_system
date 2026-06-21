@@ -68,6 +68,9 @@ def create_app():
     event_route = EventRoutes()
     event_route.register()
     app.register_blueprint(event_route.bp)
+    # Register chatbot API
+    from app.routes.chatbot import chatbot_bp
+    app.register_blueprint(chatbot_bp)
 
     @app.context_processor
     def inject_user_wishlist():

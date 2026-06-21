@@ -333,9 +333,9 @@
 
     <!-- Hero -->
     <div class="reviews-hero">
-        <p class="section-tag">⭐ Adventurer Reviews</p>
-        <h1>Adventure Reviews</h1>
-        <p>Real experiences from real thrill-seekers. Your voice shapes the next adventure.</p>
+        <p class="section-tag" data-i18n="reviews.hero-tag">⭐ Adventurer Reviews</p>
+        <h1 data-i18n="reviews.hero-title">Adventure Reviews</h1>
+        <p data-i18n="reviews.hero-desc">Real experiences from real thrill-seekers. Your voice shapes the next adventure.</p>
     </div>
 
     <div class="reviews-layout">
@@ -372,10 +372,10 @@
                     {% if user and (user.id == item.user_id or user.role in ('super_admin', 'admin')) %}
                     <div class="review-actions">
                         <button class="btn-review-edit" onclick="openEditModal({{ item.id }}, {{ item.rating }}, `{{ item.review | replace('`', "'") | replace('\\', '\\\\') }}`)">
-                            ✏️ Edit
+                            <span data-i18n="reviews.edit-btn">✏️ Edit</span>
                         </button>
                         <button class="btn-review-delete" onclick="deleteReview({{ item.id }})">
-                            🗑️ Delete
+                            <span data-i18n="reviews.delete-btn">🗑️ Delete</span>
                         </button>
                     </div>
                     {% endif %}
@@ -385,8 +385,8 @@
             {% else %}
             <div class="reviews-empty">
                 <div class="empty-icon">💬</div>
-                <h3>No Reviews Yet</h3>
-                <p>Be the first to share your Thrill Sphere experience!</p>
+                <h3 data-i18n="reviews.empty-title">No Reviews Yet</h3>
+                <p data-i18n="reviews.empty-desc">Be the first to share your Thrill Sphere experience!</p>
             </div>
             {% endif %}
         </div>
@@ -394,15 +394,15 @@
         <!-- RIGHT: Write Review Form -->
         <div>
             <div class="review-form-panel">
-                <h2>Share Your Experience</h2>
-                <p class="subtitle">Your honest review helps others plan their adventure.</p>
+                <h2 data-i18n="reviews.form-title">Share Your Experience</h2>
+                <p class="subtitle" data-i18n="reviews.form-desc">Your honest review helps others plan their adventure.</p>
 
                 {% if user %}
                 <form action="{{ url_for('auth.add_review') }}" method="POST">
                     <div class="form-field">
-                        <label>Activity</label>
+                        <label data-i18n="reviews.form-activity-label">Activity</label>
                         <select name="activity" required>
-                            <option value="">— Choose Activity —</option>
+                            <option value="" data-i18n="reviews.form-choose-activity">— Choose Activity —</option>
                             <option value="Paragliding">Paragliding</option>
                             <option value="Bungee Jumping">Bungee Jumping</option>
                             <option value="White Water Rafting">White Water Rafting</option>
@@ -413,7 +413,7 @@
                     </div>
 
                     <div class="form-field">
-                        <label class="star-rating-label">Your Rating</label>
+                        <label class="star-rating-label" data-i18n="reviews.form-rating-label">Your Rating</label>
                         <div class="star-rating">
                             <input type="radio" id="star5" name="rating" value="5" required>
                             <label for="star5" title="5 stars">★</label>
@@ -429,17 +429,17 @@
                     </div>
 
                     <div class="form-field">
-                        <label>Your Review</label>
-                        <textarea name="review" placeholder="Tell us about your adventure — the highs, thrills, and memories!" required></textarea>
+                        <label data-i18n="reviews.form-text-label">Your Review</label>
+                        <textarea name="review" placeholder="Tell us about your adventure — the highs, thrills, and memories!" data-i18n-ph="reviews.form-text-ph" required></textarea>
                     </div>
 
-                    <button type="submit" class="btn-submit-review">Submit Review ⭐</button>
+                    <button type="submit" class="btn-submit-review" data-i18n="reviews.form-submit">Submit Review ⭐</button>
                 </form>
                 {% else %}
                 <div class="login-prompt">
-                    <p>You must be logged in to leave a review.</p>
+                    <p data-i18n="reviews.login-required">You must be logged in to leave a review.</p>
                     <br>
-                    <a href="{{ url_for('auth.login') }}">Log In</a> &nbsp;or&nbsp; <a href="{{ url_for('auth.register_page') }}">Sign Up</a>
+                    <a href="{{ url_for('auth.login') }}" data-i18n="reviews.login-link">Log In</a> &nbsp;<span data-i18n="reviews.login-or">or</span>&nbsp; <a href="{{ url_for('auth.register_page') }}" data-i18n="reviews.signup-link">Sign Up</a>
                 </div>
                 {% endif %}
             </div>
@@ -451,10 +451,10 @@
 <!-- Edit Review Modal -->
 <div class="modal-backdrop" id="editModalBackdrop" onclick="handleModalClick(event)">
     <div class="modal-card">
-        <h3>✏️ Edit Your Review</h3>
+        <h3 data-i18n="reviews.modal-title">✏️ Edit Your Review</h3>
 
         <div class="form-field">
-            <label class="star-rating-label">Update Rating</label>
+            <label class="star-rating-label" data-i18n="reviews.modal-rating-label">Update Rating</label>
             <div class="star-rating" id="editStarRating">
                 <input type="radio" id="es5" name="edit_rating" value="5">
                 <label for="es5">★</label>
@@ -470,13 +470,13 @@
         </div>
 
         <div class="form-field">
-            <label>Review Text</label>
-            <textarea id="editReviewText" rows="5" placeholder="Update your review..."></textarea>
+            <label data-i18n="reviews.modal-text-label">Review Text</label>
+            <textarea id="editReviewText" rows="5" placeholder="Update your review..." data-i18n-ph="reviews.modal-text-ph"></textarea>
         </div>
 
         <div class="modal-actions">
-            <button class="btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
-            <button class="btn-modal-save" onclick="saveEdit()">Save Changes</button>
+            <button class="btn-modal-cancel" onclick="closeEditModal()" data-i18n="reviews.modal-cancel">Cancel</button>
+            <button class="btn-modal-save" onclick="saveEdit()" data-i18n="reviews.modal-save">Save Changes</button>
         </div>
     </div>
 </div>

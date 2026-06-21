@@ -306,9 +306,9 @@
 
     <!-- Hero -->
     <div class="gallery-hero">
-        <p class="section-tag">📸 Adventure Shots</p>
-        <h1>Our Gallery</h1>
-        <p>Real moments captured by our team — from soaring peaks to roaring rapids</p>
+        <p class="section-tag" data-i18n="gallery.hero-tag">📸 Adventure Shots</p>
+        <h1 data-i18n="gallery.hero-title">Our Gallery</h1>
+        <p data-i18n="gallery.hero-desc">Real moments captured by our team — from soaring peaks to roaring rapids.</p>
     </div>
 
     <!-- Admin Upload Panel -->
@@ -316,32 +316,32 @@
     <div class="admin-upload-card">
         <h3>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload New Post
-            <span>ADMIN</span>
+            <span data-i18n="gallery.admin-upload-title">Upload New Post</span>
+            <span data-i18n="gallery.admin-badge">ADMIN</span>
         </h3>
         <form id="galleryUploadForm" enctype="multipart/form-data">
             <div class="upload-form-grid">
                 <div class="upload-field">
-                    <label> Title</label>
-                    <input type="text" id="postTitle" placeholder="e.g. Sunset Paragliding over Pokhara" required>
+                    <label data-i18n="gallery.form-title-label">Post Title</label>
+                    <input type="text" id="postTitle" placeholder="e.g. Sunset Paragliding over Pokhara" data-i18n-ph="gallery.form-title-ph" required>
                 </div>
                 <div class="upload-field full-width">
-                    <label>Images</label>
+                    <label data-i18n="gallery.form-image-label">Image</label>
                     <div class="drop-zone" id="dropZone">
                         <input type="file" id="postImage" accept="image/*" required>
                         <div class="drop-zone-icon">🖼️</div>
-                        <p>Drag & drop or <strong>click to browse</strong></p>
+                        <p><span data-i18n="gallery.drag-drop-1">Drag & drop or</span> <strong data-i18n="gallery.drag-drop-2">click to browse</strong></p>
                         <img id="uploadPreview" src="" alt="preview">
                     </div>
                 </div>
                 <div class="upload-field full-width">
-                    <label>Description (optional)</label>
-                    <textarea id="postDesc" placeholder="Share the story behind this shot..."></textarea>
+                    <label data-i18n="gallery.form-desc-label">Description (optional)</label>
+                    <textarea id="postDesc" placeholder="Share the story behind this shot..." data-i18n-ph="gallery.form-desc-ph"></textarea>
                 </div>
             </div>
             <button type="submit" class="btn-upload" id="uploadBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Publish to Gallery
+                <span data-i18n="gallery.form-submit">Publish to Gallery</span>
             </button>
         </form>
     </div>
@@ -365,7 +365,7 @@
             <div class="gallery-item-meta">
                 <span class="gallery-item-by">📷 {{ post.username or 'Admin' }}</span>
                 {% if user and user.role in ('super_admin', 'admin') %}
-                <button class="btn-delete-post" onclick="deletePost({{ post.id }})">Delete</button>
+                <button class="btn-delete-post" onclick="deletePost({{ post.id }})" data-i18n="gallery.delete-btn">Delete</button>
                 {% endif %}
             </div>
         </div>
@@ -374,8 +374,14 @@
     {% else %}
     <div class="gallery-empty">
         <div class="empty-icon">🏔️</div>
-        <h3>No Posts Yet</h3>
-        <p>{% if user and user.role in ('super_admin', 'admin') %}Use the panel above to upload your first adventure photo!{% else %}Check back soon — our team is capturing amazing moments!{% endif %}</p>
+        <h3 data-i18n="gallery.empty-title">No Posts Yet</h3>
+        <p>
+            {% if user and user.role in ('super_admin', 'admin') %}
+            <span data-i18n="gallery.empty-desc-admin">Use the panel above to upload your first adventure photo!</span>
+            {% else %}
+            <span data-i18n="gallery.empty-desc-user">Check back soon — our team is capturing amazing moments!</span>
+            {% endif %}
+        </p>
     </div>
     {% endif %}
 

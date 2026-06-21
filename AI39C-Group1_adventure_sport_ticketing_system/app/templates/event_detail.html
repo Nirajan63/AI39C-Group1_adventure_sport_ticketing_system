@@ -20,7 +20,7 @@
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
-            <span>Back to Events</span>
+            <span data-i18n="event-detail.back">Back to Events</span>
         </a>
         
         <button class="wishlist-btn {% if 'event_' ~ (event.id|string) in user_wishlist_ids %}is-saved{% endif %}" 
@@ -30,7 +30,13 @@
             <svg class="heart-icon" viewBox="0 0 24 24">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
-            <span class="wishlist-text">{% if 'event_' ~ (event.id|string) in user_wishlist_ids %}Saved to Wishlist{% else %}Add to Wishlist{% endif %}</span>
+            <span class="wishlist-text" id="wishlist-btn-text">
+                {% if 'event_' ~ (event.id|string) in user_wishlist_ids %}
+                <span data-i18n="event-detail.saved-wishlist">Saved to Wishlist</span>
+                {% else %}
+                <span data-i18n="event-detail.add-wishlist">Add to Wishlist</span>
+                {% endif %}
+            </span>
         </button>
     </div>
 
@@ -65,14 +71,14 @@
         <!-- Left Column (Description, Organizer, Location Map) -->
         <div class="left-col">
             <section class="info-section">
-                <h2>Adventure Overview</h2>
+                <h2 data-i18n="event-detail.overview-title">Adventure Overview</h2>
                 <div class="description-text">
                     {{ event.description or 'No detailed description available for this adventure. Prepare yourself for an unforgettable experience!' }}
                 </div>
             </section>
             
             <section class="info-section organizer-section">
-                <h2>Organizer Information</h2>
+                <h2 data-i18n="event-detail.organizer-title">Organizer Information</h2>
                 <div class="organizer-card">
                     <div class="org-avatar">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -84,7 +90,7 @@
                     </div>
                     <div class="org-details">
                         <h3 class="org-name">{{ event.organizer_name or 'Thrill Sphere Organizer' }}</h3>
-                        <p class="org-subtitle">Official Host & Safety Coordinator</p>
+                        <p class="org-subtitle" data-i18n="event-detail.organizer-subtitle">Official Host & Safety Coordinator</p>
                         <div class="org-contact-list">
                             <a href="tel:{{ event.organizer_phone or '+977-9876543210' }}" class="org-contact-item">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -100,12 +106,12 @@
             </section>
 
             <section class="info-section map-section">
-                <h2>Event Location</h2>
+                <h2 data-i18n="event-detail.location-title">Event Location</h2>
                 <div class="map-container-wrap">
                     <div id="map"></div>
                     <div class="map-meta">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <span>{{ event.location }} (Venue details will be sent in ticket confirmation)</span>
+                        <span>{{ event.location }} <span data-i18n="event-detail.venue-note">(Venue details will be sent in ticket confirmation)</span></span>
                     </div>
                 </div>
             </section>
@@ -116,19 +122,19 @@
             <div class="booking-widget sticky-widget">
                 <div class="widget-header">
                     <div class="price-box">
-                        <span class="price-sub">Ticket Price</span>
+                        <span class="price-sub" data-i18n="event-detail.ticket-price">Ticket Price</span>
                         <span class="price-main">NPR {{ "{:,}".format(event.price) }}</span>
                     </div>
                     <div class="duration-box">
-                        <span class="duration-label">Duration</span>
+                        <span class="duration-label" data-i18n="activity.duration">Duration</span>
                         <span class="duration-value">{{ event.duration or '3 hours' }}</span>
                     </div>
                 </div>
 
                 <div class="availability-meter">
                     <div class="meter-info">
-                        <span>Availability Status</span>
-                        <span id="seats-left-text" data-left="{{ event.tickets_left }}" style="font-weight: 700;">{{ event.tickets_left }} seats left</span>
+                        <span data-i18n="event-detail.availability-status">Availability Status</span>
+                        <span id="seats-left-text" data-left="{{ event.tickets_left }}" style="font-weight: 700;">{{ event.tickets_left }} <span data-i18n="event-detail.seats-left-label">seats left</span></span>
                     </div>
                     <div class="meter-progress-bg">
                         <div id="seats-progress-bar" class="meter-progress-fill {% if event.tickets_left <= 5 %}low{% endif %}" style="width: {{ (event.tickets_left / 50) * 100 }}%"></div>
@@ -137,13 +143,13 @@
 
                 <form class="checkout-form" id="booking-form" onsubmit="submitDetailBooking(event)">
                     <div class="form-group">
-                        <label for="booking-date-field">Choose Date</label>
+                        <label for="booking-date-field" data-i18n="event-detail.choose-date">Choose Date</label>
                         <input type="date" id="booking-date-field" value="{{ event.date_time.split('T')[0] }}" min="{{ event.date_time.split('T')[0] }}" max="{{ event.date_time.split('T')[0] }}" readonly required>
-                        <small class="form-note">This event takes place on a specific scheduled day.</small>
+                        <small class="form-note" data-i18n="event-detail.date-note">This event takes place on a specific scheduled day.</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="booking-tickets">Number of Tickets</label>
+                        <label for="booking-tickets" data-i18n="event-detail.num-tickets">Number of Tickets</label>
                         <div class="quantity-selector">
                             <button type="button" class="qty-btn minus" onclick="updateQty(-1)">-</button>
                             <input type="number" id="booking-tickets" min="1" max="{{ event.tickets_left }}" value="1" readonly required>
@@ -152,12 +158,12 @@
                     </div>
 
                     <div class="price-summary">
-                        <span>Total Price</span>
+                        <span data-i18n="event-detail.total-price">Total Price</span>
                         <span id="checkout-total-price">NPR {{ "{:,}".format(event.price) }}</span>
                     </div>
 
                     <button type="submit" id="btn-detail-book-now" class="btn-checkout" {% if event.tickets_left <= 0 %}disabled{% endif %}>
-                        {% if event.tickets_left <= 0 %}Sold Out{% else %}Confirm Booking{% endif %}
+                        {% if event.tickets_left <= 0 %}<span data-i18n="event-detail.sold-out">Sold Out</span>{% else %}<span data-i18n="event-detail.confirm-booking">Confirm Booking</span>{% endif %}
                     </button>
                 </form>
             </div>
@@ -229,7 +235,7 @@
             return;
         }
 
-        const btn = event.currentTarget;
+        const btn = event.currentTarget || event.target.closest('.wishlist-btn') || event.target;
         btn.disabled = true;
 
         try {

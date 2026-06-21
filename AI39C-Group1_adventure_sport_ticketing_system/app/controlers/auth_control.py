@@ -114,7 +114,8 @@ class AuthController(BaseController):
         if not act:
             conn = get_db_connection()
             cursor = conn.cursor()
-            db_act = cursor.execute("SELECT * FROM activities WHERE id = ?", (activity_id,)).fetchone()
+            cursor.execute("SELECT * FROM activities WHERE id = ?", (activity_id,))
+            db_act = cursor.fetchone()
             conn.close()
             if db_act:
                 act = dict(db_act)
@@ -138,13 +139,15 @@ class AuthController(BaseController):
                     "id": act["id"],
                     "name": act["name"],
                     "category": act.get("category", "Adventure"),
-                    "img": act["img"]
+                    "img": act["img"],
+                    "location": act.get("location", "")
                 })
         
         # Search in DB activities
         conn = get_db_connection()
         cursor = conn.cursor()
-        db_results = cursor.execute("SELECT id, name, category, img FROM activities WHERE LOWER(name) LIKE ? OR LOWER(location) LIKE ?", (f"%{query}%", f"%{query}%")).fetchall()
+        cursor.execute("SELECT id, name, category, img, location FROM activities WHERE LOWER(name) LIKE ? OR LOWER(location) LIKE ?", (f"%{query}%", f"%{query}%"))
+        db_results = cursor.fetchall()
         conn.close()
 
         for row in db_results:
@@ -154,8 +157,36 @@ class AuthController(BaseController):
                     "id": row["id"],
                     "name": row["name"],
                     "category": row["category"],
-                    "img": row["img"]
+                    "img": row["img"],
+                    "location": row.get("location", "")
                 })
+
+        # Rank results based on relevance to query
+        def get_match_rank(item):
+            name_lower = item["name"].lower()
+            location_lower = item.get("location", "").lower()
+            
+            # 1. Exact match with name
+            if name_lower == query:
+                return 0
+            # 2. Name starts with query
+            if name_lower.startswith(query):
+                return 1
+            # 3. A word in name starts with query
+            if any(word.startswith(query) for word in name_lower.split()):
+                return 2
+            # 4. Name contains query
+            if query in name_lower:
+                return 3
+            # 5. Location starts with query
+            if location_lower.startswith(query):
+                return 4
+            # 6. Location contains query
+            if query in location_lower:
+                return 5
+            return 6
+
+        results.sort(key=get_match_rank)
                 
         return jsonify(results)
 
@@ -188,16 +219,7 @@ class AuthController(BaseController):
             user_data = cursor.fetchone()
             conn.close()
 
-            from werkzeug.security import check_password_hash
-            is_valid_password = False
-            if user_data:
-                db_password = user_data["password"]
-                if db_password == password:
-                    is_valid_password = True
-                elif db_password.startswith(("scrypt:", "pbkdf2:")) and check_password_hash(db_password, password):
-                    is_valid_password = True
-
-            if user_data and is_valid_password:
+            if user_data and user_data["password"] == password:
                 if user_data.get("status") == "suspended":
                     error_msg = "Access denied: Your account has been suspended."
                     if request.is_json:
@@ -595,6 +617,14 @@ class AuthController(BaseController):
             "spent": sum(float(b.get("total", 0)) for b in bookings_list),
         }
 
+        
+        # Determine earned badges
+        badge_list = []
+        # Trekker badge: award after completing 10 trekking bookings
+        trek_completed = sum(1 for b in bookings_list if b.get('activity', '').lower() == 'trekking' and b.get('status') == 'completed')
+        if trek_completed >= 10:
+            badge_list.append({'icon': '🏔️', 'key': 'dash.badge-trekker', 'label': 'Trekker'})
+
         return render_template(
             "Dashboard.html",
             user=user,
@@ -603,7 +633,8 @@ class AuthController(BaseController):
             activities=ACTIVITIES,
             wishlist_count=wishlist_count,
             availability=availability,
-            notifications=notifications
+            notifications=notifications,
+            badges=badge_list
         )
 
     # ── CANCEL BOOKING ─────────────────────────────────────────────────────
@@ -704,14 +735,6 @@ class AuthController(BaseController):
                         "INSERT INTO bookings (user_id, activity, date, people, price, total, status, payment_status, payment_method, txn_code) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         (user_id, activity_name, date, people, price, total, booking_status, "confirmed", payment_method, txn_code)
-                    )
-                    cursor.execute(
-                        "INSERT INTO notifications (user_id, title, message, status) VALUES (?, ?, ?, 'unread')",
-                        (
-                            user_id,
-                            "Booking Confirmed",
-                            f"Your booking for {activity_name} on {date} has been confirmed successfully!"
-                        )
                     )
                     conn.commit()
                     flash(f"🎉 {activity_name} booked successfully!")
@@ -1021,9 +1044,10 @@ class AuthController(BaseController):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        posts = cursor.execute(
+        cursor.execute(
             "SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.admin_id = u.id ORDER BY p.created_at DESC"
-        ).fetchall()
+        )
+        posts = cursor.fetchall()
         conn.close()
 
         posts_list = [dict(p) for p in posts]
@@ -1078,7 +1102,8 @@ class AuthController(BaseController):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        post = cursor.execute("SELECT * FROM posts WHERE id = ?", (post_id,)).fetchone()
+        cursor.execute("SELECT * FROM posts WHERE id = ?", (post_id,))
+        post = cursor.fetchone()
         if not post:
             conn.close()
             return jsonify({"success": False, "message": "Post not found"}), 404
@@ -1110,12 +1135,18 @@ class AuthController(BaseController):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        reviews_data = cursor.execute(
+        cursor.execute(
             "SELECT r.*, u.username FROM reviews r LEFT JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC"
-        ).fetchall()
+        )
+        reviews_data = cursor.fetchall()
         conn.close()
 
-        reviews_list = [dict(r) for r in reviews_data]
+        reviews_list = []
+        for r in reviews_data:
+            d = dict(r)
+            if d.get("created_at") and hasattr(d["created_at"], "strftime"):
+                d["created_at"] = d["created_at"].strftime("%Y-%m-%d")
+            reviews_list.append(d)
         return render_template("review.html", user=user, reviews=reviews_list, wishlist_count=wishlist_count)
 
     # ── ADD REVIEW ────────────────────────────────────────────────────────
@@ -1162,7 +1193,8 @@ class AuthController(BaseController):
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        existing = cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,)).fetchone()
+        cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,))
+        existing = cursor.fetchone()
 
         if not existing:
             conn.close()
@@ -1198,7 +1230,8 @@ class AuthController(BaseController):
         user = session["user"]
         conn = get_db_connection()
         cursor = conn.cursor()
-        existing = cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,)).fetchone()
+        cursor.execute("SELECT * FROM reviews WHERE id = ?", (review_id,))
+        existing = cursor.fetchone()
 
         if not existing:
             conn.close()
@@ -1287,3 +1320,66 @@ class AuthController(BaseController):
             conn.close()
             print("Error marking all notifications as read:", e)
             return jsonify({"success": False, "error": "Database error"}), 500
+
+    # ── REFERRAL PAGE ──────────────────────────────────────────────────────
+    def referral_page(self):
+        from app.models.database import generate_referral_code, get_referral_stats
+
+        user = session.get("user")
+
+        if not user:
+            # Show guest version of the page
+            return render_template("referral.html",
+                user=None,
+                referral_code=None,
+                referral_link=None,
+                whatsapp_text="",
+                twitter_text="",
+                email_body="",
+                stats={},
+                referred_users=[]
+            )
+
+        user_id  = user["id"]
+        username = user["username"]
+
+        # Generate / fetch referral code
+        referral_code = generate_referral_code(user_id, username)
+
+        # Build the shareable link — use the request host
+        base_url = request.host_url.rstrip("/")
+        referral_link = f"{base_url}/register?ref={referral_code}"
+
+        # Social share texts
+        whatsapp_text = (
+            f"Hey! Join me on Thrill Sphere – Nepal's best adventure sports booking platform. "
+            f"Use my referral code *{referral_code}* and get NPR 500 off your first booking! "
+            f"Sign up here: {referral_link}"
+        )
+        twitter_text = (
+            f"🏔️ Just booked an adventure on @ThrillSphere! Use my code {referral_code} "
+            f"for NPR 500 off your first booking 🎉"
+        )
+        email_body = (
+            f"Hi,\n\nI've been using Thrill Sphere for amazing adventure sports in Nepal "
+            f"and thought you'd love it too!\n\n"
+            f"Use my referral code: {referral_code}\n"
+            f"Sign up here: {referral_link}\n\n"
+            f"You'll get NPR 500 off your first booking, and I'll earn rewards too!\n\n"
+            f"See you on the trails,\n{username}"
+        )
+
+        # Stats and referred users
+        stats, referred_users = get_referral_stats(user_id)
+
+        return render_template(
+            "referral.html",
+            user=user,
+            referral_code=referral_code,
+            referral_link=referral_link,
+            whatsapp_text=whatsapp_text,
+            twitter_text=twitter_text,
+            email_body=email_body,
+            stats=stats,
+            referred_users=referred_users
+        )

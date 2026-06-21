@@ -18,6 +18,7 @@ class AuthRoutes:
         self.bp.route("/wishlist", methods=["GET"])(self.controller.wishlist_page)
         self.bp.route("/forgot", methods=["GET", "POST"])(self.controller.forgot_password)
         self.bp.route("/activity/<activity_id>", methods=["GET"])(self.controller.activity_page)
+        self.bp.route("/referral", methods=["GET"])(self.controller.referral_page)
 
         # Gallery Routes
         self.bp.route("/gallery", methods=["GET"])(self.controller.gallery)

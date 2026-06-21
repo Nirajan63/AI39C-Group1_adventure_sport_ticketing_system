@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
     <script>
         // Inject server variables for client-side use
         window.THRILL_ADMIN_ROLE = "{{ user.role }}";
@@ -60,6 +60,9 @@
                 </a>
                 <a class="nav-link" onclick="switchAdminTab('audit-logs', this)">
                     <i class="bx bx-history"></i> Audit Logs
+                </a>
+                <a class="nav-link" onclick="switchAdminTab('gallery', this)">
+                    <i class="bx bx-images"></i> Gallery Posts
                 </a>
             </nav>
 
@@ -184,7 +187,7 @@
                     <div class="chart-box card">
                         <div class="card-header">
                             <h3>Revenue Trends</h3>
-                            <span class="text-secondary">Weekly and monthly transaction pattern</span>
+                            <span class="text-secondary">Weekly and monthly transaction patterns</span>
                         </div>
                         <div class="card-body">
                             <canvas id="revenueChart"></canvas>
@@ -193,7 +196,7 @@
                     <div class="chart-box card">
                         <div class="card-header">
                             <h3>Popular Activities</h3>
-                            <span class="text-secondary">Booking distributions by activity types</span>
+                            <span class="text-secondary">Booking distributions by activity type</span>
                         </div>
                         <div class="card-body">
                             <canvas id="popularityChart"></canvas>
@@ -337,7 +340,7 @@
                     </div>
                     <div class="reports-group">
                         {% if user.role != 'staff' %}
-                        <button class="btn btn-primary" onclick="openManualPaymentModal()"><i class="bx bx-plus-circle"></i> Record Payments</button>
+                        <button class="btn btn-primary" onclick="openManualPaymentModal()"><i class="bx bx-plus-circle"></i> Record Payment</button>
                         {% endif %}
                         <button class="btn btn-secondary" onclick="exportPayments('csv')"><i class="bx bx-export"></i> Export CSV</button>
                         <button class="btn btn-secondary" onclick="exportPayments('excel')"><i class="bx bx-file"></i> Export Excel</button>
@@ -353,7 +356,7 @@
                                     <th>Booking ID</th>
                                     <th>Customer</th>
                                     <th>Activity</th>
-                                    <th>Date &amp; Time</th>
+                                    <th>Date</th>
                                     <th>Amount</th>
                                     <th>Method</th>
                                     <th>Txn Reference</th>
@@ -523,14 +526,66 @@
 
                         <div class="form-group">
                             <label>Delivery Channel</label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification <small class="text-secondary">(active)</small></label>
-                                <label><input type="checkbox" disabled> Email Dispatcher <small class="text-secondary">(not connected — dev mode only)</small></label>
-                                <label><input type="checkbox" disabled> SMS Dispatcher <small class="text-secondary">(future integration)</small></label>
+                            <div class="channel-cards-container">
+                                <div class="channel-card">
+                                    <div class="channel-card-left">
+                                        <input type="checkbox" checked disabled class="channel-checkbox">
+                                        <span class="channel-name">In-App Dashboard Notification</span>
+                                    </div>
+                                    <span class="channel-badge channel-badge-active">active</span>
+                                </div>
+                                <div class="channel-card">
+                                    <div class="channel-card-left">
+                                        <input type="checkbox" disabled class="channel-checkbox">
+                                        <span class="channel-name">Email Dispatcher</span>
+                                    </div>
+                                    <span class="channel-badge channel-badge-dev">not connected – dev mode only</span>
+                                </div>
+                                <div class="channel-card">
+                                    <div class="channel-card-left">
+                                        <input type="checkbox" disabled class="channel-checkbox">
+                                        <span class="channel-name">SMS Dispatcher</span>
+                                    </div>
+                                    <span class="channel-badge channel-badge-future">future integration</span>
+                                </div>
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block">Broadcast Message</button>
+                    </form>
+                </div>
+
+                <!-- NEW: Event Mass Email Dispatcher -->
+                <div class="card max-w-lg" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3>Event Mass Email Dispatcher</h3>
+                        <p class="text-secondary">Send simultaneous emails to all users registered for a specific event</p>
+                    </div>
+                    <form class="card-body" id="eventEmailForm" onsubmit="dispatchEventEmail(event)">
+                        <div class="form-group">
+                            <label for="eventEmailSelect">Select Event / Activity</label>
+                            <select id="eventEmailSelect" required>
+                                <option value="">-- Choose Activity --</option>
+                                <option value="Paragliding">Paragliding</option>
+                                <option value="Bungee Jumping">Bungee Jumping</option>
+                                <option value="River Rafting">River Rafting</option>
+                                <option value="Himalayan Trekking">Himalayan Trekking</option>
+                                <option value="Canyoning">Canyoning</option>
+                                <option value="Zip-lining">Zip-lining</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventEmailSubject">Email Subject</label>
+                            <input type="text" id="eventEmailSubject" placeholder="e.g. Important Update for your Booking" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventEmailMessage">Email Message</label>
+                            <textarea id="eventEmailMessage" rows="5" placeholder="Type instructions or details to email..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Send Mass Email</button>
                     </form>
                 </div>
             </section>
@@ -563,91 +618,54 @@
                     </div>
                 </div>
             </section>
+
+            <!-- TAB 9: GALLERY POSTS -->
+            <section class="admin-section" id="sec-gallery">
+                <div class="grid grid-2" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <!-- LEFT COLUMN: UPLOAD FORM -->
+                    <div class="card" style="height: fit-content; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;">
+                        <div class="card-header" style="margin-bottom: 20px;">
+                            <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--text);" data-i18n="gallery.admin-upload-title">Upload Gallery Post</h3>
+                        </div>
+                        <form id="adminGalleryUploadForm" onsubmit="submitAdminGalleryPost(event)" enctype="multipart/form-data">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="galleryPostTitle" style="display: block; margin-bottom: 6px; font-weight: 500;" data-i18n="gallery.form-title-label">Post Title</label>
+                                <input type="text" id="galleryPostTitle" placeholder="e.g. Stunning Phewa Lake Glide" required style="width: 100%; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none;" data-i18n-ph="gallery.form-title-ph">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="galleryPostDesc" style="display: block; margin-bottom: 6px; font-weight: 500;" data-i18n="gallery.form-desc-label">Description</label>
+                                <textarea id="galleryPostDesc" rows="3" placeholder="Describe the adventure context..." required style="width: 100%; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; font-family: inherit; resize: vertical;" data-i18n-ph="gallery.form-desc-ph"></textarea></textarea>
+                                <textarea id="galleryPostDesc" rows="3" placeholder="Describe the adventure context..." required style="width: 100%; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; font-family: inherit; resize: vertical;" data-i18n-ph="gallery.form-desc-ph"></textarea>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 6px; font-weight: 500;" data-i18n="gallery.form-image-label">Post Image</label>
+                                <div id="galleryDragDropArea" style="border: 2px dashed var(--primary); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: var(--surface2); transition: all 0.2s;" onclick="document.getElementById('galleryImageInput').click()">
+                                    <i class="bx bx-cloud-upload" style="font-size: 40px; color: var(--primary); margin-bottom: 8px;"></i>
+                                    <p style="font-size: 13px; color: var(--muted); margin: 0;"><span data-i18n="gallery.drag-drop-1">Drag & drop</span> <span data-i18n="gallery.drag-drop-2">click to browse</span></p>
+                                    <input type="file" id="galleryImageInput" accept="image/*" required style="display: none;" onchange="previewGalleryImage(this)">
+                                </div>
+                                <div id="galleryImagePreviewContainer" style="display: none; margin-top: 15px; position: relative;">
+                                    <img id="galleryImagePreview" src="" alt="Preview" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
+                                    <button type="button" onclick="clearGalleryImagePreview()" style="position: absolute; top: 8px; right: 8px; background: rgba(255,79,79,0.9); border: none; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"><i class="bx bx-x"></i></button>
+                                </div>
+                            </div>
+                                                            <button type="submit" class="btn btn-primary btn-block" data-i18n="gallery.form-submit"><i class="bx bx-send"></i> Publish to Gallery</button>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- RIGHT COLUMN: MANAGE GRID -->
+                    <div class="card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;">
+                        <div class="card-header" style="margin-bottom: 20px;">
+                            <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--text);">Manage Gallery Grid</h3>
+                        </div>
+                        <div id="adminGalleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px;">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
-    </div>
-
-    <!-- ── MODAL: EVENT CREATE/EDIT ── -->
-    <div class="modal-overlay" id="eventModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="eventModalTitle">Create Scheduled Event</h3>
-                <button class="modal-close" onclick="closeEventModal()"><i class="bx bx-x"></i></button>
-            </div>
-            <form class="modal-body" id="eventForm" onsubmit="submitEventForm(event)">
-                <input type="hidden" id="evtFormMode" value="create"> <!-- create | edit -->
-                <input type="hidden" id="evtFormId">
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="evtTitleInput">Event Title</label>
-                        <input type="text" id="evtTitleInput" placeholder="e.g. Annapurna Trekking Expedition" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="evtCategoryInput">Category</label>
-                        <input type="text" id="evtCategoryInput" placeholder="e.g. Adventure, Water Sports" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="evtPriceInput">Price (NPR)</label>
-                        <input type="number" id="evtPriceInput" placeholder="3500" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="evtCapacityInput">Tickets Left / Capacity</label>
-                        <input type="number" id="evtCapacityInput" placeholder="50" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="evtLocationInput">Location</label>
-                        <input type="text" id="evtLocationInput" placeholder="e.g. Annapurna, Trishuli" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="evtDurationInput">Duration</label>
-                        <input type="text" id="evtDurationInput" placeholder="e.g. 2 days, 3 hours" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="evtDateTimeInput">Scheduled Date &amp; Time</label>
-                        <input type="datetime-local" id="evtDateTimeInput" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="evtBadgeInput">Badge Overlay</label>
-                        <select id="evtBadgeInput">
-                            <option value="">No Badge</option>
-                            <option value="Featured">Featured</option>
-                            <option value="Trending">Trending</option>
-                            <option value="Popular">Popular</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="evtImgInput">Image Filenames</label>
-                        <input type="text" id="evtImgInput" placeholder="Trekking_Pic.jpeg" value="Mountain-Main.png">
-                    </div>
-                    <div class="form-group">
-                        <label for="evtPublishedInput">Visibility Status</label>
-                        <select id="evtPublishedInput">
-                            <option value="1">Published (Visible on catalog)</option>
-                            <option value="0">Draft (Hidden)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="evtDescInput">Description Details</label>
-                    <textarea id="evtDescInput" rows="3" placeholder="Provide event schedule details, guidelines, and safety info..."></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Save Event Details</button>
-            </form>
-        </div>
     </div>
 
     <!-- ── MODAL: ACTIVITY CREATE/EDIT ── -->
@@ -944,6 +962,55 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='dashboard_Admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard_Admin.js') }}"></script>
+    <script>
+        async function dispatchEventEmail(e) {
+            e.preventDefault();
+            const activityName = document.getElementById('eventEmailSelect').value;
+            const subject = document.getElementById('eventEmailSubject').value;
+            const message = document.getElementById('eventEmailMessage').value;
+
+            if(!activityName || !subject || !message) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            if(!confirm(`Are you sure you want to send this email to ALL users booked for ${activityName}?`)) return;
+
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/send-event-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN || ''
+                    },
+                    body: JSON.stringify({
+                        activity_name: activityName,
+                        subject: subject,
+                        message: message
+                    })
+                });
+
+                const data = await res.json();
+                if(data.success) {
+                    alert('Success: ' + data.message);
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(err) {
+                console.error(err);
+                alert('An error occurred while sending emails.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>

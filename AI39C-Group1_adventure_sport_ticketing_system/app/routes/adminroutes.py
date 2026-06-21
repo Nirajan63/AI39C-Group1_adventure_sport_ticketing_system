@@ -41,6 +41,11 @@ class AuthRoutes_Admin:
         self.bp.route("/api/events", methods=["GET", "POST"])(self.controller.api_events)
         self.bp.route("/api/events/<int:event_id>", methods=["PUT", "DELETE"])(self.controller.api_event_detail)
 
+        # Gallery routes
+        self.bp.route("/api/gallery", methods=["GET"])(self.controller.api_gallery_list)
+        self.bp.route("/api/gallery", methods=["POST"])(self.controller.api_gallery_add)
+        self.bp.route("/api/gallery/<int:post_id>", methods=["DELETE"])(self.controller.api_gallery_delete)
+
         # Audit logs route
         self.bp.route("/api/audit-logs", methods=["GET"])(self.controller.api_audit_logs)
 

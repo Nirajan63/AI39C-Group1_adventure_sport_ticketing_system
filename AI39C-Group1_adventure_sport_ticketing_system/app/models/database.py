@@ -1,6 +1,7 @@
 import pymysql
 import pymysql.cursors
 import os
+from app.config import Config  # Ensure .env is loaded
 
 class SafeDictCursor(pymysql.cursors.DictCursor):
     def execute(self, query, args=None):
@@ -226,14 +227,14 @@ def init_db():
         )
         
     # Seed default admin user if missing
-    cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', ('admin', 'admin@sportadventure.com'))
+    cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', ('Nirajan', 'admin@sportadventure.com'))
     if not cursor.fetchone():
         from werkzeug.security import generate_password_hash
-        hashed_password = generate_password_hash('admin123')
+        hashed_password = generate_password_hash('Nirajan@123')
         cursor.execute(
             '''INSERT INTO users (username, email, password, first_name, last_name, role, status, must_change_password) 
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            ('admin', 'admin@sportadventure.com', hashed_password, 'System', 'Admin', 'super_admin', 'active', 1)
+            ('Nirajan', 'admin@sportadventure.com', hashed_password, 'System', 'Admin', 'super_admin', 'active', 1)
         )
         
     # Prepopulate activities if table is empty
@@ -457,8 +458,230 @@ def init_db():
                 evt
             )
 
+    # ── Referral Codes Table ──────────────────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referral_codes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL UNIQUE,
+            code VARCHAR(20) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+
+    # ── Referrals Table ───────────────────────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            referrer_id INT NOT NULL,
+            referred_user_id INT NOT NULL,
+            status VARCHAR(30) DEFAULT 'joined',
+            reward_earned INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (referred_user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+
     conn.commit()
     conn.close()
+
+
+# ── Referral Helper Functions ─────────────────────────────────────────────────
+
+def generate_referral_code(user_id, username):
+    """Generate and store a unique referral code for a user."""
+    import string, random as _random
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if already has a code
+    cursor.execute("SELECT code FROM referral_codes WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return row["code"]
+
+    # Generate unique code: TS + first 4 chars of username + 4 random alphanum
+    prefix = ''.join(c.upper() for c in username[:4] if c.isalpha())
+    suffix = ''.join(_random.choices(string.ascii_uppercase + string.digits, k=4))
+    code = f"TS{prefix}{suffix}"
+
+    # Ensure uniqueness
+    attempts = 0
+    while attempts < 10:
+        cursor.execute("SELECT id FROM referral_codes WHERE code = ?", (code,))
+        if not cursor.fetchone():
+            break
+        suffix = ''.join(_random.choices(string.ascii_uppercase + string.digits, k=4))
+        code = f"TS{prefix}{suffix}"
+        attempts += 1
+
+    try:
+        cursor.execute(
+            "INSERT INTO referral_codes (user_id, code) VALUES (?, ?)",
+            (user_id, code)
+        )
+        conn.commit()
+    except Exception:
+        # Race condition: fetch existing
+        cursor.execute("SELECT code FROM referral_codes WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        code = row["code"] if row else code
+
+    conn.close()
+    return code
+
+
+def get_referral_stats(user_id):
+    """Return all referral statistics for a user."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # All referrals made by this user
+    cursor.execute("""
+        SELECT r.*, u.username, u.created_at AS user_joined
+        FROM referrals r
+        JOIN users u ON r.referred_user_id = u.id
+        WHERE r.referrer_id = ?
+        ORDER BY r.created_at DESC
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    referred_users = []
+    total_earned = 0
+    pending_earnings = 0
+    pending_count = 0
+    successful = 0
+
+    for row in rows:
+        status = row["status"]
+        reward = int(row.get("reward_earned") or 0)
+        joined_date = row["user_joined"]
+        if hasattr(joined_date, "strftime"):
+            joined_date = joined_date.strftime("%b %d, %Y")
+        else:
+            joined_date = str(joined_date)[:10] if joined_date else "N/A"
+
+        if status == "booked":
+            total_earned += reward
+            successful += 1
+        elif status == "joined":
+            pending_count += 1
+            pending_earnings += 750  # base pending reward estimate
+
+        referred_users.append({
+            "username": row["username"],
+            "status": status,
+            "joined_date": joined_date,
+        })
+
+    # Determine tier
+    if successful >= 11:
+        tier_emoji, tier_label, per_reward, next_tier_at = "💎", "Platinum", 2000, successful + 5
+    elif successful >= 6:
+        tier_emoji, tier_label, per_reward, next_tier_at = "🥇", "Gold", 1500, 11
+    elif successful >= 3:
+        tier_emoji, tier_label, per_reward, next_tier_at = "🥈", "Silver", 1000, 6
+    else:
+        tier_emoji, tier_label, per_reward, next_tier_at = "🥉", "Bronze", 750, 3
+
+    stats = {
+        "total_invited": len(rows),
+        "successful": successful,
+        "pending": pending_count,
+        "total_earned": total_earned,
+        "pending_earnings": pending_earnings,
+        "per_referral_reward": per_reward,
+        "current_tier_emoji": tier_emoji,
+        "current_tier_label": tier_label,
+        "next_tier_at": next_tier_at,
+    }
+
+    return stats, referred_users
+
+
+def record_referral(referrer_code, new_user_id):
+    """Called after a new user registers via a referral link/code."""
+    if not referrer_code:
+        return
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT user_id FROM referral_codes WHERE code = ?", (referrer_code,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return
+        referrer_id = row["user_id"]
+        if referrer_id == new_user_id:
+            conn.close()
+            return
+
+        # Check not already recorded
+        cursor.execute(
+            "SELECT id FROM referrals WHERE referrer_id = ? AND referred_user_id = ?",
+            (referrer_id, new_user_id)
+        )
+        if cursor.fetchone():
+            conn.close()
+            return
+
+        cursor.execute(
+            "INSERT INTO referrals (referrer_id, referred_user_id, status, reward_earned) VALUES (?, ?, 'joined', 0)",
+            (referrer_id, new_user_id)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"record_referral error: {e}")
+    finally:
+        conn.close()
+
+
+def mark_referral_booked(user_id):
+    """When a referred user completes their first booking, upgrade referral to booked."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT id, referrer_id FROM referrals WHERE referred_user_id = ? AND status = 'joined'",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return
+
+        referral_id = row["id"]
+        referrer_id = row["referrer_id"]
+
+        # Calculate reward based on referrer tier
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM referrals WHERE referrer_id = ? AND status = 'booked'",
+            (referrer_id,)
+        )
+        cnt_row = cursor.fetchone()
+        completed = int(cnt_row["cnt"]) if cnt_row else 0
+
+        if completed >= 10:
+            reward = 2000
+        elif completed >= 5:
+            reward = 1500
+        elif completed >= 2:
+            reward = 1000
+        else:
+            reward = 750
+
+        cursor.execute(
+            "UPDATE referrals SET status = 'booked', reward_earned = ? WHERE id = ?",
+            (reward, referral_id)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"mark_referral_booked error: {e}")
+    finally:
+        conn.close()
 
 def get_event_by_id(event_id):
     conn = get_db_connection()

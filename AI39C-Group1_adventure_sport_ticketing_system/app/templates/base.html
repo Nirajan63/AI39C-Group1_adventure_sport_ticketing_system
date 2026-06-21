@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,24 +9,22 @@
 
     <!-- Boxicons & Google Fonts -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap"
+        rel="stylesheet">
 
     <!-- Unified CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
 
     {% block head %}{% endblock %}
     {% block extra_css %}{% endblock %}
     {% block styles %}{% endblock %}
 
-    <!-- CSRF and App State Global Setup -->
-    <script>
-        window.CSRF_TOKEN = "{{ csrf_token() }}";
-    </script>
-
     <!-- Anti-Flash Theme Handler -->
     <script>
-        (function() {
+        (function () {
             var userTheme = "{{ session.get('user', {}).get('theme_preference', '') }}";
             var localTheme = localStorage.getItem('theme') || 'light';
             var finalTheme = userTheme || localTheme;
@@ -49,6 +48,7 @@
             vertical-align: middle;
             display: inline-block;
         }
+
         .user-avatar-initial {
             width: 22px;
             height: 22px;
@@ -62,6 +62,7 @@
             font-size: 0.7rem;
             flex-shrink: 0;
         }
+
         .unified-footer {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -70,12 +71,14 @@
             margin-top: 60px;
             transition: background-color 0.3s ease;
         }
+
         .footer-grid {
             display: grid;
             grid-template-columns: 1.5fr 1fr 1fr;
             gap: 40px;
             margin-bottom: 30px;
         }
+
         .footer-brand h3 {
             font-size: 1.1rem;
             font-weight: 700;
@@ -83,12 +86,14 @@
             margin-bottom: 12px;
             text-transform: uppercase;
         }
+
         .footer-brand p {
             font-size: 0.8rem;
             line-height: 1.7;
             color: var(--muted);
             max-width: 320px;
         }
+
         .footer-col h4 {
             font-size: 0.85rem;
             font-weight: 600;
@@ -97,6 +102,7 @@
             letter-spacing: 0.05em;
             color: var(--text);
         }
+
         .footer-col ul {
             list-style: none;
             padding: 0;
@@ -105,12 +111,17 @@
             flex-direction: column;
             gap: 10px;
         }
+
         .footer-col ul li a {
             font-size: 0.8rem;
             color: var(--muted);
             transition: color 0.25s ease;
         }
-        .footer-col ul li a:hover { color: #7494ec; }
+
+        .footer-col ul li a:hover {
+            color: #7494ec;
+        }
+
         .footer-bottom {
             display: flex;
             justify-content: space-between;
@@ -122,27 +133,89 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+
         @media (max-width: 700px) {
-            .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
         }
 
         /* Dark mode overrides */
-        html.dark-mode body { background: var(--page-bg); color: var(--text); }
-        html.dark-mode .stat-item { background: var(--surface) !important; }
-        html.dark-mode .stat-item:nth-child(3) { background: var(--surface2) !important; }
-        html.dark-mode .stat-label { color: var(--muted) !important; }
-        html.dark-mode .story-content { background: var(--surface) !important; }
-        html.dark-mode .story-text { color: var(--muted) !important; }
-        html.dark-mode .adventures-section { background: var(--page-bg) !important; }
-        html.dark-mode .activity-card { background: var(--surface) !important; border-color: var(--border) !important; }
-        html.dark-mode .card-meta, html.dark-mode .card-desc { color: var(--muted) !important; }
-        html.dark-mode .reviews-section, html.dark-mode .testimonials-section { background: var(--surface2) !important; }
-        html.dark-mode .review-card, html.dark-mode .testimonial-card { background: var(--surface) !important; color: var(--text) !important; }
-        html.dark-mode .review-text, html.dark-mode .testimonial-text { color: var(--muted) !important; }
-        html.dark-mode .section-title, html.dark-mode .section-heading { color: var(--text) !important; }
-        html.dark-mode .section-desc, html.dark-mode .section-sub { color: var(--muted) !important; }
-        html.dark-mode .btn-solid { background: var(--accent) !important; color: #fff !important; }
-        html.dark-mode .btn-dark { background: var(--surface) !important; color: var(--text) !important; }
+        html.dark-mode body {
+            background: var(--page-bg);
+            color: var(--text);
+        }
+
+        html.dark-mode .stat-item {
+            background: var(--surface) !important;
+        }
+
+        html.dark-mode .stat-item:nth-child(3) {
+            background: var(--surface2) !important;
+        }
+
+        html.dark-mode .stat-label {
+            color: var(--muted) !important;
+        }
+
+        html.dark-mode .story-content {
+            background: var(--surface) !important;
+        }
+
+        html.dark-mode .story-text {
+            color: var(--muted) !important;
+        }
+
+        html.dark-mode .adventures-section {
+            background: var(--page-bg) !important;
+        }
+
+        html.dark-mode .activity-card {
+            background: var(--surface) !important;
+            border-color: var(--border) !important;
+        }
+
+        html.dark-mode .card-meta,
+        html.dark-mode .card-desc {
+            color: var(--muted) !important;
+        }
+
+        html.dark-mode .reviews-section,
+        html.dark-mode .testimonials-section {
+            background: var(--surface2) !important;
+        }
+
+        html.dark-mode .review-card,
+        html.dark-mode .testimonial-card {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+        }
+
+        html.dark-mode .review-text,
+        html.dark-mode .testimonial-text {
+            color: var(--muted) !important;
+        }
+
+        html.dark-mode .section-title,
+        html.dark-mode .section-heading {
+            color: var(--text) !important;
+        }
+
+        html.dark-mode .section-desc,
+        html.dark-mode .section-sub {
+            color: var(--muted) !important;
+        }
+
+        html.dark-mode .btn-solid {
+            background: var(--accent) !important;
+            color: #fff !important;
+        }
+
+        html.dark-mode .btn-dark {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+        }
 
         /* Search Bar & Autosuggestions */
         .nav-search {
@@ -155,6 +228,7 @@
             border: 1px solid var(--border);
             margin-right: 15px;
         }
+
         .nav-search input {
             border: none;
             background: transparent;
@@ -164,9 +238,11 @@
             font-family: inherit;
             width: 200px;
         }
+
         .nav-search i {
             color: var(--muted);
         }
+
         .search-suggestions {
             position: absolute;
             top: 100%;
@@ -176,15 +252,17 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             margin-top: 5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             z-index: 1000;
             display: none;
             flex-direction: column;
             overflow: hidden;
         }
+
         .search-suggestions.show {
             display: flex;
         }
+
         .suggestion-item {
             padding: 10px 15px;
             display: flex;
@@ -195,118 +273,127 @@
             border-bottom: 1px solid var(--border);
             transition: background 0.2s;
         }
+
         .suggestion-item:last-child {
             border-bottom: none;
         }
+
         .suggestion-item:hover {
             background: rgba(116, 148, 236, 0.1);
         }
+
         .suggestion-item img {
             width: 30px;
             height: 30px;
             border-radius: 4px;
             object-fit: cover;
         }
+
         .suggestion-info {
             display: flex;
             flex-direction: column;
         }
+
         .suggestion-name {
             font-size: 0.85rem;
             font-weight: 600;
         }
+
         .suggestion-cat {
             font-size: 0.7rem;
             color: var(--muted);
         }
+
         @media (max-width: 768px) {
-            .nav-search { display: none; }
+            .nav-search {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
-
-    <!-- ══ Navbar ══ -->
-    <header class="site-header">
-        <div class="top-nav">
-            <a href="/" class="brand">THRILL<em>SPHERE</em></a>
-
-            <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
-                <span></span><span></span><span></span>
-            </button>
-
-            <div class="nav-content" data-nav-content>
-                <nav class="nav-links">
-            <a href="{{ url_for('auth.home') }}" class="nav-item">Explore</a>
-            <a href="{{ url_for('event.events_page') }}" class="nav-item">Events</a>
-            <a href="{{ url_for('auth.gallery') }}" class="nav-item">Gallery</a>
-            <a href="{{ url_for('auth.reviews') }}" class="nav-item">Reviews</a>
-            {% if session.get('user') %}
-                        <a href="/dashboard" data-nav-link data-i18n="nav.dashboard">Dashboard</a>
-                        <a href="/wishlist" data-nav-link class="nav-wishlist-link">
-                           <span data-i18n="nav.wishlist">Wishlist</span>
-                           {% if wishlist_count and wishlist_count > 0 %}
-                               <span class="wishlist-badge">{{ wishlist_count }}</span>
-                           {% endif %}
-                        </a>
-                        <a href="/manage" data-nav-link data-i18n="nav.profile">Profile</a>
-                    {% endif %}
-                </nav>
-
-                <div class="nav-actions">
-                    <!-- Search Bar -->
-                    <div class="nav-search">
-                        <i class='bx bx-search'></i>
-                        <input type="text" id="globalSearchInput" placeholder="Search adventures..." autocomplete="off">
-                        <div class="search-suggestions" id="searchSuggestions"></div>
-                    </div>
-
-                    <!-- Language Toggle -->
-                    <button id="langToggleBtn" aria-label="Toggle language">नेपाली</button>
-
-                    <!-- Theme Toggle -->
-                    <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
-                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                    </button>
-
-                    {% if session.get('user') %}
-                        <!-- Notifications -->
-                        <div class="notification-wrap">
-                            <button class="icon-button notification-button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
-                                <i class='bx bxs-bell' style="font-size:1.2rem; color:var(--text-color);"></i>
-                                <span class="notification-dot" style="display: none;"></span>
-                            </button>
-                            <div class="notification-menu" data-notification-menu style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-                                    <h4 class="menu-title" style="margin:0; font-size:0.95rem; font-weight:700;">Notifications</h4>
-                                    <button onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: var(--accent); font-weight: 600; padding:0;">Mark all read</button>
-                                </div>
-                                <div id="notification-dropdown-list">
-                                    <p class="menu-empty">No new notifications</p>
-                                </div>
+    </div>
+<!-- ══ Navbar ══ -->
+<header class="site-header">
+    <div class="top-nav">
+        <a href="/" class="brand">THRILL<em>SPHERE</em></a>
+        <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-content" data-nav-content>
+            <div class="nav-actions">
+                <!-- Search Bar -->
+                <div class="nav-search">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="globalSearchInput" placeholder="Search adventures..." autocomplete="off" data-i18n-ph="nav.search-ph" />
+                    <div class="search-suggestions" id="searchSuggestions"></div>
+                </div>
+                <!-- Theme Toggle -->
+                <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <!-- Language Toggle -->
+                <button class="icon-button" id="langToggleBtn" aria-label="Toggle language"><span class="lang-label">नेपाली</span></button>
+                {% if session.get('user') %}
+                    <!-- Notifications -->
+                    <div class="notification-wrap">
+                        <button class="icon-button notification-button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+                            <i class='bx bxs-bell' style="font-size:1.2rem; color:var(--text-color);"></i>
+                            <span class="notification-dot" style="display: none;"></span>
+                        </button>
+                        <div class="notification-menu" data-notification-menu style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                <h4 class="menu-title" style="margin:0; font-size:0.95rem; font-weight:700;">Notifications</h4>
+                                <button onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: var(--accent); font-weight: 600; padding:0;">Mark all read</button>
+                            </div>
+                            <div id="notification-dropdown-list">
+                                <p class="menu-empty">No new notifications</p>
                             </div>
                         </div>
-                        
-                        <span class="user-chip">
-                            {% if session['user'].get('avatar') %}
-                                <img src="{{ session['user']['avatar'] }}" alt="avatar" class="user-avatar-img">
-                            {% else %}
-                                <span class="user-avatar-initial">{{ session['user']['username'][0].upper() }}</span>
-                            {% endif %}
-                            {{ session['user']['username'] }}
-                        </span>
-                        <a href="{{ url_for('auth.logout') }}" class="logout-button">
-                            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            <span data-i18n="nav.logout">Logout</span>
-                        </a>
-                    {% else %}
-                        <a href="/login" class="user-chip" data-i18n="nav.login">Login</a>
-                        <a href="/register" class="user-chip" style="background:var(--accent);color:#fff;" data-i18n="nav.register">Register</a>
-                    {% endif %}
+                    </div>
+                    <span class="user-chip">
+                        {% if session['user'].get('avatar') %}
+                            <img src="{{ session['user']['avatar'] }}" alt="avatar" class="user-avatar-img" />
+                        {% else %}
+                            <span class="user-avatar-initial">{{ session['user']['username'][0].upper() }}</span>
+                        {% endif %}
+                        {{ session['user']['username'] }}
+                    </span>
+                    <a href="{{ url_for('auth.logout') }}" class="logout-button" aria-label="Logout"><i class='bx bx-log-out'></i> Logout</a>
+                {% else %}
+                    <a href="/login" class="icon-button" aria-label="Login" title="Login">
+                        <svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4h4v-6h-4z"/></svg>
+                    </a>
+                    <a href="/register" class="icon-button" aria-label="Register" title="Register">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </a>
+                {% endif %}
+
+                <!-- Three-dot menu button -->
+                <div class="more-menu-wrapper">
+                    <button id="moreOptionsToggle" class="more-button" aria-label="More options" aria-expanded="false"><i class='bx bx-dots-vertical-rounded'></i></button>
+                    <div id="moreOptionsMenu" class="more-menu">
+                        <a href="{{ url_for('auth.home') }}" class="nav-button" aria-label="Explore"><i class='bx bx-compass'></i> Explore</a>
+                        <a href="{{ url_for('event.events_page') }}" class="nav-button" aria-label="Events"><i class='bx bx-calendar'></i> Events</a>
+                        <a href="{{ url_for('auth.gallery') }}" class="nav-button" aria-label="Gallery"><i class='bx bx-image'></i> Gallery</a>
+                        <a href="{{ url_for('auth.reviews') }}" class="nav-button" aria-label="Reviews"><i class='bx bx-star'></i> Reviews</a>
+                        <a href="{{ url_for('auth.home') }}" class="nav-button" aria-label="Home"><i class='bx bx-home'></i> Home</a>
+                        <a href="{{ url_for('auth.dashboard') }}" class="nav-button" aria-label="Dashboard"><i class='bx bx-dashboard'></i> Dashboard</a>
+                        <a href="{{ url_for('auth_admin.login_admin') }}" class="nav-button" aria-label="Admin Login"><i class='bx bx-lock'></i> Admin Login</a>
+                        {% if session.get('user') %}
+                            <a href="/wishlist" class="nav-item nav-wishlist-link" aria-label="Wishlist"><i class='bx bx-heart'></i> Wishlist{% if wishlist_count and wishlist_count > 0 %}<span class="wishlist-badge">{{ wishlist_count }}</span>{% endif %}</a>
+                            <a href="/manage" class="nav-item" aria-label="Profile"><i class='bx bx-user-circle'></i> Profile</a>
+                            <a href="/referral" class="nav-item" aria-label="Refer &amp; Earn"><i class='bx bx-gift'></i> Refer &amp; Earn</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
     <!-- ══ Dynamic Content ══ -->
     <main class="page-shell {% block page_shell_class %}{% endblock %}">
@@ -318,7 +405,8 @@
         <div class="footer-grid">
             <div class="footer-brand">
                 <h3>Thrill Sphere</h3>
-                <p data-i18n="footer.tagline">Kathmandu's premier adventure sports booking platform. We curate secure, certified, and unforgettable adrenaline-fueled experiences in Nepal.</p>
+                <p data-i18n="footer.tagline">Kathmandu's premier adventure sports booking platform. We curate secure,
+                    certified, and unforgettable adrenaline-fueled experiences in Nepal.</p>
             </div>
             <div class="footer-col">
                 <h4 data-i18n="footer.adventures">Adventures</h4>
@@ -336,6 +424,7 @@
                     <li><a href="/dashboard" data-i18n="footer.dashboard">Dashboard</a></li>
                     <li><a href="/wishlist" data-i18n="footer.my-wishlist">My Wishlist</a></li>
                     <li><a href="/manage" data-i18n="footer.profile-mgmt">Profile Management</a></li>
+                    <li><a href="/referral">Refer &amp; Earn</a></li>
                 </ul>
             </div>
         </div>
@@ -345,83 +434,105 @@
         </div>
     </footer>
 
-    <!-- Global Scripts -->
+    <!-- Global Chat Widget (chat with us) -->
+    <div class="chatbot-widget" id="chatbot-widget">
+        <div class="chatbot-header" id="chatbot-toggle-btn">
+            <span><i class='bx bx-message-rounded-dots'></i> Chat with us</span>
+            <span class="chatbot-toggle" id="chatbot-arrow">▼</span>
+        </div>
+        <div class="chatbot-body" id="chatbot-body">
+            <div class="chatbot-messages" id="chatbot-messages"></div>
+            <div class="chatbot-typing" id="chatbot-typing" style="display:none;">Assistant is typing…</div>
+            <div class="chatbot-input-row">
+                <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Ask about activities, prices, bookings…" />
+                <button type="button" id="chatbot-send-btn" class="chatbot-send-btn" aria-label="Send">
+                    <i class='bx bx-send'></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+
     <script>
         // Global Search Autosuggestion (scoped to avoid clashing with events.js)
         (function () {
-        const searchInput = document.getElementById('globalSearchInput');
-        const searchSuggestions = document.getElementById('searchSuggestions');
-        let searchTimeout;
+            const searchInput = document.getElementById('globalSearchInput');
+            const searchSuggestions = document.getElementById('searchSuggestions');
+            let searchTimeout;
 
-        if (searchInput && searchSuggestions) {
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                clearTimeout(searchTimeout);
-                
-                if (query.length < 1) {
-                    searchSuggestions.classList.remove('show');
-                    return;
-                }
+            if (searchInput && searchSuggestions) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.trim();
+                    clearTimeout(searchTimeout);
 
-                searchTimeout = setTimeout(async () => {
-                    try {
-                        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-                        if (res.ok) {
-                            const data = await res.json();
-                            searchSuggestions.innerHTML = '';
-                            if (data.length > 0) {
-                                data.forEach(item => {
-                                    const a = document.createElement('a');
-                                    a.className = 'suggestion-item';
-                                    a.href = `/activity/${item.id}`;
-                                    
-                                    const img = document.createElement('img');
-                                    img.src = `/static/images/${item.img}`;
-                                    img.onerror = function() { this.src = '/static/images/Mountain-Main.png'; };
-                                    
-                                    const info = document.createElement('div');
-                                    info.className = 'suggestion-info';
-                                    
-                                    const name = document.createElement('span');
-                                    name.className = 'suggestion-name';
-                                    name.textContent = item.name;
-                                    
-                                    const cat = document.createElement('span');
-                                    cat.className = 'suggestion-cat';
-                                    cat.textContent = item.category;
-                                    
-                                    info.appendChild(name);
-                                    info.appendChild(cat);
-                                    
-                                    a.appendChild(img);
-                                    a.appendChild(info);
-                                    
-                                    searchSuggestions.appendChild(a);
-                                });
-                                searchSuggestions.classList.add('show');
-                            } else {
-                                searchSuggestions.innerHTML = '<div class="suggestion-item"><span class="suggestion-name" style="color:var(--muted)">No results found</span></div>';
-                                searchSuggestions.classList.add('show');
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Search error:', err);
+                    if (query.length < 1) {
+                        searchSuggestions.classList.remove('show');
+                        return;
                     }
-                }, 300);
-            });
 
-            // Close suggestions when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
-                    searchSuggestions.classList.remove('show');
-                }
-            });
-        }
+                    searchTimeout = setTimeout(async () => {
+                        try {
+                            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                searchSuggestions.innerHTML = '';
+                                if (data.length > 0) {
+                                    data.forEach(item => {
+                                        const a = document.createElement('a');
+                                        a.className = 'suggestion-item';
+                                        a.href = `/activity/${item.id}`;
+
+                                        const img = document.createElement('img');
+                                        img.src = `/static/images/${item.img}`;
+                                        img.onerror = function () { this.src = '/static/images/Mountain-Main.png'; };
+
+                                        const info = document.createElement('div');
+                                        info.className = 'suggestion-info';
+
+                                        const name = document.createElement('span');
+                                        name.className = 'suggestion-name';
+                                        name.textContent = item.name;
+
+                                        const cat = document.createElement('span');
+                                        cat.className = 'suggestion-cat';
+                                        cat.textContent = item.category;
+
+                                        info.appendChild(name);
+                                        info.appendChild(cat);
+
+                                        a.appendChild(img);
+                                        a.appendChild(info);
+
+                                        searchSuggestions.appendChild(a);
+                                    });
+                                    searchSuggestions.classList.add('show');
+                                } else {
+                                    searchSuggestions.innerHTML = '<div class="suggestion-item"><span class="suggestion-name" style="color:var(--muted)">No results found</span></div>';
+                                    searchSuggestions.classList.add('show');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Search error:', err);
+                        }
+                    }, 100);
+                });
+
+                // Close suggestions when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                        searchSuggestions.classList.remove('show');
+                    }
+                });
+            }
         })();
     </script>
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

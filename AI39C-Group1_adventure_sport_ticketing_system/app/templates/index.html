@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Links — Thrill Sphere{% endblock %}
+
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quicklink.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Bottom Share Section -->
+<div class="share-wrapper">
+
+    <!-- Share Button -->
+    <button class="share-btn" onclick="toggleMenu()">
+        <i class="fa-solid fa-share-nodes"></i>
+    </button>
+
+    <!-- Social Icons -->
+    <div class="social-icons" id="socialIcons">
+
+        <!-- Instagram -->
+        <a href="https://www.instagram.com/thrillsphere22/" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-instagram"></i>
+        </a>
+
+        <!-- WhatsApp -->
+        <a href="https://wa.me/9779868935600?text=Hello%20Thrill%20Sphere!" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+
+        <!-- Facebook -->
+        <a href="https://www.facebook.com/profile.php?id=61591072228614" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-facebook-f"></i>
+        </a>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
