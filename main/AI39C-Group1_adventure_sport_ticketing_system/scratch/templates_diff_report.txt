@@ -1,0 +1,180 @@
+DIFFERENT: Base.html <-> base.html (diff lines: 412)
+   --- A/Base.html
+
+   +++ B/base.html
+
+   @@ -3,14 +3,402 @@
+
+    <head>
+        <meta charset="UTF-8">
+   +    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   -    <title>{% block title %}Thrill Sphere{% endblock %}</title>
+   -    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='payment.css') }}">
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='calendar.css') }}">
+   +    <title>{% block title %}Thrill Sphere — Kathmandu, Nepal{% endblock %}</title>
+   +
+   +    <!-- Boxicons & Google Fonts -->
+   +    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+   +    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+   +
+   +    <!-- Unified CSS -->
+   +    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+   +    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+   +
+   +    {% block head %}{% endblock %}
+   +    {% block extra_css %}{% endblock %}
+   +    {% block styles %}{% endblock %}
+   +
+   +    <!-- Anti-Flash Theme Handler -->
+   +    <script>
+   +        (function() {
+   +            var userTheme = "{{ session.get('user', {}).get('theme_preference', '') }}";
+--------------------------------------------------
+Identical: change_password_Admin.html <-> change_password_Admin.html
+DIFFERENT: Dashboard.html <-> Dashboard.html (diff lines: 161)
+   --- A/Dashboard.html
+
+   +++ B/Dashboard.html
+
+   @@ -1,5 +1,10 @@
+
+   -{% extends "Base.html" %}
+   +{% extends "base.html" %}
+    {% block title %}Dashboard — Thrill Sphere{% endblock %}
+   -{% block head %}{% endblock %}
+   +{% block extra_css %}
+   +<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+   +<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
+   +<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+   +<link rel="stylesheet" href="{{ url_for('static', filename='css/payment_modal.css') }}">
+   +{% endblock %}
+    
+    {% block content %}
+   @@ -7,16 +12,11 @@
+
+    <header class="navbar-horizontal">
+      <div class="nav-container">
+   -    <div class="nav-brand">THRILL<em>SPHERE</em></div>
+   +    <a href="/" class="nav-brand" style="text-decoration: none;">THRILL<em>SPHERE</em></a>
+        <nav class="nav-links">
+   +      <a href="/" class="nav-item" style="text-decoration: none;">Home</a>
+          <a class="nav-item active" onclick="switchSection('overview', this)">Overview</a>
+          <a class="nav-item" onclick="switchSection('bookings', this)">My Bookings</a>
+          <a class="nav-item" onclick="switchSection('book-new', this)">Book Activity</a>
+   -      <a class="nav-item" onclick="switchSection('my-calendar', this)">My Calendar</a>
+   -      <a class="nav-item" onclick="switchSection('notifications', this)">
+   -        Notifications
+   -        {% if notifications and notifications | selectattr('status', 'equalto', 'unread') | list | length > 0 %}
+   -          <span class="notif-badge" style="background: var(--orange); color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 4px; font-weight: 700;">{{ notifications | selectattr('status', 'equalto', 'unread') | list | length }}</span>
+--------------------------------------------------
+DIFFERENT: dashboard_Admin.html <-> dashboard_Admin.html (diff lines: 137)
+   --- A/dashboard_Admin.html
+
+   +++ B/dashboard_Admin.html
+
+   @@ -13,5 +13,5 @@
+
+        <!-- Stylesheets -->
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_Admin.css') }}">
+   +    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_Admin.css') }}">
+        <script>
+            // Inject server variables for client-side use
+   @@ -456,11 +456,11 @@
+
+    
+                            <div class="form-group">
+   -                            <label for="notifTitle">Alert Title <small class="text-secondary">(max 120 chars)</small></label>
+   -                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" maxlength="120" required>
+   +                            <label for="notifTitle">Alert Title</label>
+   +                            <input type="text" id="notifTitle" placeholder="e.g. Booking rescheduled, Special Offer" required>
+                            </div>
+    
+                            <div class="form-group">
+   -                            <label for="notifMessage">Notification Message <small class="text-secondary">(max 600 chars)</small></label>
+   -                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." maxlength="600" required></textarea>
+   +                            <label for="notifMessage">Notification Message</label>
+   +                            <textarea id="notifMessage" rows="5" placeholder="Type instructions or details to display in-app..." required></textarea>
+                            </div>
+    
+   @@ -468,11 +468,45 @@
+
+                                <label>Delivery Channel</label>
+                                <div class="checkbox-group">
+   -                                <label><input type="checkbox" checked disabled> In-App Dashboard Notification <small class="text-secondary">(active)</small></label>
+   -                                <label><input type="checkbox" disabled> Email Dispatcher <small class="text-secondary">(not connected — dev mode only)</small></label>
+--------------------------------------------------
+DIFFERENT: Login.html <-> login.html (diff lines: 103)
+   --- A/Login.html
+
+   +++ B/login.html
+
+   @@ -1,39 +1,48 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+   +
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   -    <title>Login — Thrill Sphere</title>
+   +    <title>Login Page</title>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
+   +    <link rel="stylesheet" href="/static/css/login.css">
+   +    <script>
+   +        (function() {
+   +            const savedTheme = localStorage.getItem('theme') || 'light';
+   +            if (savedTheme === 'dark') {
+   +                document.documentElement.classList.add('dark-mode');
+   +            }
+   +        })();
+   +    </script>
+    </head>
+    
+    <body>
+   +
+   +    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+   +        <i class='bx bx-moon'></i>
+   +    </button>
+--------------------------------------------------
+Identical: login_Admin.html <-> login_Admin.html
+DIFFERENT: Register.html <-> register.html (diff lines: 83)
+   --- A/Register.html
+
+   +++ B/register.html
+
+   @@ -1,40 +1,50 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+   +
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   -    <title>Register — Thrill Sphere</title>
+   +    <title>Register Page</title>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+   -    <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
+   +    <link rel="stylesheet" href="/static/css/register.css">
+   +    <script>
+   +        (function() {
+   +            const savedTheme = localStorage.getItem('theme') || 'light';
+   +            if (savedTheme === 'dark') {
+   +                document.documentElement.classList.add('dark-mode');
+   +            }
+   +        })();
+   +    </script>
+    </head>
+    
+    <body>
+   +
+   +    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+   +        <i class='bx bx-moon'></i>
+   +    </button>
+--------------------------------------------------

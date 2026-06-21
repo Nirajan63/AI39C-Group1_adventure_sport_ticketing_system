@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Management — Thrill Sphere{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile_manage.css') }}">
+<style>
+    /* Styling adjustments to align with unified header */
+    .container {
+        margin-top: 30px !important;
+        margin-bottom: 50px !important;
+    }
+    .form-header h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-overlay"></div>
+
+<main class="container">
+
+  <!-- Left Sidebar Card -->
+  <aside class="profile-card glass">
+    <div class="cover-wrap">
+      <img id="coverImg" src="{% if user.cover %}{{ user.cover }}{% else %}https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2070&auto=format&fit=crop{% endif %}" alt="cover">
+    </div>
+
+    <div class="profile-content">
+      <div class="avatar-wrap">
+        {% if user.avatar %}
+          <img id="avatarImg" src="{{ user.avatar }}" alt="avatar">
+        {% else %}
+          <img id="avatarImg" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1200&auto=format&fit=crop" alt="avatar">
+        {% endif %}
+      </div>
+
+      <input type="file" id="avatarFile" hidden accept="image/*">
+
+      <h2 id="displayName">{{ user.first_name }} {{ user.last_name }}</h2>
+      <p id="displayRole">{{ user.role or 'Adventure Seeker' }}</p>
+
+      <button class="btn outline small" onclick="avatarFile.click()">
+        Change Avatar
+      </button>
+
+      <div class="stats">
+        <div class="stat">
+          <span id="statBookings">12</span>
+          <p>Bookings</p>
+        </div>
+
+        <div class="stat">
+          <span id="statSaved">{{ wishlist_count }}</span>
+          <p>Saved</p>
+        </div>
+
+        <div class="stat">
+          <span id="statPoints">450</span>
+          <p>Points</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Profile Management Card -->
+  <section class="form-card glass">
+    <div class="form-header">
+      <h1>Profile Management</h1>
+      <p>Customize your adventure identity.</p>
+    </div>
+
+    <form id="profileForm" onsubmit="event.preventDefault();">
+
+      <div class="grid">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" id="firstName" placeholder="First Name" value="{{ user.first_name }}">
+        </div>
+
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Last Name" value="{{ user.last_name }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com" value="{{ user.email }}">
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" placeholder="+977 98XXXXXXXX" value="{{ user.phone }}">
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <input type="text" id="city" placeholder="Kathmandu" value="{{ user.city }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Bio</label>
+        <textarea id="bio" placeholder="Tell the world about your adventure spirit...">{{ user.bio }}</textarea>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Language</label>
+          <select id="language">
+            <option value="en" {% if user.language == 'en' %}selected{% endif %}>English</option>
+            <option value="ne" {% if user.language == 'ne' %}selected{% endif %}>Nepali</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Adventure Role</label>
+          <input type="text" id="role" placeholder="Mountain Explorer" value="{{ user.role }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cover Photo</label>
+        <input type="file" id="coverFile" accept="image/*">
+      </div>
+
+      <!-- Preferences / Theme Customizations -->
+      <div class="form-header" style="margin-top: 35px; border-top: 1px solid var(--border); padding-top: 25px;">
+        <h2>System Preferences</h2>
+        <p>Choose your persistent visual theme experience.</p>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Theme Preference</label>
+          <select id="themePreference">
+            <option value="light" {% if user.theme_preference == 'light' %}selected{% endif %}>Light Mode</option>
+            <option value="dark" {% if user.theme_preference == 'dark' %}selected{% endif %}>Dark Mode</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Sync Status</label>
+          <input type="text" disabled placeholder="Synced with MySQL Database ✓" style="opacity: 0.7; font-weight: 500; cursor: not-allowed; border-color: rgba(0, 200, 120, 0.4); background: rgba(0, 200, 120, 0.05); color: #00c878;">
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top: 30px;">
+        <button type="button" class="btn primary" id="saveBtn">Save Profile</button>
+        <button type="button" class="btn outline" id="resetBtn">Reset</button>
+        <button type="button" class="btn danger" id="deleteBtn">Clear</button>
+      </div>
+
+    </form>
+  </section>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile_manage.js') }}"></script>
+<script>
+    // Preview toggle handler
+    const previewBtn = document.getElementById('previewBtn');
+    if (previewBtn) {
+        previewBtn.addEventListener('click', () => {
+            window.location.href = '/dashboard';
+        });
+    }
+</script>
+{% endblock %}

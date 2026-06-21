@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+{% block title %}Home — Thrill Sphere Nepal{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* Heart Icon Pop Micro-Animation */
+  @keyframes heartPop {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.3);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-pop {
+    animation: heartPop 0.3s ease-in-out;
+  }
+
+  /* Section Anchors and Margins Adjustments */
+  .adventures-section {
+    padding-top: 60px !important;
+    scroll-margin-top: 80px;
+  }
+
+  /* Share Button Container - Scroll Animation */
+  .share-wrapper {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    z-index: 1000;
+  }
+
+  /* Share Button */
+  .share-btn {
+    width: 75px;
+    height: 75px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: 0.3s ease;
+  }
+
+  .share-btn i {
+    font-size: 30px;
+    color: #333;
+  }
+
+  .share-btn:hover {
+    transform: scale(1.08);
+  }
+
+  /* Scroll Jump Animation */
+  @keyframes buttonJump {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .share-btn.scrolling {
+    animation: buttonJump 0.6s ease-in-out infinite;
+  }
+
+  /* Social Icons */
+  .social-icons {
+    position: absolute;
+    bottom: 95px;
+    left: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: 0.4s ease;
+  }
+
+  .social-icons.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .social-icons a {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(15px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+    text-decoration: none;
+    transition: 0.3s ease;
+  }
+
+  .social-icons a:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+  }
+
+  .social-icons a i {
+    font-size: 24px;
+  }
+
+  /* Chatbot widget styles now live site-wide in static/css/chatbot.css,
+       loaded once from base.html, so every page gets the same widget. */
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════ HERO SLIDESHOW ══════════════ -->
+<section class="hero">
+  <div class="hero-slides">
+    <div class="hero-slide active"></div>
+    <div class="hero-slide"></div>
+    <div class="hero-slide"></div>
+    <div class="hero-slide"></div>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <p class="hero-tag" data-i18n="home.hero-tag">Adventure Travel — Kathmandu, Nepal</p>
+    <h1 class="hero-title" data-i18n="home.hero-title">
+      Where Every<br>
+      <em>Thrill</em> Beckons
+    </h1>
+    <p class="hero-desc" data-i18n="home.hero-desc">
+      Nepal's premier adventure sports booking platform. We curate
+      journeys that challenge limits and shape memories that endure a lifetime.
+    </p>
+    <div class="hero-actions">
+      <a href="events" class="btn-outline" data-i18n="home.explore-activities">Explore Activities</a>
+      <a href="/dashboard" class="btn-solid" data-i18n="home.book-trip">Book a Trip</a>
+    </div>
+  </div>
+
+  <div class="hero-dots">
+    <div class="hero-dot active" data-index="0"></div>
+    <div class="hero-dot" data-index="1"></div>
+    <div class="hero-dot" data-index="2"></div>
+    <div class="hero-dot" data-index="3"></div>
+  </div>
+
+  <div class="ticker-bar">
+    <div class="ticker-item"><span class="ticker-dot"></span> Paragliding</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> River Rafting</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Himalayan Trek</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Bungee Jump</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Zip Line</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Canyoning</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Rock Climbing</div>
+  </div>
+</section>
+
+
+<!-- ══════════════ OUR ADVENTURES ══════════════ -->
+<section class="adventures-section" id="activities-anchor">
+  <div class="section-header">
+    <div>
+      <p class="section-label" data-i18n="home.what-we-offer">What We Offer</p>
+      <h2 class="section-title" data-i18n="home.our-adventures">Our <em>Adventures</em></h2>
+    </div>
+    <p class="section-desc" data-i18n="home.adventures-desc">
+      From soaring paragliders over Pokhara to roaring white-water rapids — every adventure
+      is supervised by certified professionals with your safety as our prime priority.
+    </p>
+  </div>
+
+  <div class="adventures-grid">
+    <!-- Card 1 — Paragliding -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/paragliding.jpg') }}" alt="Paragliding">
+      <div class="adv-card-overlay"></div>
+
+      <!-- Wishlist Toggle Floating Heart Button -->
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'paragliding')"
+        id="btn-wishlist-paragliding" aria-label="Save to Wishlist">
+        <i class="bx {% if 'paragliding' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
+      <div class="adv-card-info">
+        <p class="adv-category" data-i18n="home.adv-sky">Sky</p>
+        <h3 class="adv-name" data-i18n="home.act-paragliding">Paragliding</h3>
+        <a href="/activity/paragliding" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 2 — River Rafting -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/rafting.jpg') }}" alt="River Rafting">
+      <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'rafting')" id="btn-wishlist-rafting"
+        aria-label="Save to Wishlist">
+        <i class="bx {% if 'rafting' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
+      <div class="adv-card-info">
+        <p class="adv-category" data-i18n="home.adv-water">Water</p>
+        <h3 class="adv-name" data-i18n="home.act-rafting">River Rafting</h3>
+        <a href="/activity/rafting" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 3 — Himalayan Trek -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/trekking.jpg') }}" alt="Himalayan Trek">
+      <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'trekking')" id="btn-wishlist-trekking"
+        aria-label="Save to Wishlist">
+        <i class="bx {% if 'trekking' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
+      <div class="adv-card-info">
+        <p class="adv-category" data-i18n="home.adv-mountain">Mountain</p>
+        <h3 class="adv-name" data-i18n="home.act-trekking">Himalayan Trekking</h3>
+        <a href="/activity/trekking" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 4 — Bungee Jump -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/bungee.jpg') }}" alt="Bungee Jump">
+      <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'bungee')" id="btn-wishlist-bungee"
+        aria-label="Save to Wishlist">
+        <i class="bx {% if 'bungee' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
+      <div class="adv-card-info">
+        <p class="adv-category" data-i18n="home.adv-extreme">Extreme</p>
+        <h3 class="adv-name" data-i18n="home.act-bungee">Bungee Jumping</h3>
+        <a href="/activity/bungee" class="adv-arrow">→</a>
+      </div>
+    </div>
+
+    <!-- Card 5 — Zip Line -->
+    <div class="adv-card">
+      <img src="{{ url_for('static', filename='images/zipline.jpg') }}" alt="Zip Line">
+      <div class="adv-card-overlay"></div>
+
+      {% if session.get('user') %}
+      <button class="wishlist-float-btn" onclick="toggleWishlistHome(event, 'ziplining')" id="btn-wishlist-ziplining"
+        aria-label="Save to Wishlist">
+        <i class="bx {% if 'ziplining' in saved_wishlist %}bxs-heart{% else %}bx-heart{% endif %}"></i>
+      </button>
+      {% endif %}
+
+      <div class="adv-card-info">
+        <p class="adv-category" data-i18n="home.adv-aerial">Aerial</p>
+        <h3 class="adv-name" data-i18n="home.act-ziplining">Zip-lining</h3>
+        <a href="/activity/ziplining" class="adv-arrow">→</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ STATS METRICS ══════════════ -->
+<div class="stats-section">
+  <div class="stat-item">
+    <div class="stat-number">500+</div>
+    <div class="stat-label" data-i18n="home.stat-adventurers">Thrilled Adventurers</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">6</div>
+    <div class="stat-label" data-i18n="home.stat-activities">Epic Activities</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">5+</div>
+    <div class="stat-label" data-i18n="home.stat-years">Years Operating</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">100%</div>
+    <div class="stat-label" data-i18n="home.stat-safety">100% Safety Track Record</div>
+  </div>
+</div>
+
+
+<!-- ══════════════ OUR STORY ══════════════ -->
+<section class="story-section">
+  <div class="story-image">
+    <img src="{{ url_for('static', filename='images/bg.jpg') }}" alt="Himalayan landscape">
+  </div>
+  <div class="story-content">
+    <p class="section-label" data-i18n="home.our-story-label">Our Story</p>
+    <h2 class="section-title" data-i18n="home.our-story-title">Rooted in <em>Kathmandu,</em><br>Built for Adventure</h2>
+    <div class="story-divider"></div>
+    <p class="story-text" data-i18n="home.story-1">
+      Thrill Sphere was founded by a team of passionate explorers in Kathmandu —
+      one of the world's most iconic gateways to the high Himalayas. We believe the mountain
+      kingdom holds some of the world's most exhilarating adventures, and we aim to share them securely.
+    </p>
+    <p class="story-text" data-i18n="home.story-2">
+      Every trip is engineered with deep local expertise, certified safety gear,
+      and genuine support for both our guests and the environment we explore in.
+    </p>
+    <ul class="story-features">
+      <li>
+        <span class="feature-icon">📍</span>
+        <span data-i18n="home.feature-location">Thamel, Kathmandu, Bagmati Province, Nepal</span>
+      </li>
+      <li>
+        <span class="feature-icon">🛡</span>
+        <span data-i18n="home.feature-guides">Government-licensed guides &amp; certified safety protocols</span>
+      </li>
+      <li>
+        <span class="feature-icon">🌿</span>
+        <span data-i18n="home.feature-eco">Eco-conscious booking models for sustainable tourism</span>
+      </li>
+    </ul>
+    <a href="#activities-anchor" class="btn-dark" data-i18n="home.explore-challenges">Explore Challenges</a>
+  </div>
+</section>
+
+
+<!-- ══════════════ STORY GALLERY ══════════════ -->
+<section class="gallery-section">
+  <div class="gallery-header">
+    <p class="section-label" data-i18n="home.gallery-label">Gallery</p>
+    <h2 class="section-title" data-i18n="home.gallery-title">Moments <em>Captured</em></h2>
+  </div>
+  <div class="gallery-strip" id="galleryStrip">
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/paragliding.jpg') }}" alt="Paragliding">
+      <div class="gallery-item-label" data-i18n="home.act-paragliding">Paragliding</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/rafting.jpg') }}" alt="Rafting">
+      <div class="gallery-item-label" data-i18n="home.act-rafting">Rafting</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/trekking.jpg') }}" alt="Trekking">
+      <div class="gallery-item-label" data-i18n="home.act-trekking">Trekking</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/bungee.jpg') }}" alt="Bungee Jump">
+      <div class="gallery-item-label" data-i18n="home.act-bungee">Bungee Jump</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/zipline.jpg') }}" alt="Zip Line">
+      <div class="gallery-item-label" data-i18n="home.act-ziplining">Zip Line</div>
+    </div>
+    <div class="gallery-item">
+      <img src="{{ url_for('static', filename='images/bg.jpg') }}" alt="Himalayas">
+      <div class="gallery-item-label" data-i18n="home.story-title">Himalayas</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ TESTIMONIALS ══════════════ -->
+<section class="testimonials-section">
+  <p class="section-label" data-i18n="home.testimonials-label">Client Stories</p>
+  <h2 class="section-title" data-i18n="home.testimonials-title">What Our <em>Adventurers</em> Say</h2>
+
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text" data-i18n="home.testimonial-1">
+        "The views above Kathmandu Valley were simply breathtaking. The Thrill Sphere
+        team was professional throughout and made me feel completely safe. I will
+        absolutely book again."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">R</div>
+        <div>
+          <div class="author-name">Rajesh Sharma</div>
+          <div class="author-activity" data-i18n="home.reviewer-paragliding">Paragliding</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card featured">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text" data-i18n="home.testimonial-2">
+        "The Trishuli rapids were incredible. Our guide kept the energy high the
+        entire day. The riverside lunch was a wonderful touch — I have already
+        recommended this to everyone I know."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">P</div>
+        <div>
+          <div class="author-name">Priya Thapa</div>
+          <div class="author-activity" data-i18n="home.reviewer-rafting">River Rafting</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text" data-i18n="home.testimonial-3">
+        "Three unforgettable days walking through the Annapurna highlands. Our
+        guide had encyclopaedic knowledge of the region. The camping was
+        comfortable and exceptionally well-organised."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">D</div>
+        <div>
+          <div class="author-name">David Chen</div>
+          <div class="author-activity" data-i18n="home.reviewer-trekking">Trekking</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-placeholder">
+      <span data-i18n="home.map-label">MAP — Kathmandu, Nepal</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ CONTACT / OFFICE LOCATION ══════════════ -->
+<section class="contact-section">
+  <div class="contact-info">
+    <p class="section-label" data-i18n="home.find-us">Find Us</p>
+    <h2 class="contact-title" data-i18n="home.visit-office">Visit Our <em>Office</em></h2>
+    <div class="contact-divider"></div>
+    <ul class="contact-details">
+      <li>
+        <span class="contact-icon">📍</span>
+        <span data-i18n="home.address">Thamel, Kathmandu-29, Bagmati Province, Nepal</span>
+      </li>
+      <li>
+        <span class="contact-icon">📞</span>
+        +977-9847366756 &nbsp;·&nbsp; +977-9868935600
+      </li>
+      <li>
+        <span class="contact-icon">✉</span>
+        aic651664@gmail.com
+      </li>
+      <li>
+        <span class="contact-icon">🕐</span>
+        <span data-i18n="home.hours">Sun – Fri &nbsp;·&nbsp; 8:00 AM – 6:00 PM</span>
+      </li>
+    </ul>
+    <a href="/dashboard" class="btn-outline-white" data-i18n="home.book-appointment">Book an Appointment</a>
+  </div>
+  <div class="contact-map">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28266.059893985555!2d85.2911!3d27.7172!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb18fcb77fd4bd%3A0x58099b1d495cf9f2!2sThamel%2C%20Kathmandu!5e0!3m2!1sen!2snp!4v1685000000000"
+      allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+  </div>
+</section>
+
+<!-- ══════════════ FLOATING SHARE BUTTON ══════════════ -->
+<div class="share-wrapper">
+  <button class="share-btn" onclick="toggleMenu()" id="shareBtn" aria-label="Share">
+    <i class="fa-solid fa-share-nodes"></i>
+  </button>
+  <div class="social-icons" id="socialIcons">
+    <a href="https://www.instagram.com/thrillsphere22/" target="_blank" aria-label="Instagram">
+      <i class="fab fa-instagram"></i>
+    </a>
+    <a href="https://wa.me/9779868935600?text=Hello%20Thrill%20Sphere!" target="_blank" aria-label="WhatsApp">
+      <i class="fab fa-whatsapp"></i>
+    </a>
+    <a href="https://www.facebook.com/profile.php?id=61591072228614" target="_blank" aria-label="Facebook">
+      <i class="fab fa-facebook-f"></i>
+    </a>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Toggle Menu Function ──
+  function toggleMenu() {
+    const socialIcons = document.getElementById("socialIcons");
+    if (socialIcons) {
+      socialIcons.classList.toggle("show");
+    }
+  }
+
+  // ── Share Button Scroll Animation ──
+  let scrollTimeout;
+  const shareBtn = document.getElementById("shareBtn");
+  window.addEventListener("scroll", () => {
+    if (shareBtn) {
+      shareBtn.classList.add("scrolling");
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        shareBtn.classList.remove("scrolling");
+      }, 300);
+    }
+  });
+
+  // ── Hero slideshow ──
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  let current = 0;
+  let timer;
+
+  function goToSlide(n) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function nextSlide() { goToSlide((current + 1) % slides.length); }
+  function startAuto() { timer = setInterval(nextSlide, 5000); }
+  function stopAuto() { clearInterval(timer); }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      stopAuto();
+      goToSlide(+dot.dataset.index);
+      startAuto();
+    });
+  });
+  startAuto();
+
+  // ── Gallery drag-scroll ──
+  const strip = document.getElementById('galleryStrip');
+  if (strip) {
+    let isDown = false, startX, scrollLeft;
+    strip.addEventListener('mousedown', e => {
+      isDown = true;
+      strip.classList.add('grabbing');
+      startX = e.pageX - strip.offsetLeft;
+      scrollLeft = strip.scrollLeft;
+    });
+    strip.addEventListener('mouseleave', () => { isDown = false; strip.classList.remove('grabbing'); });
+    strip.addEventListener('mouseup', () => { isDown = false; strip.classList.remove('grabbing'); });
+    strip.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - strip.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      strip.scrollLeft = scrollLeft - walk;
+    });
+  }
+
+  // ── AJAX Wishlist Toggle ──
+  async function toggleWishlistHome(event, activityId) {
+    event.preventDefault();
+    event.stopPropagation();
+    const btn = document.getElementById(`btn-wishlist-${activityId}`);
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    try {
+      const response = await fetch("/api/wishlist/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activity_id: activityId })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.saved) {
+          icon.className = 'bx bxs-heart animate-pop';
+          btn.classList.add('saved');
+        } else {
+          icon.className = 'bx bx-heart';
+          btn.classList.remove('saved');
+        }
+        // Update wishlist badge
+        let badge = document.querySelector(".wishlist-badge");
+        if (badge) {
+          let count = parseInt(badge.textContent) || 0;
+          count = data.saved ? count + 1 : count - 1;
+          if (count <= 0) badge.remove(); else badge.textContent = count;
+        } else if (data.saved) {
+          const navLink = document.querySelector("a[href='/wishlist']");
+          if (navLink) {
+            const newBadge = document.createElement("span");
+            newBadge.className = "wishlist-badge";
+            newBadge.textContent = "1";
+            navLink.appendChild(newBadge);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("AJAX Home Wishlist Error:", err);
+    }
+  }
+</script>
+{% endblock %}

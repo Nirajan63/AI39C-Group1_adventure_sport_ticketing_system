@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in - Google Accounts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #1f1f1f;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-sizing: border-box;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .logo {
+            margin-bottom: 16px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            margin: 0 0 8px 0;
+            color: #1f1f1f;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #444746;
+            margin-bottom: 32px;
+        }
+        .account-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 24px 0;
+            text-align: left;
+        }
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e3e3e3;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .account-item:hover {
+            background-color: #f7f9fc;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #7494ec;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+        .account-info {
+            flex-grow: 1;
+        }
+        .account-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .account-email {
+            font-size: 12px;
+            color: #444746;
+        }
+        .use-another-btn {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            color: #0b57d0;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .use-another-btn:hover {
+            background-color: #f1f5fb;
+        }
+        .use-another-btn svg {
+            margin-right: 12px;
+            fill: #0b57d0;
+        }
+        
+        .custom-email-section {
+            display: none;
+            text-align: left;
+            animation: slideIn 0.3s ease;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #747775;
+            border-radius: 4px;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .input-group input:focus {
+            border-color: #0b57d0;
+            border-width: 2px;
+            padding: 15px;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+        }
+        .btn-back {
+            color: #0b57d0;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 100px;
+        }
+        .btn-back:hover {
+            background-color: #f1f5fb;
+        }
+        .btn-next {
+            background-color: #0b57d0;
+            color: #fff;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px 24px;
+            border-radius: 100px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .btn-next:hover {
+            background-color: #0a4ebd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .otp-verification-section {
+            display: none;
+            text-align: left;
+            animation: slideIn 0.3s ease;
+        }
+        .otp-verification-section .email-display {
+            font-weight: 500;
+            background: #f1f3f4;
+            padding: 8px 12px;
+            border-radius: 100px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 24px;
+            color: #3c4043;
+        }
+        .otp-verification-section .email-display svg {
+            margin-right: 8px;
+            fill: #5f6368;
+        }
+        .error-message {
+            color: #b00020;
+            font-size: 13px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            display: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+        </div>
+        
+        <div id="account-chooser-section">
+            <h1>Choose an account</h1>
+            <div class="subtitle">to continue to App</div>
+            
+            <ul class="account-list">
+                <li class="account-item" onclick="selectAccount('john.doe@gmail.com')">
+                    <div class="avatar" style="background-color: #e8711a;">J</div>
+                    <div class="account-info">
+                        <div class="account-name">John Doe</div>
+                        <div class="account-email">john.doe@gmail.com</div>
+                    </div>
+                </li>
+                <li class="account-item" onclick="selectAccount('jane.smith@gmail.com')">
+                    <div class="avatar" style="background-color: #1a73e8;">J</div>
+                    <div class="account-info">
+                        <div class="account-name">Jane Smith</div>
+                        <div class="account-email">jane.smith@gmail.com</div>
+                    </div>
+                </li>
+            </ul>
+            
+            <div class="use-another-btn" onclick="showCustomInput()">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99c.2-1.3 3.3-3.01 6-3.01 2.7 0 5.8 1.71 6 3.01V18zm6-8h-3V7h-2v3h-3v2h3v3h2v-3h3v-2z"/>
+                </svg>
+                Use another account
+            </div>
+        </div>
+
+        <div id="custom-email-section" class="custom-email-section">
+            <h1>Sign in</h1>
+            <div class="subtitle">with your Google Account</div>
+            
+            <form onsubmit="handleCustomSubmit(event)">
+                <div class="input-group">
+                    <input type="email" id="email-input" placeholder="Email or phone" required autofocus>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn-back" onclick="showAccountChooser()">Back</button>
+                    <button type="submit" class="btn-next">Next</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="otp-verification-section" class="otp-verification-section">
+            <h1>Verify it's you</h1>
+            <div class="subtitle">A 6-digit verification code has been sent to your email:</div>
+            
+            <div class="email-display">
+                <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+                <span id="display-email-text"></span>
+            </div>
+
+            <form onsubmit="handleVerifySubmit(event)">
+                <div class="input-group">
+                    <input type="text" id="otp-input" placeholder="Enter 6-digit code" required autocomplete="one-time-code" pattern="\d{6}" maxlength="6">
+                </div>
+                <div class="error-message" id="otp-error-msg"></div>
+                <div class="btn-group">
+                    <button type="button" class="btn-back" onclick="showEmailStep()">Back</button>
+                    <button type="submit" class="btn-next" id="verify-btn">Verify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentEmail = '';
+        let previousSection = 'account-chooser-section';
+
+        function showCustomInput() {
+            document.getElementById('account-chooser-section').style.display = 'none';
+            document.getElementById('otp-verification-section').style.display = 'none';
+            document.getElementById('custom-email-section').style.display = 'block';
+            previousSection = 'custom-email-section';
+            document.getElementById('email-input').focus();
+        }
+
+        function showAccountChooser() {
+            document.getElementById('custom-email-section').style.display = 'none';
+            document.getElementById('otp-verification-section').style.display = 'none';
+            document.getElementById('account-chooser-section').style.display = 'block';
+            previousSection = 'account-chooser-section';
+        }
+
+        function showEmailStep() {
+            document.getElementById('otp-verification-section').style.display = 'none';
+            if (previousSection === 'custom-email-section') {
+                document.getElementById('custom-email-section').style.display = 'block';
+                document.getElementById('email-input').focus();
+            } else {
+                document.getElementById('account-chooser-section').style.display = 'block';
+            }
+        }
+
+        function selectAccount(email) {
+            currentEmail = email;
+            sendOTP(email);
+        }
+
+        function handleCustomSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('email-input').value;
+            previousSection = 'custom-email-section';
+            selectAccount(email);
+        }
+
+        async function sendOTP(email) {
+            const submitBtn = document.querySelector('#custom-email-section .btn-next');
+            if (submitBtn) submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/google-login/send-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('account-chooser-section').style.display = 'none';
+                    document.getElementById('custom-email-section').style.display = 'none';
+                    document.getElementById('otp-verification-section').style.display = 'block';
+                    document.getElementById('display-email-text').textContent = email;
+                    document.getElementById('otp-input').value = '';
+                    document.getElementById('otp-error-msg').style.display = 'none';
+                    document.getElementById('otp-input').focus();
+                } else {
+                    alert(data.message || 'Failed to send verification code.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error while requesting verification code.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+
+        async function handleVerifySubmit(e) {
+            e.preventDefault();
+            const code = document.getElementById('otp-input').value;
+            const errorMsg = document.getElementById('otp-error-msg');
+            const verifyBtn = document.getElementById('verify-btn');
+            
+            errorMsg.style.display = 'none';
+            verifyBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/google-login/verify-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: currentEmail, code })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (window.opener) {
+                        window.opener.postMessage({ 
+                            type: 'mock-google-login', 
+                            email: data.user.email,
+                            username: data.user.username 
+                        }, '*');
+                    }
+                    window.close();
+                } else {
+                    errorMsg.textContent = data.message || 'Invalid code.';
+                    errorMsg.style.display = 'block';
+                    document.getElementById('otp-input').focus();
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Network error while verifying.';
+                errorMsg.style.display = 'block';
+            } finally {
+                verifyBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

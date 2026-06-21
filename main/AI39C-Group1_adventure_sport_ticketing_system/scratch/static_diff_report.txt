@@ -1,0 +1,176 @@
+DIFFERENT: calendar.css <-> css/calendar.css (diff lines: 7)
+   --- A/calendar.css
+
+   +++ B/css/calendar.css
+
+   @@ -1,3 +1,3 @@
+
+    /* ══════════════════════════════════════════════════════
+   -   calendar.css — Thrill Sphere — My Calendar
+   +   calendar.css — Thrill Sphere Events Calendar
+       Premium · Glassmorphism · Adventure Theme
+--------------------------------------------------
+DIFFERENT: calendar.js <-> js/calendar.js (diff lines: 6)
+   --- A/calendar.js
+
+   +++ B/js/calendar.js
+
+   @@ -1,2 +1,2 @@
+
+   -// calendar.js — Thrill Sphere — My Calendar
+   +// calendar.js — Thrill Sphere Events Calendar
+    // Single source of truth:
+--------------------------------------------------
+DIFFERENT: dashboard.css <-> css/dashboard.css (diff lines: 90)
+   --- A/dashboard.css
+
+   +++ B/css/dashboard.css
+
+   @@ -238,3 +238,3 @@
+
+    .booking-img { flex-shrink: 0; width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: var(--surface2); display: flex; align-items: center; justify-content: center; }
+   -.booking-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.15)); }
+   +.booking-img img { width: 100%; height: 100%; object-fit: contain; }
+    
+   @@ -257,2 +257,20 @@
+
+    
+   +.booking-cancel-btn {
+   +    margin-top: 8px;
+   +    padding: 6px 14px;
+   +    background: transparent;
+   +    border: 1px solid var(--red);
+   +    color: var(--red);
+   +    border-radius: 6px;
+   +    font-family: 'Poppins', sans-serif;
+   +    font-size: 12px;
+   +    font-weight: 600;
+   +    cursor: pointer;
+--------------------------------------------------
+DIFFERENT: dashboard.js <-> js/dashboard.js (diff lines: 47)
+   --- A/dashboard.js
+
+   +++ B/js/dashboard.js
+
+   @@ -138,44 +138 @@
+
+    }
+   -
+   -// ── Cancel booking ─────────────────────────────────────────────────
+   -function cancelBooking(bookingId, btn) {
+   -    if (!confirm('Are you sure you want to cancel this booking? This cannot be undone.')) return;
+   -
+   -    btn.disabled = true;
+   -    btn.textContent = 'Cancelling…';
+   -
+   -    var formData = new FormData();
+   -    formData.append('booking_id', bookingId);
+   -
+   -    fetch('/cancel-booking', {
+   -        method: 'POST',
+   -        body: formData
+   -    })
+   -    .then(function (res) { return res.json(); })
+--------------------------------------------------
+DIFFERENT: dashboard_Admin.css <-> css/dashboard_Admin.css (diff lines: 45)
+   --- A/dashboard_Admin.css
+
+   +++ B/css/dashboard_Admin.css
+
+   @@ -881,16 +881,2 @@
+
+    
+   -.form-group input[readonly],
+   -.form-group textarea[readonly] {
+   -    background: var(--surface2);
+   -    color: var(--muted);
+   -    cursor: not-allowed;
+   -    border-color: var(--border);
+   -}
+   -
+   -.form-group input[readonly]:focus,
+   -.form-group textarea[readonly]:focus {
+   -    border-color: var(--border);
+   -    box-shadow: none;
+   -}
+   -
+    .form-group input::placeholder { color: var(--muted); }
+   @@ -929,7 +915,6 @@
+
+--------------------------------------------------
+DIFFERENT: dashboard_Admin.js <-> js/dashboard_Admin.js (diff lines: 130)
+   --- A/dashboard_Admin.js
+
+   +++ B/js/dashboard_Admin.js
+
+   @@ -993,12 +993,2 @@
+
+    
+   -        // ── FIX #07: Client-side length limits (mirrors server validation) ─
+   -        if (title.length > 120) {
+   -            showAlert('Alert title must be 120 characters or fewer', 'danger');
+   -            return;
+   -        }
+   -        if (msg.length > 600) {
+   -            showAlert('Notification message must be 600 characters or fewer', 'danger');
+   -            return;
+   -        }
+   -
+            fetch('/admin/api/notifications', {
+   @@ -1155,28 +1145,3 @@
+
+    
+   -        // ── FIX #02: Lock price + people when payment is confirmed ────────
+   -        // A confirmed payment freezes the financial terms of the booking.
+   -        const isPaidConfirmed = (booking.payment_status || 'confirmed') === 'confirmed';
+--------------------------------------------------
+Identical: payment-assets.js <-> js/payment-assets.js
+DIFFERENT: payment.css <-> css/payment.css (diff lines: 28)
+   --- A/payment.css
+
+   +++ B/css/payment.css
+
+   @@ -407,3 +407,13 @@
+
+    .pm-txn-input {
+   -    flex: 1;
+   +    width: 100%;
+   +    background: transparent;
+   +    border: none;
+   +    outline: none;
+   +    color: var(--text);
+   +    font-size: 16px;
+   +    font-weight: 700;
+   +    letter-spacing: 2px;
+   +    font-family: 'Poppins', sans-serif;
+   +    padding: 12px 16px;
+   +    text-transform: uppercase;
+        background: #f8fafc;
+   @@ -411,10 +421,3 @@
+
+        border-radius: 12px;
+   -    padding: 13px 16px;
+--------------------------------------------------
+DIFFERENT: payment.js <-> js/payment.js (diff lines: 18)
+   --- A/payment.js
+
+   +++ B/js/payment.js
+
+   @@ -333,15 +333,2 @@
+
+                    form.appendChild(paidInput);
+   -
+   -                var methodInput = document.createElement('input');
+   -                methodInput.type  = 'hidden';
+   -                methodInput.name  = 'payment_method';
+   -                methodInput.value = state.method;
+   -                form.appendChild(methodInput);
+   -
+   -                var txnInputEl = document.createElement('input');
+   -                txnInputEl.type  = 'hidden';
+   -                txnInputEl.name  = 'txn_code';
+   -                txnInputEl.value = state.txnCode;
+   -                form.appendChild(txnInputEl);
+   -
+                    form.submit();
+--------------------------------------------------

@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Thrill Sphere{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment_modal.css') }}">
+{% endblock %}
+
+
+        <!-- Notification Toast -->
+        <div id="notification-toast" class="notification-toast" style="position:fixed; bottom:20px; right:20px; background:rgba(0,0,0,0.85); color:#fff; padding:16px 24px; border-radius:8px; display:none; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            <span id="toast-message"></span>
+            <button id="toast-close" style="background:none;border:none;color:#fff;float:right;font-size:18px;cursor:pointer;">✖</button>
+        </div>
+        
+        <!-- Hidden container for all notifications (optional modal) -->
+        <div id="all-notifications-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:1001;">
+            <div class="modal-content" style="background:#222; color:#fff; padding:24px; border-radius:8px; max-height:80vh; overflow-y:auto; width:90%; max-width:500px;">
+                <h3 data-i18n="dash.your-notifications">Your Notifications</h3>
+                <div id="notifications-list" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">
+                </div>
+                <button id="modal-close" style="margin-top:12px; padding:8px 16px; background:#444; border:none; border-radius:4px; color:#fff; cursor:pointer;" data-i18n="dash.close">Close</button>
+            </div>
+        </div>
+        
+        <script>
+            // Prepare notifications data
+            const notifications = {{ notifications|tojson|safe }};
+            // Find first unread notification
+            const unread = notifications.find(n => n.status === 'unread');
+            if (unread) {
+                const toast = document.getElementById('notification-toast');
+                const messageSpan = document.getElementById('toast-message');
+                messageSpan.textContent = `${unread.title}: ${unread.message}`;
+                toast.style.display = 'block';
+                // Auto-hide after 8 seconds
+                setTimeout(() => { toast.style.display = 'none'; }, 8000);
+            }
+            // Close button handler
+            document.getElementById('toast-close').addEventListener('click', () => {
+                document.getElementById('notification-toast').style.display = 'none';
+            });
+            // Populate modal with all notifications
+            const modal = document.getElementById('all-notifications-modal');
+            const listDiv = document.getElementById('notifications-list');
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.style.padding='12px';
+                item.style.borderBottom='1px solid #444';
+                const title = document.createElement('strong');
+                title.textContent = n.title;
+                const msg = document.createElement('p');
+                msg.style.margin='4px 0';
+                msg.textContent = n.message;
+                const time = document.createElement('small');
+                time.style.color='#aaa';
+                time.textContent = n.timestamp;
+                item.appendChild(title);
+                item.appendChild(msg);
+                item.appendChild(time);
+                listDiv.appendChild(item);
+            });
+            // Add click handler to notification bell (if any)
+            const notifBell = document.querySelector('.notif-badge');
+            if (notifBell) {
+                notifBell.addEventListener('click', () => {
+                    modal.style.display = 'flex';
+                });
+            }
+            document.getElementById('modal-close').addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        </script>
+
+{% block content %}
+<!-- ══ HORIZONTAL TOP NAVBAR ══ -->
+<header class="navbar-horizontal">
+  <div class="nav-container">
+    <a href="/" class="nav-brand" style="text-decoration: none;">THRILL<em>SPHERE</em></a>
+    <nav class="nav-links">
+      <a href="/" class="nav-item" style="text-decoration: none;" data-i18n="nav.home">Home</a>
+      <a class="nav-item active" onclick="switchSection('overview', this)" data-i18n="dash.tab-overview">Overview</a>
+      <a class="nav-item" onclick="switchSection('bookings', this)" data-i18n="dash.tab-bookings">My Bookings</a>
+      <a class="nav-item" onclick="switchSection('book-new', this)" data-i18n="dash.tab-book-new">Book Activity</a>
+      <a class="nav-item" onclick="switchSection('events', this)" data-i18n="dash.tab-calendar">Calender</a>
+      <a class="nav-item" onclick="switchSection('notifications', this)">
+        <span data-i18n="dash.tab-notifications">Notifications</span>
+        {% if notifications and notifications | selectattr('status', 'equalto', 'unread') | list | length > 0 %}
+          <span class="notif-badge" style="background: var(--orange); color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 4px; font-weight: 700;">{{ notifications | selectattr('status', 'equalto', 'unread') | list | length }}</span>
+        {% endif %}
+      </a>
+      <a class="nav-item" onclick="switchSection('profile', this)" data-i18n="dash.tab-profile">My Profile</a>
+      <a href="/referral" class="nav-item" aria-label="Refer &amp; Earn" style="color:#c47af5;"><i class='bx bx-gift'></i> Refer &amp; Earn</a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-item logout-link" data-i18n="nav.logout">Logout</a>
+    </nav>
+  </div>
+</header>
+
+<div class="dash-wrapper">
+  <!-- ══ MAIN CONTENT ══ -->
+  <main class="dash-main">
+
+    <!-- Topbar greeting and statistics header -->
+    <header class="topbar">
+      <div>
+        <p class="topbar-greeting" id="greeting" data-i18n="dash.welcome-back">Welcome back</p>
+        <h2 class="topbar-name">{{ user.username }}</h2>
+      </div>
+      <div class="topbar-meta">
+        <span class="topbar-date" id="liveDate"></span>
+        <span class="topbar-badge"><span data-i18n="dash.member-since">Member since</span> {{ user.joined }}</span>
+      </div>
+    </header>
+
+    <!-- ══ OVERVIEW SECTION ══ -->
+    <section class="dash-section active" id="overview">
+
+      <!-- Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label" data-i18n="dash.stat-total">Total Bookings</span>
+            <span class="stat-value" data-target="{{ stats.total }}">0</span>
+          </div>
+          <div class="stat-icon orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label" data-i18n="dash.stat-upcoming">Upcoming</span>
+            <span class="stat-value" data-target="{{ stats.upcoming }}">0</span>
+          </div>
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label" data-i18n="dash.stat-completed">Completed</span>
+            <span class="stat-value" data-target="{{ stats.completed }}">0</span>
+          </div>
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-left">
+            <span class="stat-label" data-i18n="dash.stat-spent">Total Spent</span>
+            <span class="stat-value spent">NPR {{ "{:,}".format(stats.spent) }}</span>
+          </div>
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent bookings -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="dash.recent-adventures">Recent Adventures</h3>
+          <button class="panel-link" onclick="switchSection('bookings', null)" data-i18n="dash.view-all">View All →</button>
+        </div>
+        {% if bookings %}
+          {% for b in bookings[:3] %}
+          <div class="booking-card">
+            <div class="booking-img">
+              <img src="{{ url_for('static', filename='images/' + b.img) }}" alt="{{ b.activity }}">
+            </div>
+            <div class="booking-body">
+              <div class="booking-name">{{ b.activity }}</div>
+              <div class="booking-pills">
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ b.location }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ b.date }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  {{ b.people }} <span data-i18n="dash.people-label">person(s)</span>
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ b.duration }}
+                </span>
+              </div>
+            </div>
+            <div class="booking-right">
+              <span class="booking-total">NPR {{ "{:,}".format(b.total) }}</span>
+              <span class="booking-status {{ b.status }}">
+                {% if b.status == 'confirmed' %}<span data-i18n="dash.confirmed">Confirmed</span>
+                {% elif b.status == 'cancelled' %}<span data-i18n="dash.cancelled">Cancelled</span>
+                {% else %}<span data-i18n="dash.completed">Completed</span>{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">
+              <img src="{{ url_for('static', filename='images/Mountain-Main.png') }}" alt="Mountain">
+            </div>
+            <p data-i18n="dash.no-adventures">No adventures yet — book your first thrill!</p>
+            <button class="btn-primary" onclick="switchSection('book-new', null)" data-i18n="dash.book-now">Book Now</button>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Book -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="dash.quick-book">Quick Book</h3>
+          <button class="panel-link" onclick="switchSection('book-new', null)" data-i18n="dash.all-activities">All Activities →</button>
+        </div>
+        <div class="quick-grid">
+          {% for id, act in activities.items() %}
+          <div class="quick-card" onclick="switchSection('book-new', null); selectActivity('{{ id }}')">
+            <div class="activity-img-wrapper">
+              <img class="activity-icon" src="{{ url_for('static', filename='images/' + act.img) }}" alt="{{ act.name }}">
+              <img class="activity-pic" src="{{ url_for('static', filename='images/' + act.pic) }}" alt="{{ act.name }}">
+            </div>
+            <p>{{ act.name }}</p>
+            <small>NPR {{ "{:,}".format(act.price) }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ BOOKINGS SECTION ══ -->
+    <section class="dash-section" id="bookings">
+      <div class="section-title-row">
+        <h2 class="section-heading" data-i18n="dash.my-bookings">My Bookings</h2>
+        <div class="filter-tabs">
+          <button class="filter-btn active" data-filter="all" data-i18n="dash.filter-all">All</button>
+          <button class="filter-btn" data-filter="confirmed" data-i18n="dash.filter-upcoming">Upcoming</button>
+          <button class="filter-btn" data-filter="completed" data-i18n="dash.filter-completed">Completed</button>
+          <button class="filter-btn" data-filter="cancelled" data-i18n="dash.filter-cancelled">Cancelled</button>
+        </div>
+      </div>
+
+      {% if bookings %}
+        <div class="bookings-full" id="bookingsFull">
+          {% for b in bookings %}
+          <div class="booking-card" data-status="{{ b.status }}">
+            <div class="booking-img">
+              <img src="{{ url_for('static', filename='images/' + b.img) }}" alt="{{ b.activity }}">
+            </div>
+            <div class="booking-body">
+              <div class="booking-name">{{ b.activity }}</div>
+              <div class="booking-pills">
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ b.location }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ b.date }}
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  {{ b.people }} <span data-i18n="dash.people-label">person(s)</span>
+                </span>
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ b.duration }}
+                </span>
+                <span class="pill-id">#{{ b.id }}</span>
+              </div>
+            </div>
+            <div class="booking-right">
+              <span class="booking-total">NPR {{ "{:,}".format(b.total) }}</span>
+              <span class="booking-status {{ b.status }}">
+                {% if b.status == 'confirmed' %}<span data-i18n="dash.confirmed">Confirmed</span>
+                {% elif b.status == 'cancelled' %}<span data-i18n="dash.cancelled">Cancelled</span>
+                {% else %}<span data-i18n="dash.completed">Completed</span>{% endif %}
+              </span>
+              {% if b.status == 'confirmed' %}
+              <button class="booking-cancel-btn" data-id="{{ b.id }}" onclick="cancelBooking({{ b.id }}, this)" data-i18n="dash.cancel-btn">
+                Cancel
+              </button>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <img src="{{ url_for('static', filename='images/Mountain-Main.png') }}" alt="Mountain">
+          </div>
+          <h3 data-i18n="dash.no-bookings-title">No adventures booked yet.</h3>
+          <p data-i18n="dash.no-bookings-desc">The mountains are calling — book your first thrill!</p>
+          <button class="btn-primary" onclick="switchSection('book-new', null)" data-i18n="dash.explore-activities">Explore Activities</button>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- ══ BOOK ACTIVITY SECTION ══ -->
+    <section class="dash-section" id="book-new">
+      <h2 class="section-heading" data-i18n="dash.book-adventure">Book an Adventure</h2>
+
+      <!-- Activity Picker -->
+      <div class="activity-picker" id="activityPicker">
+        {% for id, act in activities.items() %}
+        <div class="activity-option {% if loop.first %}selected{% endif %}"
+             data-id="{{ id }}"
+             data-price="{{ act.price }}"
+             data-name="{{ act.name }}"
+             onclick="selectActivity('{{ id }}')">
+          <div class="activity-img-wrapper">
+            <img class="activity-icon" src="{{ url_for('static', filename='images/' + act.img) }}" alt="{{ act.name }}">
+            <img class="activity-pic" src="{{ url_for('static', filename='images/' + act.pic) }}" alt="{{ act.name }}">
+          </div>
+          <p>{{ act.name }}</p>
+          <small>NPR {{ "{:,}".format(act.price) }}</small>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Booking Form -->
+      <div class="book-form-card">
+        <h3 id="formActivityTitle">Paragliding</h3>
+
+        <form method="POST" action="{{ url_for('auth.book_activity') }}" id="bookForm">
+          <input type="hidden" name="activity_id" id="activityIdInput" value="paragliding">
+
+          <div class="book-form-grid">
+            <div class="form-group">
+              <label data-i18n="dash.adventure-date">Adventure Date</label>
+              <input type="date" name="date" id="bookDate" required>
+            </div>
+            <div class="form-group">
+              <label data-i18n="dash.num-people">Number of People</label>
+              <select name="people" id="bookPeople">
+                <option value="1" data-i18n="dash.person-1">1 person</option>
+                <option value="2" data-i18n="dash.person-2">2 people</option>
+                <option value="3" data-i18n="dash.person-3">3 people</option>
+                <option value="4" data-i18n="dash.person-4">4 people</option>
+                <option value="5" data-i18n="dash.person-5">5 people</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Availability warning banner (shown dynamically by dashboard.js) -->
+          <div id="availabilityWarning" class="avail-warning" style="display:none;"></div>
+
+          <div class="total-preview">
+            <span data-i18n="dash.estimated-total">Estimated Total</span>
+            <strong id="bookTotal">NPR 4,500</strong>
+          </div>
+
+          <button type="submit" class="btn-primary" data-i18n="dash.confirm-booking">Confirm Booking</button>
+        </form>
+      </div>
+    </section>
+
+
+    <!-- ══ EVENTS CALENDAR SECTION ══ -->
+    <section class="dash-section" id="events">
+      <div class="section-title-row">
+        <h2 class="section-heading" data-i18n="dash.calendar-title">Adventure Calendar</h2>
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" id="calPrev" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="cal-month-label" id="calMonthLabel">June 2026</span>
+          <button class="cal-nav-btn" id="calNext" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cal-layout">
+        <!-- Calendar Grid -->
+        <div class="cal-card">
+          <div class="cal-weekdays">
+            <span data-i18n="dash.day-sun">Sun</span><span data-i18n="dash.day-mon">Mon</span><span data-i18n="dash.day-tue">Tue</span><span data-i18n="dash.day-wed">Wed</span><span data-i18n="dash.day-thu">Thu</span><span data-i18n="dash.day-fri">Fri</span><span data-i18n="dash.day-sat">Sat</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+
+          <!-- Legend -->
+          <div class="cal-legend">
+            <span class="cal-legend-item"><span class="cal-dot cal-dot-available"></span><span data-i18n="dash.confirmed">Confirmed</span></span>
+            <span class="cal-legend-item"><span class="cal-dot cal-dot-limited"></span><span data-i18n="dash.completed">Completed</span></span>
+            <span class="cal-legend-item"><span class="cal-dot cal-dot-soldout"></span><span data-i18n="dash.sold-out">Sold Out</span></span>
+            <span class="cal-legend-item"><span class="cal-dot cal-dot-selected"></span><span data-i18n="dash.selected">Selected</span></span>
+          </div>
+        </div>
+
+        <!-- Event List Panel -->
+        <div class="cal-events-panel" id="calEventsPanel">
+          <div class="cal-events-header">
+            <div class="cal-events-date" id="calEventsDate" data-i18n="dash.cal-select-date">Select a date to view events</div>
+          </div>
+          <div class="cal-events-list" id="calEventsList">
+            <div class="cal-no-selection">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <p data-i18n="dash.cal-click-date">Click any highlighted date to explore upcoming adventure events</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ MY PROFILE SECTION ══ -->
+    <section class="dash-section" id="profile">
+      <h2 class="section-heading" data-i18n="dash.profile-title">My Profile</h2>
+      <div class="profile-card">
+        <div class="profile-header">
+          {% if user.avatar %}
+            <img src="{{ user.avatar }}" alt="avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); flex-shrink: 0; box-shadow: 0 0 18px rgba(116,148,236,0.25);">
+          {% else %}
+            <div class="profile-avatar-lg">{{ user.username[0].upper() }}</div>
+          {% endif %}
+          <div class="profile-details">
+            <h2>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
+            <p><span data-i18n="dash.adventure-seeker">Adventure Seeker</span> · <span data-i18n="dash.member-since">Member since</span> {{ user.joined }}</p>
+            {% if badges %}
+              <div class="badge-grid">
+                {% for badge in badges %}
+                  <span class="badge">{{ badge.icon }} <span data-i18n="{{ badge.key }}">{{ badge.label }}</span></span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="badge-grid">
+                <!-- No badges earned yet -->
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-field"><label data-i18n="dash.full-name">Full Name</label><span>{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span></div>
+          <div class="profile-field"><label data-i18n="dash.email">Email</label><span>{{ user.email }}</span></div>
+          <div class="profile-field"><label data-i18n="dash.phone">Phone</label><span>{{ user.phone or 'Not set' }}</span></div>
+          <div class="profile-field"><label data-i18n="dash.location">Location</label><span>{{ user.city or 'Kathmandu, Nepal' }}</span></div>
+          <div class="profile-field"><label data-i18n="dash.member-since-label">Member Since</label><span>{{ user.joined }}</span></div>
+          <div class="profile-field"><label data-i18n="dash.account-status">Account Status</label><span style="color:var(--green);font-weight:600;" data-i18n="dash.active">✓ Active</span></div>
+        </div>
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+          <a href="/manage" class="btn-primary" style="width: auto; text-decoration: none;" data-i18n="dash.edit-profile">Edit Profile</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="dash.adventure-stats">Adventure Stats</h3></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-left"><span class="stat-label" data-i18n="dash.stat-favourite">Favourite</span><span style="font-weight:600;font-size:15px;margin-top:4px;">Paragliding</span></div>
+            <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-left"><span class="stat-label" data-i18n="dash.stat-mostvisited">Most Visited</span><span style="font-weight:600;font-size:15px;margin-top:4px;">Pokhara</span></div>
+            <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-left"><span class="stat-label" data-i18n="dash.stat-peoplebrought">People Brought</span><span class="stat-value" data-target="{{ stats.total * 2 }}">0</span></div>
+            <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-left"><span class="stat-label" data-i18n="dash.stat-spent">Total Spent</span><span class="stat-value spent">NPR {{ "{:,}".format(stats.spent) }}</span></div>
+            <div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ NOTIFICATIONS SECTION ══ -->
+    <section class="dash-section" id="notifications">
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="dash.your-notifications">Your Notifications</h3>
+        </div>
+        <div class="notifications-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+          {% if notifications %}
+            {% for n in notifications %}
+              <div class="notification-item {% if n.status == 'unread' %}unread{% endif %}" id="notif-{{ n.id }}" style="padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: {% if n.status == 'unread' %}rgba(99,102,241,0.05){% else %}rgba(255,255,255,0.01){% endif %}; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s;">
+                <div style="flex-grow: 1; margin-right: 15px;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-weight: 700; color: #fff; font-size: 15px;">{{ n.title }}</span>
+                    {% if n.status == 'unread' %}
+                      <span class="unread-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--orange); display: inline-block;"></span>
+                    {% endif %}
+                  </div>
+                  <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">{{ n.message }}</p>
+                  <small style="font-size: 11px; color: var(--text-muted);">{{ n.timestamp }}</small>
+                </div>
+                {% if n.status == 'unread' %}
+                  <button class="btn-read" onclick="markAsRead({{ n.id }})" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: #fff; font-size: 12px; cursor: pointer; transition: all 0.2s;" data-i18n="dash.mark-read">Mark Read</button>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <p data-i18n="dash.no-notifications">You have no notifications at this time.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# ── Single source of truth: inject real bookings + live availability ── #}
+<script>
+  window.THRILL_BOOKINGS     = {{ bookings     | tojson | safe }};
+  window.THRILL_AVAILABILITY = {{ availability | tojson | safe }};
+
+  function markAsRead(id) {
+      fetch('/read-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id })
+      }).then(res => res.json()).then(data => {
+          if (data.success) {
+              const item = document.getElementById('notif-' + id);
+              if (item) {
+                  item.style.background = 'rgba(255,255,255,0.01)';
+                  const dot = item.querySelector('.unread-dot');
+                  if (dot) dot.remove();
+                  const btn = item.querySelector('.btn-read');
+                  if (btn) btn.remove();
+              }
+              // Update badge count
+              const badge = document.querySelector('.notif-badge');
+              if (badge) {
+                  const count = parseInt(badge.textContent, 10) - 1;
+                  if (count > 0) {
+                      badge.textContent = count;
+                  } else {
+                      badge.remove();
+                  }
+              }
+          }
+      });
+  }
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment-assets.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,13 @@
+Flask==3.1.0
+flask-cors==4.0.1
+pymysql
+python-dotenv
+
+# --- AI chatbot (LangChain agent + FAISS + free local embeddings) ---
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+langchain-huggingface>=0.1.0
+faiss-cpu>=1.8.0
+sentence-transformers>=3.0.0
+requests
